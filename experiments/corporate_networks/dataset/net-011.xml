@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<network id="net-011" schemaVersion="1.0" seed="20260913" profile="small" topology="segmented" generated="2026-09-02T16:36:51+00:00">
+  <summary nodes="9" links="15" physicalLinks="8" flows="7" vulnerabilities="12" segmentationBypass="false" />
+  <subnets>
+    <subnet id="dmz" cidr="10.164.10.0/24" zone="dmz" trust="low" />
+    <subnet id="lan" cidr="10.164.20.0/24" zone="lan" trust="medium" />
+    <subnet id="server" cidr="10.164.30.0/24" zone="server" trust="high" />
+    <subnet id="mgmt" cidr="10.164.40.0/24" zone="management" trust="high" />
+  </subnets>
+  <assets>
+    <asset id="web-01" role="web-server" hostname="web-01" subnet="dmz" ip="10.164.10.10" criticality="high">
+      <os family="linux" product="Ubuntu Server" version="20.04 LTS" />
+      <services>
+        <service name="http" product="Drupal" version="8.5.0" port="80" protocol="tcp">
+          <vulnerability cve="CVE-2018-7600" exploitClass="initial-access" exploitability="0.980" cvss="9.8" severity="CRITICAL" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+            <mitre technique="T1190" />
+            <cwe id="CWE-20" />
+          </vulnerability>
+        </service>
+        <service name="ssh" product="OpenSSH" version="9.2p1" port="22" protocol="tcp">
+          <vulnerability cve="CVE-2024-6387" exploitClass="initial-access" exploitability="0.810" cvss="8.1" severity="HIGH" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+            <mitre technique="T1190" />
+            <cwe id="CWE-364" />
+            <cwe id="CWE-362" />
+          </vulnerability>
+        </service>
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2021-4034" exploitClass="privilege-escalation" exploitability="0.218" cvss="7.8" severity="HIGH" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H" attackVector="LOCAL" privilegesRequired="LOW" userInteraction="NONE">
+          <mitre technique="T1068" />
+          <cwe id="CWE-787" />
+          <cwe id="CWE-125" />
+        </vulnerability>
+        <vulnerability cve="CVE-2022-0847" exploitClass="privilege-escalation" exploitability="0.218" cvss="7.8" severity="HIGH" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H" attackVector="LOCAL" privilegesRequired="LOW" userInteraction="NONE">
+          <mitre technique="T1068" />
+          <cwe id="CWE-665" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-web-01" privilege="service" domain="false" />
+      </accounts>
+      <defenses>
+        <defense kind="firewall-host" product="iptables" state="enabled" />
+      </defenses>
+    </asset>
+    <asset id="dc-01" role="domain-controller" hostname="dc-01" subnet="server" ip="10.164.30.10" criticality="critical">
+      <os family="windows" product="Microsoft Windows Server" version="2019" />
+      <services>
+        <service name="microsoft-ds" product="Microsoft Windows SMB" version="3.1.1" port="445" protocol="tcp" />
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2021-34527" exploitClass="privilege-escalation" exploitability="0.616" cvss="8.8" severity="HIGH" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="LOW" userInteraction="NONE">
+          <mitre technique="T1068" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-dc-01" privilege="service" domain="false" />
+        <account name="Administrator" privilege="domain-admin" domain="true" />
+      </accounts>
+      <defenses>
+        <defense kind="av" product="Kaspersky Endpoint Security" state="enabled" />
+        <defense kind="edr" product="CrowdStrike Falcon" state="enabled" />
+        <defense kind="av" product="ESET Endpoint Security" state="enabled" />
+      </defenses>
+    </asset>
+    <asset id="db-01" role="db-server" hostname="db-01" subnet="server" ip="10.164.30.11" criticality="critical">
+      <os family="linux" product="CentOS Linux" version="7" />
+      <services>
+        <service name="http" product="Oracle WebLogic Server" version="12.2.1.4" port="7001" protocol="tcp">
+          <vulnerability cve="CVE-2020-14882" exploitClass="initial-access" exploitability="0.980" cvss="9.8" severity="CRITICAL" cvssVersion="3.1" cvssSource="cna-fallback" cvssVector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+            <mitre technique="T1190" />
+          </vulnerability>
+        </service>
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2016-5195" exploitClass="privilege-escalation" exploitability="0.196" cvss="7.0" severity="HIGH" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H" attackVector="LOCAL" privilegesRequired="LOW" userInteraction="NONE">
+          <mitre technique="T1068" />
+          <cwe id="CWE-362" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-db-01" privilege="service" domain="false" />
+        <account name="backup-operator" privilege="local-admin" domain="true" />
+      </accounts>
+      <defenses>
+        <defense kind="backup" product="Veeam Agent for Linux" state="partial" />
+        <defense kind="firewall-host" product="firewalld" state="enabled" />
+      </defenses>
+    </asset>
+    <asset id="adm-01" role="admin-workstation" hostname="adm-01" subnet="lan" ip="10.164.20.10" criticality="high">
+      <os family="windows" product="Microsoft Windows 10" version="21H2" />
+      <services>
+        <service name="microsoft-ds" product="Microsoft Windows SMB" version="3.1.1" port="445" protocol="tcp" />
+        <service name="ms-wbt-server" product="Microsoft Terminal Services" version="10.0" port="3389" protocol="tcp" />
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2020-0796" exploitClass="lateral-movement" exploitability="1.000" cvss="10.0" severity="CRITICAL" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+          <mitre technique="T1210" />
+          <cwe id="CWE-119" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-adm-01" privilege="service" domain="false" />
+        <account name="user99" privilege="user" domain="true" />
+        <account name="helpdesk" privilege="local-admin" domain="true">
+          <reusedOn asset="db-01" />
+        </account>
+      </accounts>
+      <defenses>
+        <defense kind="edr" product="Microsoft Defender for Endpoint" state="disabled" />
+        <defense kind="av" product="ESET Endpoint Security" state="enabled" />
+        <defense kind="edr" product="CrowdStrike Falcon" state="enabled" />
+        <defense kind="mfa" product="Duo Security" state="enabled" />
+      </defenses>
+    </asset>
+    <asset id="fw-01" role="firewall" hostname="fw-01" subnet="mgmt" ip="10.164.40.10" criticality="critical">
+      <os family="appliance" product="Fortinet FortiOS" version="6.0.4" />
+      <services>
+        <service name="snmp" product="SNMP" version="v2c" port="161" protocol="udp" />
+        <service name="ssh" product="OpenSSH" version="8.8p1" port="22" protocol="tcp" />
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2018-13379" exploitClass="credential-access" exploitability="0.980" cvss="9.8" severity="CRITICAL" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+          <mitre technique="T1190" />
+          <mitre technique="T1552" />
+          <cwe id="CWE-22" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-fw-01" privilege="service" domain="false" />
+      </accounts>
+      <defenses>
+        <defense kind="firewall-host" product="вбудована політика" state="enabled" />
+        <defense kind="ids" product="вбудований IPS" state="enabled" />
+      </defenses>
+    </asset>
+    <asset id="rtr-01" role="router" hostname="rtr-01" subnet="mgmt" ip="10.164.40.11" criticality="high">
+      <os family="network-os" product="Cisco IOS" version="15.2" />
+      <services>
+        <service name="telnet" product="Telnet" version="-" port="23" protocol="tcp" />
+        <service name="ssh" product="OpenSSH" version="8.8p1" port="22" protocol="tcp" />
+        <service name="snmp" product="SNMP" version="v2c" port="161" protocol="udp" />
+      </services>
+      <accounts>
+        <account name="svc-rtr-01" privilege="service" domain="false" />
+      </accounts>
+      <defenses>
+        <defense kind="firewall-host" product="control-plane ACL" state="enabled" />
+        <defense kind="siem-agent" product="syslog export" state="enabled" />
+        <defense kind="ids" product="Cisco IOS IPS" state="partial" />
+      </defenses>
+    </asset>
+    <asset id="sw-01" role="switch" hostname="sw-01" subnet="dmz" ip="10.164.10.11" criticality="medium">
+      <os family="network-os" product="Cisco IOS" version="15.2" />
+      <services>
+        <service name="snmp" product="SNMP" version="v2c" port="161" protocol="udp" />
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2018-0171" exploitClass="initial-access" exploitability="0.980" cvss="9.8" severity="CRITICAL" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+          <mitre technique="T1190" />
+          <cwe id="CWE-20" />
+          <cwe id="CWE-787" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-sw-01" privilege="service" domain="false" />
+      </accounts>
+      <defenses>
+        <defense kind="siem-agent" product="syslog export" state="enabled" />
+        <defense kind="ids" product="Cisco IOS IPS" state="enabled" />
+      </defenses>
+    </asset>
+    <asset id="sw-02" role="switch" hostname="sw-02" subnet="server" ip="10.164.30.12" criticality="medium">
+      <os family="network-os" product="Cisco IOS" version="15.2" />
+      <services>
+        <service name="ssh" product="OpenSSH" version="8.8p1" port="22" protocol="tcp" />
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2018-0171" exploitClass="initial-access" exploitability="0.980" cvss="9.8" severity="CRITICAL" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+          <mitre technique="T1190" />
+          <cwe id="CWE-20" />
+          <cwe id="CWE-787" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-sw-02" privilege="service" domain="false" />
+      </accounts>
+      <defenses />
+    </asset>
+    <asset id="sw-03" role="switch" hostname="sw-03" subnet="lan" ip="10.164.20.11" criticality="medium">
+      <os family="network-os" product="Cisco IOS" version="15.2" />
+      <services>
+        <service name="ssh" product="OpenSSH" version="8.8p1" port="22" protocol="tcp" />
+        <service name="telnet" product="Telnet" version="-" port="23" protocol="tcp" />
+      </services>
+      <osVulnerabilities>
+        <vulnerability cve="CVE-2018-0171" exploitClass="initial-access" exploitability="0.980" cvss="9.8" severity="CRITICAL" cvssVersion="3.1" cvssSource="nvd" cvssVector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" attackVector="NETWORK" privilegesRequired="NONE" userInteraction="NONE">
+          <mitre technique="T1190" />
+          <cwe id="CWE-20" />
+          <cwe id="CWE-787" />
+        </vulnerability>
+      </osVulnerabilities>
+      <accounts>
+        <account name="svc-sw-03" privilege="service" domain="false" />
+      </accounts>
+      <defenses>
+        <defense kind="firewall-host" product="control-plane ACL" state="partial" />
+      </defenses>
+    </asset>
+  </assets>
+  <links>
+    <link src="rtr-01" dst="fw-01" kind="uplink" />
+    <link src="sw-01" dst="fw-01" kind="trunk" />
+    <link src="sw-02" dst="fw-01" kind="trunk" />
+    <link src="sw-03" dst="fw-01" kind="trunk" />
+    <link src="web-01" dst="sw-01" kind="ethernet" />
+    <link src="dc-01" dst="sw-02" kind="ethernet" />
+    <link src="db-01" dst="sw-02" kind="ethernet" />
+    <link src="adm-01" dst="sw-03" kind="ethernet" />
+  </links>
+  <flows>
+    <flow src="db-01" dst="dc-01" kind="domain-auth" port="88" />
+    <flow src="adm-01" dst="dc-01" kind="domain-auth" port="88" />
+    <flow src="adm-01" dst="rtr-01" kind="admin-access" port="22" />
+    <flow src="adm-01" dst="fw-01" kind="admin-access" port="22" />
+    <flow src="adm-01" dst="sw-03" kind="admin-access" port="22" />
+    <flow src="adm-01" dst="sw-02" kind="admin-access" port="22" />
+    <flow src="adm-01" dst="sw-01" kind="admin-access" port="22" />
+  </flows>
+  <policy>
+    <rule srcZone="internet" dstZone="dmz" protocol="tcp" ports="80,443" action="allow" />
+    <rule srcZone="internet" dstZone="lan" protocol="any" ports="any" action="deny" />
+    <rule srcZone="internet" dstZone="server" protocol="any" ports="any" action="deny" />
+    <rule srcZone="internet" dstZone="management" protocol="any" ports="any" action="deny" />
+    <rule srcZone="lan" dstZone="server" protocol="tcp" ports="445,389,88,1433,3306" action="allow" />
+    <rule srcZone="lan" dstZone="dmz" protocol="tcp" ports="80,443" action="allow" />
+    <rule srcZone="server" dstZone="internet" protocol="any" ports="any" action="deny" />
+    <rule srcZone="management" dstZone="server" protocol="tcp" ports="any" action="allow" />
+    <rule srcZone="dmz" dstZone="server" protocol="any" ports="any" action="deny" />
+  </policy>
+  <task>
+    <initialState asset="adm-01" condition="phishing-landing" />
+    <goal asset="db-01" condition="data-exfiltration" />
+    <constraints>
+      <constraint>збереження доказової бази для розслідування</constraint>
+      <constraint>час реагування не більше 4 годин</constraint>
+      <constraint>без зупинки виробничих сервісів</constraint>
+    </constraints>
+  </task>
+  <attacks>
+    <attack id="a1" steps="4">
+      <step n="1" from="adm-01" to="fw-01" cve="CVE-2018-13379" exploitClass="credential-access" via="flow">
+        <mitre technique="T1190" />
+        <mitre technique="T1552" />
+      </step>
+      <step n="2" from="fw-01" to="dc-01" cve="CVE-2021-34527" exploitClass="privilege-escalation" via="policy">
+        <mitre technique="T1068" />
+      </step>
+      <step n="3" from="dc-01" to="sw-02" cve="CVE-2018-0171" exploitClass="initial-access" via="same-zone">
+        <mitre technique="T1190" />
+      </step>
+      <step n="4" from="sw-02" to="db-01" cve="CVE-2020-14882" exploitClass="initial-access" via="same-zone">
+        <mitre technique="T1190" />
+      </step>
+    </attack>
+    <attack id="a2" steps="3">
+      <step n="1" from="adm-01" to="fw-01" cve="CVE-2018-13379" exploitClass="credential-access" via="flow">
+        <mitre technique="T1190" />
+        <mitre technique="T1552" />
+      </step>
+      <step n="2" from="fw-01" to="sw-02" cve="CVE-2018-0171" exploitClass="initial-access" via="policy">
+        <mitre technique="T1190" />
+      </step>
+      <step n="3" from="sw-02" to="db-01" cve="CVE-2020-14882" exploitClass="initial-access" via="same-zone">
+        <mitre technique="T1190" />
+      </step>
+    </attack>
+    <attack id="a3" steps="1">
+      <step n="1" from="adm-01" to="db-01" cve="CVE-2016-5195" exploitClass="privilege-escalation" via="policy">
+        <mitre technique="T1068" />
+      </step>
+    </attack>
+    <attack id="a4" steps="3">
+      <step n="1" from="adm-01" to="dc-01" cve="CVE-2021-34527" exploitClass="privilege-escalation" via="flow">
+        <mitre technique="T1068" />
+      </step>
+      <step n="2" from="dc-01" to="sw-02" cve="CVE-2018-0171" exploitClass="initial-access" via="same-zone">
+        <mitre technique="T1190" />
+      </step>
+      <step n="3" from="sw-02" to="db-01" cve="CVE-2020-14882" exploitClass="initial-access" via="same-zone">
+        <mitre technique="T1190" />
+      </step>
+    </attack>
+    <attack id="a5" steps="2">
+      <step n="1" from="adm-01" to="dc-01" cve="CVE-2021-34527" exploitClass="privilege-escalation" via="flow">
+        <mitre technique="T1068" />
+      </step>
+      <step n="2" from="dc-01" to="db-01" cve="CVE-2020-14882" exploitClass="initial-access" via="same-zone">
+        <mitre technique="T1190" />
+      </step>
+    </attack>
+  </attacks>
+</network>

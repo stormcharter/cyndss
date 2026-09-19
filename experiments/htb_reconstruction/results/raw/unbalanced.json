@@ -1,0 +1,265 @@
+{
+  "machine": "Unbalanced",
+  "split": "validation",
+  "input": {
+    "documents": 20,
+    "graph_nodes": 96,
+    "graph_edges": 908,
+    "entry_concepts": [
+      "host",
+      "openssh",
+      "rsync",
+      "squid",
+      "unbalanced"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "unbalanced:host:0",
+        "title": "Unbalanced",
+        "summary": "Debian 10 Linux Rsync/EncFS backup, Squid internal proxy and Pi-hole container",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:H1",
+        "title": "Unbalanced host",
+        "summary": "Host OS/security boundary 10.10.10.200 Debian 10; OpenSSH 7.9p1 root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH 7.9p1 root daemon Public SSH after XPath credential discovery Unbalanced host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:C2",
+        "title": "rsync",
+        "summary": "Service Backup module 873/tcp rsync backup Public Encrypted backup tree downloadable Unbalanced host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:C3",
+        "title": "EncFS",
+        "summary": "Storage Encrypted filesystem rsync backup files EncFS backup Local after crack Config reveals cipher/root path Unbalanced host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:C4",
+        "title": "Squid",
+        "summary": "Service HTTP proxy 3128/tcp Squid proxy Public/authenticated Stats/config expose internal IPs and credentials Unbalanced host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:C5",
+        "title": "internal management site",
+        "summary": "Application XPath-backed auth internal IP/vhost Python/XML www-data Only through Squid XPath injection dumps users/passwords Squid",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:C6",
+        "title": "Pi-hole",
+        "summary": "Container DNS admin container internal web Pi-hole www-data/root container Internal Upload exploit to webshell Unbalanced host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:component:C7",
+        "title": "root credential script",
+        "summary": "Artifact Host maintenance container/host file shell script root Local Contains host root secret Unbalanced host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:permission:0",
+        "title": "anonymous rsync",
+        "summary": "read rsync module rsync module allows listing EncFS backup",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:permission:1",
+        "title": "anonymous EncFS",
+        "summary": "crack EncFS password EncFS config/hash accessible Squid config/creds",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:permission:2",
+        "title": "proxy client C4/C5",
+        "summary": "route internal IPs C4/C5 Squid credentials XPath app",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:permission:3",
+        "title": "remote client internal management site",
+        "summary": "inject XPath internal management site internal site reachable sa password",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:permission:4",
+        "title": "sa OpenSSH",
+        "summary": "SSH login OpenSSH password recovered sa shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:permission:5",
+        "title": "sa Pi-hole",
+        "summary": "upload Pi-hole webshell Pi-hole internal app/API exploit container shell and root script",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:permission:6",
+        "title": "root root credential script",
+        "summary": "read maintenance secret root credential script script readable root host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:vulnerability:V1",
+        "title": "Anonymous encrypted backup disclosure with crackable config C2+C3",
+        "summary": "C2+C3 rsync/EncFS rsync public Backup exposes EncFS metadata/password material Squid config Backup module not access-controlled",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:vulnerability:V2",
+        "title": "XPath injection internal management site",
+        "summary": "internal management site XPath-backed internal app Internal vhost reachable through proxy Malformed XPath returns users/passwords sa credential XML query input unsanitized",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:vulnerability:V3",
+        "title": "File upload/webshell exploit Pi-hole",
+        "summary": "Pi-hole Pi-hole Internal app access Upload bypass executes PHP in container container/www-data Outdated admin interface",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "unbalanced:vulnerability:V4",
+        "title": "Root secret stored in readable script root credential script",
+        "summary": "root credential script root maintenance script Container/sa shell Read script and reuse host root secret root Secret hard-coded in operational script",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential",
+        "squid"
+      ],
+      [
+        "password"
+      ],
+      [
+        "container",
+        "shell"
+      ],
+      [
+        "credential",
+        "root",
+        "script"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "script",
+        "root"
+      ],
+      [
+        "maintenance",
+        "root"
+      ],
+      [
+        "secret",
+        "root"
+      ],
+      [
+        "authenticated",
+        "host",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "unbalanced",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "squid",
+        "debian",
+        "root"
+      ],
+      [
+        "rsync",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "unbalanced",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "squid",
+        "debian",
+        "root"
+      ],
+      [
+        "rsync",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.25,
+    "a_ordered": 0.25,
+    "a_precision": 0.5,
+    "a_coverage_topk": 0.25,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.25,
+    "b_ordered": 0.25,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.25,
+    "c_ordered": 0.25,
+    "c_precision": 0.5,
+    "c_coverage_topk": 0.5
+  }
+}

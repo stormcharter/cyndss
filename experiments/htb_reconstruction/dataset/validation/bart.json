@@ -1,0 +1,316 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Bart",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/07/15/htb-bart.html",
+    "title": "HTB Bart writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows IIS 10 host",
+    "deployment_role": "Three virtual hosts, PHP log poison and Winlogon secret"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Bart host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.81",
+      "software_or_version": "Windows (IIS 10.0; build not disclosed in writeup)",
+      "runs_as": "Administrator",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "IIS",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Microsoft IIS 10.0",
+      "runs_as": "IUSR",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Routes forum.bart.htb, monitor.bart.htb and internal-01.bart.htb"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "forum site",
+      "role": "Static employee portal",
+      "binding_or_path": "forum.bart.htb",
+      "software_or_version": "Static HTML",
+      "runs_as": "IIS",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Publishes names/roles used for account discovery"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "monitor site",
+      "role": "PHP account portal",
+      "binding_or_path": "monitor.bart.htb",
+      "software_or_version": "PHP",
+      "runs_as": "IIS",
+      "exposure": "Public login",
+      "evidence": "Explicit",
+      "analysis_note": "Forgot-password oracle and weak Harvey password"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "simple_chat",
+      "role": "PHP chat application",
+      "binding_or_path": "internal-01.bart.htb/simple_chat",
+      "software_or_version": "custom PHP",
+      "runs_as": "IUSR",
+      "exposure": "Login/register",
+      "evidence": "Explicit",
+      "analysis_note": "Registration endpoint still enabled"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C4",
+      "layer_or_type": "Application",
+      "name": "log.php",
+      "role": "Log writer",
+      "binding_or_path": "internal-01.bart.htb/log/log.php",
+      "software_or_version": "PHP",
+      "runs_as": "IUSR",
+      "exposure": "Authenticated chat user",
+      "evidence": "Explicit",
+      "analysis_note": "filename and User-Agent are written to PHP-readable log"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "Winlogon registry",
+      "role": "AutoLogon credential store",
+      "binding_or_path": "HKLM\\...\\Winlogon",
+      "software_or_version": "Windows registry",
+      "runs_as": "SYSTEM",
+      "exposure": "Local/IUSR read",
+      "evidence": "Explicit",
+      "analysis_note": "Administrator password stored in DefaultPassword"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "harvey",
+      "principal_type": "local/application user",
+      "operational_role": "developer and monitor account",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "monitor login and internal chat access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "IUSR",
+      "principal_type": "service identity",
+      "operational_role": "IIS anonymous worker",
+      "groups_or_nesting": "IIS_IUSRS",
+      "authentication_or_effective_access": "executes poisoned PHP log as low-privilege user",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "local administrator",
+      "operational_role": "AutoLogon/root flag owner",
+      "groups_or_nesting": "Administrators",
+      "authentication_or_effective_access": "credential in Winlogon; full host control",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "forum visitor",
+      "principal_type": "network principal",
+      "operational_role": "unauthenticated recon client",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "reads public employee names",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "forum visitor",
+      "permission_or_action": "read names/roles",
+      "object": "C2",
+      "condition_or_scope": "public forum",
+      "security_consequence": "candidate Harvey account",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "attacker",
+      "permission_or_action": "authenticate monitor",
+      "object": "C3",
+      "condition_or_scope": "forgot-password oracle plus weak password",
+      "security_consequence": "Harvey session",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Harvey",
+      "permission_or_action": "register chat account",
+      "object": "C4",
+      "condition_or_scope": "register.php still reachable",
+      "security_consequence": "internal chat access",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Harvey/chat user",
+      "permission_or_action": "write log filename and User-Agent",
+      "object": "C5",
+      "condition_or_scope": "authenticated chat/log link",
+      "security_consequence": "PHP webshell as IUSR",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "IUSR",
+      "permission_or_action": "read Winlogon values",
+      "object": "C6",
+      "condition_or_scope": "64-bit shell/registry read",
+      "security_consequence": "Administrator credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Administrator",
+      "permission_or_action": "runas/net use",
+      "object": "C1/H1",
+      "condition_or_scope": "credential recovered",
+      "security_consequence": "full host/root files",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "forum employee directory",
+      "hosted_on": "C2",
+      "purpose": "identity enumeration",
+      "owner_or_authority": "forum publisher",
+      "read_access": "public read",
+      "write_or_execute_access": "site owner writes",
+      "security_significance": "Feeds password/account discovery",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "internal log file",
+      "hosted_on": "C5",
+      "purpose": "time/user-agent log",
+      "owner_or_authority": "IUSR",
+      "read_access": "chat user can cause entries",
+      "write_or_execute_access": "log.php writes",
+      "security_significance": "PHP log-poisoning code source",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Winlogon DefaultPassword",
+      "hosted_on": "C6",
+      "purpose": "AutoLogon secret",
+      "owner_or_authority": "Administrator/SYSTEM",
+      "read_access": "IUSR can query registry",
+      "write_or_execute_access": "SYSTEM writes",
+      "security_significance": "Plaintext privileged credential",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "custom PHP monitor",
+      "issue": "Username oracle plus weak password",
+      "preconditions": "monitor login public",
+      "vulnerable_behavior": "Forgot-password response reveals valid account; password is guessable",
+      "resulting_access": "Harvey session",
+      "reference": "Authentication design weakness",
+      "failed_control": "Account recovery leaks validity; weak secret",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4+C5",
+      "affected_version": "custom PHP chat",
+      "issue": "Log poisoning / PHP code injection",
+      "preconditions": "Chat account can be registered",
+      "vulnerable_behavior": "User-Agent PHP is stored in file later included by PHP",
+      "resulting_access": "IUSR webshell",
+      "reference": "Log poisoning",
+      "failed_control": "Untrusted log path and content execute as PHP",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C6",
+      "affected_version": "Windows IIS host",
+      "issue": "Winlogon stores Administrator password in plaintext",
+      "preconditions": "IUSR shell; registry readable",
+      "vulnerable_behavior": "DefaultPassword returns reusable admin secret",
+      "resulting_access": "Administrator",
+      "reference": "Credential storage weakness",
+      "failed_control": "AutoLogon secret not protected",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "forum visitor",
+      "action": "enumerate employees",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "public forum",
+      "resulting_principal_or_access": "Harvey candidate",
+      "boundary_crossed": "network → identity",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "attacker",
+      "action": "log in monitor and register chat",
+      "target_component_or_artifact": "C3/C4",
+      "prerequisite": "weak password",
+      "resulting_principal_or_access": "chat user",
+      "boundary_crossed": "application → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "chat user",
+      "action": "poison PHP log and request it",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "log writer and PHP include",
+      "resulting_principal_or_access": "IUSR",
+      "boundary_crossed": "user → web service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "IUSR",
+      "action": "read Winlogon and run as Administrator",
+      "target_component_or_artifact": "C6/H1",
+      "prerequisite": "registry access and recovered secret",
+      "resulting_principal_or_access": "Administrator",
+      "boundary_crossed": "service → host admin",
+      "evidence": "Explicit"
+    }
+  ]
+}

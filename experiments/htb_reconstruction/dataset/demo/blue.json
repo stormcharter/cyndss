@@ -1,0 +1,186 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Blue",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/05/11/htb-blue.html",
+    "title": "HTB Blue writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows 7 Professional SP1 build 7601",
+    "deployment_role": "Standalone SMB workstation"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "HARIS-PC",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.40",
+      "software_or_version": "Windows 7 Professional SP1 6.1.7601",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "WORKGROUP member"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "RPC Endpoint Mapper",
+      "role": "RPC discovery",
+      "binding_or_path": "0.0.0.0:135/tcp",
+      "software_or_version": "Windows RPC",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "High RPC ports also exposed"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "NetBIOS/SMB Server",
+      "role": "File sharing and named pipes",
+      "binding_or_path": "0.0.0.0:139,445/tcp",
+      "software_or_version": "Windows 7 SP1 SMBv1",
+      "runs_as": "SYSTEM",
+      "exposure": "Public; signing not required",
+      "evidence": "Explicit",
+      "analysis_note": "Guest can enumerate selected shares"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Share",
+      "name": "Share",
+      "role": "General data share",
+      "binding_or_path": "\\HARIS-PC\\Share",
+      "software_or_version": "SMB share",
+      "runs_as": "SYSTEM",
+      "exposure": "Guest-readable",
+      "evidence": "Explicit",
+      "analysis_note": "Recon surface"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Share",
+      "name": "Users",
+      "role": "User-profile share",
+      "binding_or_path": "\\HARIS-PC\\Users",
+      "software_or_version": "SMB share",
+      "runs_as": "SYSTEM",
+      "exposure": "Guest-readable",
+      "evidence": "Explicit",
+      "analysis_note": "ADMIN$, C$, IPC$ inaccessible to guest"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "guest/null",
+      "principal_type": "SMB network principal",
+      "operational_role": "limited share reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "read Share and Users; denied ADMIN$/C$/IPC$",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "haris",
+      "principal_type": "local user",
+      "operational_role": "workstation user/profile owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "ordinary local access; bypassed",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "SMB service/kernel authority",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "guest/null",
+      "permission_or_action": "read/list",
+      "object": "C3 Share and C4 Users",
+      "condition_or_scope": "SMB guest access",
+      "security_consequence": "Information disclosure; not required for exploit",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "send crafted SMBv1 packets",
+      "object": "C2 SMB server",
+      "condition_or_scope": "MS17-010 missing",
+      "security_consequence": "Kernel-level execution as SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Share and Users shares",
+      "hosted_on": "C2",
+      "purpose": "published file namespaces",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "guest",
+      "write_or_execute_access": "SYSTEM",
+      "security_significance": "Guest-readable only",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "ADMIN$, C$, IPC$",
+      "hosted_on": "C2",
+      "purpose": "administrative shares",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "denied to guest",
+      "write_or_execute_access": "SYSTEM/admin",
+      "security_significance": "Privilege boundary remains until exploit",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "Windows 7 SP1 SMBv1",
+      "issue": "EternalBlue-class SMBv1 RCE",
+      "preconditions": "TCP 445 reachable; unpatched host",
+      "vulnerable_behavior": "Crafted transaction corrupts kernel memory",
+      "resulting_access": "NT AUTHORITY\\SYSTEM",
+      "reference": "MS17-010 / CVE-2017-0144 family",
+      "failed_control": "Legacy protocol exposed without security update",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "exploit SMBv1",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "TCP 445 and vulnerable build",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "network → kernel/system",
+      "evidence": "Explicit"
+    }
+  ]
+}

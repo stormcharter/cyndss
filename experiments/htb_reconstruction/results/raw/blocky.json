@@ -1,0 +1,284 @@
+{
+  "machine": "Blocky",
+  "split": "train",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 62,
+    "graph_edges": 547,
+    "entry_concepts": [
+      "apache",
+      "blocky",
+      "host",
+      "java",
+      "openssh",
+      "plugin",
+      "wordpress"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "blocky:host:0",
+        "title": "Blocky",
+        "summary": "Ubuntu Linux WordPress/Apache host with exposed Java plugin JAR and sudo",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:component:H1",
+        "title": "Blocky host",
+        "summary": "Host OS/security boundary 10.10.10.37 Ubuntu Linux root VPN reachable Standalone Minecraft-themed host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH root daemon Public Used after credential disclosure Blocky host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp Apache 2.4.x + PHP www-data Public WordPress and plugin directory Blocky host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:component:C3",
+        "title": "WordPress",
+        "summary": "Application CMS / WordPress www-data Public User notch named in site and source Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:component:C4",
+        "title": "Java plugin JAR",
+        "summary": "Artifact Application credential artifact /plugins/*.jar custom Java plugin notch Public directory listing Hard-coded database password Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:component:C5",
+        "title": "sudo policy",
+        "summary": "Authorization Local authorization /etc/sudoers sudo root Local notch may run ALL without password Blocky host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:permission:0",
+        "title": "remote client C2/C4",
+        "summary": "read directory/JAR C2/C4 /plugins exposed database credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:permission:1",
+        "title": "remote client OpenSSH",
+        "summary": "authenticate SSH OpenSSH credential reused by notch notch shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:permission:2",
+        "title": "notch sudo policy",
+        "summary": "sudo execute sudo policy NOPASSWD ALL root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:vulnerability:V1",
+        "title": "Hard-coded credential disclosure Java plugin JAR",
+        "summary": "Java plugin JAR custom Java plugin Directory listing/public JAR Decompiler reveals password reused for OS account notch Credentials embedded in deployable artifact",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blocky:vulnerability:V2",
+        "title": "User has unrestricted NOPASSWD sudo sudo policy",
+        "summary": "sudo policy sudo policy notch authentication sudo accepts arbitrary command root No command/target restriction",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential",
+        "notch"
+      ],
+      [
+        "notch",
+        "openssh"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "policy",
+        "root"
+      ],
+      [
+        "nopasswd",
+        "root"
+      ],
+      [
+        "sudo",
+        "root"
+      ],
+      [
+        "authenticate",
+        "shell",
+        "root"
+      ],
+      [
+        "account",
+        "disclosure",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "blocky",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "blocky",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "wordpress",
+        "blocky",
+        "root"
+      ],
+      [
+        "java",
+        "sudo",
+        "root"
+      ],
+      [
+        "apache",
+        "blocky",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "blocky",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "wordpress",
+        "blocky",
+        "root"
+      ],
+      [
+        "java",
+        "sudo",
+        "root"
+      ],
+      [
+        "apache",
+        "blocky",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "java",
+        "plugin",
+        "application",
+        "credential",
+        "artifact",
+        "custom",
+        "hard-coded",
+        "disclosure",
+        "notch",
+        "sudo",
+        "policy",
+        "local",
+        "authorization",
+        "unrestricted",
+        "nopasswd",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "notch",
+        "sudo",
+        "policy",
+        "local",
+        "authorization",
+        "unrestricted",
+        "nopasswd",
+        "root"
+      ],
+      [
+        "java",
+        "plugin",
+        "application",
+        "credential",
+        "artifact",
+        "custom",
+        "notch",
+        "sudo",
+        "policy",
+        "local",
+        "authorization",
+        "unrestricted",
+        "nopasswd",
+        "root"
+      ],
+      [
+        "java",
+        "plugin",
+        "application",
+        "credential",
+        "artifact",
+        "custom",
+        "hard-coded",
+        "disclosure",
+        "notch",
+        "sudo",
+        "policy",
+        "local",
+        "authorization",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "notch",
+        "sudo",
+        "policy",
+        "local",
+        "authorization",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

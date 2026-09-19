@@ -1,0 +1,167 @@
+{
+  "machine": "Chatterbox",
+  "split": "train",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 69,
+    "graph_edges": 606,
+    "entry_concepts": [
+      "chatterbox",
+      "host"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "chatterbox:host:0",
+        "title": "Chatterbox",
+        "summary": "Windows 7 SP1 x64-era standalone host AChat service and permissive Administrator desktop ACL",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:component:H1",
+        "title": "Chatterbox host",
+        "summary": "Host OS/security boundary 10.10.10.74 Windows 7 SP1 build 6.1.7601 SYSTEM VPN reachable AChat ports are nonstandard",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:component:C1",
+        "title": "AChat",
+        "summary": "Service Chat service 9255,9256/tcp/udp AChat beta v0.150 Alfred user context Network reachable SEH stack overflow in message handling Chatterbox host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:component:C2",
+        "title": "PowerShell shell",
+        "summary": "Application AChat payload process AChat message protocol PowerShell Alfred Indirect Exploit shell migrates out of crashing AChat process AChat",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:component:C3",
+        "title": "Administrator Desktop ACL",
+        "summary": "Authorization File authorization C:\\Users\\Administrator\\Desktop NTFS Alfred/Administrator Local Alfred has full control on directory but root.txt ACL is restrictive Chatterbox host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:permission:0",
+        "title": "remote chat client AChat",
+        "summary": "send oversized message AChat AChat ports reachable memory corruption and Alfred shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:permission:1",
+        "title": "AChat PowerShell shell",
+        "summary": "spawn PowerShell payload PowerShell shell SEH exploit Alfred code execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:permission:2",
+        "title": "Alfred Administrator Desktop ACL",
+        "summary": "change root.txt ACL Administrator Desktop ACL directory grants full control read Administrator root flag",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:permission:3",
+        "title": "Administrator Administrator Desktop ACL",
+        "summary": "own root.txt Administrator Desktop ACL file ACL can be changed by Alfred root flag disclosure",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:vulnerability:V1",
+        "title": "SEH stack buffer overflow AChat",
+        "summary": "AChat AChat beta v0.150 AChat service reachable Oversized message overwrites handler state Alfred shell No bounds checking",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "chatterbox:vulnerability:V2",
+        "title": "Alfred has full control of Administrator Desktop directory Administrator Desktop ACL",
+        "summary": "Administrator Desktop ACL NTFS ACL Alfred local shell Directory permission lets Alfred grant read/full control on root.txt root flag disclosure Parent directory ACL too broad",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "read",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "alfred",
+        "shell"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "control",
+        "read"
+      ],
+      [
+        "directory",
+        "read"
+      ],
+      [
+        "flag",
+        "read"
+      ],
+      [
+        "broad",
+        "read"
+      ],
+      [
+        "change",
+        "read"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "chatterbox",
+        "local",
+        "read"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "chatterbox",
+        "local",
+        "read"
+      ],
+      [
+        "host",
+        "local",
+        "read"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "chatterbox",
+        "local",
+        "read"
+      ],
+      [
+        "host",
+        "local",
+        "read"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 2,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 2,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "machine": "Luanne",
+  "split": "validation",
+  "input": {
+    "documents": 17,
+    "graph_nodes": 79,
+    "graph_edges": 694,
+    "entry_concepts": [
+      "host",
+      "httpd",
+      "luanne",
+      "medusa",
+      "openssh",
+      "supervisor"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "luanne:host:0",
+        "title": "Luanne",
+        "summary": "NetBSD Supervisor leak, Lua API command injection, SSH key and doas",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:H1",
+        "title": "Luanne host",
+        "summary": "Host OS/security boundary 10.10.10.218 NetBSD 9-era root VPN reachable Standalone BSD host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH 8.0 NetBSD root daemon Public jimmy SSH login Luanne host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:C2",
+        "title": "Medusa/httpd",
+        "summary": "Service Web front end 80/tcp NetBSD httpd/Medusa www Public Lua-backed web API Luanne host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:C3",
+        "title": "Supervisor",
+        "summary": "Service Process manager 9001/tcp Supervisor root Public/basic auth Process list reveals localhost web app Luanne host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:C4",
+        "title": "Lua web API",
+        "summary": "Application Command endpoint localhost/webapi Lua www Local/public via C2 Query concatenated into shell command Medusa/httpd",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:C5",
+        "title": "localhost status site",
+        "summary": "Application Basic-auth web app 127.0.0.1:3000-ish httpd jimmy Local Contains SSH key/htpasswd Luanne host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:C6",
+        "title": "doas",
+        "summary": "Authorization BSD authorization /etc/doas.conf doas root Local jimmy may run arbitrary commands as root Luanne host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:component:C7",
+        "title": "encrypted backup",
+        "summary": "Artifact PGP artifact /home/jimmy/backups netpgp/PGP jimmy Local Contains doas password Luanne host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:permission:0",
+        "title": "anonymous Supervisor",
+        "summary": "read Supervisor process list Supervisor default/basic auth exposed localhost app path",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:permission:1",
+        "title": "remote client Lua web API",
+        "summary": "inject Lua API command Lua web API API path discovered www shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:permission:2",
+        "title": "www localhost status site",
+        "summary": "read htpasswd/SSH key localhost status site local web service jimmy credential/key",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:permission:3",
+        "title": "jimmy encrypted backup",
+        "summary": "decrypt backup encrypted backup PGP tooling/password clue doas password",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:permission:4",
+        "title": "jimmy doas",
+        "summary": "doas arbitrary command doas valid doas password root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:vulnerability:V1",
+        "title": "Default/basic-auth process disclosure Supervisor",
+        "summary": "Supervisor Supervisor 9001 public Supervisor reveals command lines and localhost endpoints web API path Management interface exposed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:vulnerability:V2",
+        "title": "Command injection Lua web API",
+        "summary": "Lua web API Lua API API reachable Lua concatenates query into shell command www shell No escaping/parameterization",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "luanne:vulnerability:V3",
+        "title": "Doas password recoverable from encrypted backup C6+C7",
+        "summary": "C6+C7 doas/PGP jimmy can read backup PGP key/password path decrypts credential root Root authorization secret stored with user data",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "path",
+        "supervisor"
+      ],
+      [
+        "jimmy",
+        "localhost",
+        "site",
+        "status"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "arbitrary",
+        "root"
+      ],
+      [
+        "authorization",
+        "root"
+      ],
+      [
+        "anonymous",
+        "auth",
+        "root"
+      ],
+      [
+        "client",
+        "remote",
+        "root"
+      ],
+      [
+        "concatenates",
+        "reachable",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "medusa",
+        "public",
+        "root"
+      ],
+      [
+        "httpd",
+        "host",
+        "root"
+      ],
+      [
+        "luanne",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "medusa",
+        "public",
+        "root"
+      ],
+      [
+        "httpd",
+        "host",
+        "root"
+      ],
+      [
+        "luanne",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "netbsd",
+        "root"
+      ],
+      [
+        "supervisor",
+        "process",
+        "manager",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

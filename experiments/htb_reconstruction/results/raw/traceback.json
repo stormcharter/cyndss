@@ -1,0 +1,286 @@
+{
+  "machine": "Traceback",
+  "split": "validation",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 73,
+    "graph_edges": 660,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "openssh",
+      "smevk",
+      "traceback",
+      "webshell"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "traceback:host:0",
+        "title": "Traceback",
+        "summary": "Ubuntu 18.04 Linux Apache planted webshell, Luvit sudo and root MOTD scripts",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:component:H1",
+        "title": "Traceback host",
+        "summary": "Host OS/security boundary 10.10.10.181 Ubuntu 18.04 Bionic; OpenSSH 7.6p1; Apache 2.4.29 root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH 7.6p1 root daemon Public SSH for webadmin Traceback host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:component:C2",
+        "title": "Apache",
+        "summary": "Service HTTP front end 80/tcp Apache 2.4.29 www-data Public Planted Smevk webshell exposed Traceback host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:component:C3",
+        "title": "Smevk webshell",
+        "summary": "Application PHP command bridge /smevk.php PHP webadmin Public Backdoor left by prior actor Apache",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:component:C4",
+        "title": "Luvit",
+        "summary": "Binary Lua interpreter /home/sysadmin/luvit Luvit sysadmin Local webadmin sudo may execute arbitrary Lua Traceback host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:component:C5",
+        "title": "MOTD scripts",
+        "summary": "Scheduled task Login-time root hooks /etc/update-motd.d shell scripts root Local webadmin can write scripts executed at SSH login Traceback host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:permission:0",
+        "title": "remote client C2/C3",
+        "summary": "invoke planted webshell C2/C3 HTTP public webadmin command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:permission:1",
+        "title": "webadmin Luvit",
+        "summary": "sudo run Luvit Luvit sudo rule sysadmin shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:permission:2",
+        "title": "webadmin/sysadmin MOTD scripts",
+        "summary": "write MOTD script MOTD scripts directory write permission root code executes at SSH login",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:permission:3",
+        "title": "root MOTD scripts",
+        "summary": "run MOTD MOTD scripts login event root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:vulnerability:V1",
+        "title": "Unauthenticated planted backdoor Smevk webshell",
+        "summary": "Smevk webshell Smevk PHP webshell HTTP public Page executes supplied commands webadmin Unremoved webshell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:vulnerability:V2",
+        "title": "Sudo permits arbitrary Lua interpreter as sysadmin Luvit",
+        "summary": "Luvit Luvit webadmin shell Lua can spawn commands as target user sysadmin Interpreter treated as safe command",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "traceback:vulnerability:V3",
+        "title": "Writable login-time root scripts MOTD scripts",
+        "summary": "MOTD scripts update-motd.d webadmin/sysadmin shell Root runs script on SSH login root MOTD directory ACL too broad",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "webadmin"
+      ],
+      [
+        "luvit",
+        "sysadmin"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "motd",
+        "root"
+      ],
+      [
+        "scripts",
+        "root"
+      ],
+      [
+        "login",
+        "root"
+      ],
+      [
+        "client",
+        "remote",
+        "root"
+      ],
+      [
+        "execution",
+        "remote",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "webshell",
+        "linux",
+        "root"
+      ],
+      [
+        "traceback",
+        "root"
+      ],
+      [
+        "smevk",
+        "apache",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "webshell",
+        "linux",
+        "root"
+      ],
+      [
+        "traceback",
+        "root"
+      ],
+      [
+        "smevk",
+        "apache",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "smevk",
+        "webshell",
+        "command",
+        "bridge",
+        "unauthenticated",
+        "planted",
+        "backdoor",
+        "webadmin",
+        "motd",
+        "scripts",
+        "login-time",
+        "root",
+        "hooks",
+        "shell",
+        "writable",
+        "update-motd"
+      ],
+      [
+        "smevk",
+        "webshell",
+        "command",
+        "bridge",
+        "webadmin",
+        "motd",
+        "scripts",
+        "login-time",
+        "root",
+        "hooks",
+        "shell",
+        "writable",
+        "update-motd"
+      ],
+      [
+        "smevk",
+        "webshell",
+        "command",
+        "bridge",
+        "unauthenticated",
+        "planted",
+        "backdoor",
+        "webadmin",
+        "motd",
+        "scripts",
+        "login-time",
+        "root",
+        "hooks",
+        "shell"
+      ],
+      [
+        "smevk",
+        "webshell",
+        "command",
+        "bridge",
+        "webadmin",
+        "motd",
+        "scripts",
+        "login-time",
+        "root",
+        "hooks",
+        "shell"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

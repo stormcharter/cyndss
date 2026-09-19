@@ -1,0 +1,275 @@
+{
+  "machine": "Postman",
+  "split": "train",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 67,
+    "graph_edges": 577,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "openssh",
+      "postman",
+      "redis",
+      "webmin"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "postman:host:0",
+        "title": "Postman",
+        "summary": "Ubuntu Linux Redis service plus Webmin administration panel",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:component:H1",
+        "title": "Postman host",
+        "summary": "Host OS/security boundary 10.10.10.160 Ubuntu Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH root daemon Public Redis key injection creates redis shell Postman host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:component:C2",
+        "title": "Apache",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp Apache www-data Public Web content/credential clues Postman host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:component:C3",
+        "title": "Redis",
+        "summary": "Database In-memory database 0.0.0.0:6379/tcp Redis redis Public; no auth CONFIG can write SSH authorized_keys Postman host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:component:C4",
+        "title": "Webmin",
+        "summary": "Application System administration UI 0.0.0.0:10000/tcp Webmin 1.890 root Public HTTPS Authenticated command execution/RCE Postman host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:permission:0",
+        "title": "remote unauthenticated client Redis",
+        "summary": "write Redis config/key Redis Redis unauthenticated on 6379 redis SSH key login",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:permission:1",
+        "title": "redis /var/lib/redis/.ssh/authorized_keys",
+        "summary": "write /var/lib/redis/.ssh/authorized_keys CONFIG and filesystem rights redis shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:permission:2",
+        "title": "redis/Matt Webmin",
+        "summary": "authenticate Webmin Webmin credential reuse/weak secret root command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:permission:3",
+        "title": "Webmin Webmin",
+        "summary": "execute command Webmin Webmin 1.890 exploit root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:vulnerability:V1",
+        "title": "Unauthenticated CONFIG/authorized_keys write Redis",
+        "summary": "Redis Redis no-auth 6379 public and no password CONFIG SET dir/dbfilename writes attacker key redis shell Database exposed without authentication",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "postman:vulnerability:V2",
+        "title": "Authenticated remote command execution Webmin",
+        "summary": "Webmin Webmin 1.890 Webmin reachable and credential recovered Crafted request executes command as root root Outdated admin panel and exposed port",
+        "verified_cve_ids": "CVE-2019-12840"
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "redis"
+      ],
+      [
+        "matt",
+        "path",
+        "root"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2019-12840",
+        "root"
+      ],
+      [
+        "exposed",
+        "CVE-2019-12840",
+        "root"
+      ],
+      [
+        "panel",
+        "CVE-2019-12840",
+        "root"
+      ],
+      [
+        "attacker",
+        "exposed",
+        "CVE-2019-12840",
+        "root"
+      ],
+      [
+        "authentication",
+        "exposed",
+        "CVE-2019-12840",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "webmin",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "webmin",
+        "root"
+      ],
+      [
+        "apache",
+        "credential",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "postman",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "webmin",
+        "root"
+      ],
+      [
+        "apache",
+        "credential",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "postman",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "redis",
+        "in-memory",
+        "database",
+        "unauthenticated",
+        "config",
+        "authorized",
+        "keys",
+        "write",
+        "no-auth",
+        "webmin",
+        "system",
+        "administration",
+        "authenticated",
+        "remote",
+        "command",
+        "execution",
+        "root"
+      ],
+      [
+        "webmin",
+        "system",
+        "administration",
+        "authenticated",
+        "remote",
+        "command",
+        "execution",
+        "root"
+      ],
+      [
+        "redis",
+        "in-memory",
+        "database",
+        "webmin",
+        "system",
+        "administration",
+        "authenticated",
+        "remote",
+        "command",
+        "execution",
+        "root"
+      ],
+      [
+        "redis",
+        "in-memory",
+        "database",
+        "unauthenticated",
+        "config",
+        "authorized",
+        "keys",
+        "write",
+        "no-auth",
+        "webmin",
+        "system",
+        "administration",
+        "root"
+      ],
+      [
+        "redis",
+        "in-memory",
+        "database",
+        "webmin",
+        "system",
+        "administration",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.5,
+    "a_ordered": 0.5,
+    "a_precision": 0.5,
+    "a_coverage_topk": 0.5,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.5,
+    "b_ordered": 0.5,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.5,
+    "c_ordered": 0.5,
+    "c_precision": 0.5,
+    "c_coverage_topk": 0.5
+  }
+}

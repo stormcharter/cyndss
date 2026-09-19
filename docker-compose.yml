@@ -1,0 +1,75 @@
+# УВАГА: усі порти прокинуті ЛИШЕ на 127.0.0.1 (як у docker-compose.server.yml).
+# Mongo/Manticore/Ollama тут без автентифікації — назовні їх світити не можна.
+# Хостові клієнти (ui.py -> 127.0.0.1:9999, колектори -> 127.0.0.1:27017) не
+# зачеплені; трафік між контейнерами йде докерівською мережею і теж не зачеплений.
+services:
+  mongo:
+    image: mongo:7
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try {
+            if (rs.status().ok) { quit(0); }
+          } catch(e) {
+            if (rs.initiate({_id:'rs0', members:[{_id:0, host:'mongo:27017'}]}).ok) { quit(0); }
+          }
+          quit(1);
+        "
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  manticore:
+    image: manticoresearch/manticore:latest
+    ports:
+      - "127.0.0.1:9998:9308"  # HTTP API
+      - "127.0.0.1:9999:9306"  # MySQL-протокол (для налагодження через mysql cli)
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - manticore-data:/var/lib/manticore
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+  shipper:
+    build: .
+    depends_on:
+      mongo:
+        condition: service_healthy
+      manticore:
+        condition: service_started
+      ollama:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  manticore-data:
+  ollama-data:

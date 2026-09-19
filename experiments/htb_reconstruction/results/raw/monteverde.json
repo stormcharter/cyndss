@@ -1,0 +1,222 @@
+{
+  "machine": "Monteverde",
+  "split": "train",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 78,
+    "graph_edges": 746,
+    "entry_concepts": [
+      "monteverde",
+      "server",
+      "stack"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "monteverde:host:0",
+        "title": "Monteverde",
+        "summary": "Windows Server 2008 R2 Active Directory MEGABANK.LOCAL DC with Azure AD Connect credential store",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:component:H1",
+        "title": "Monteverde DC",
+        "summary": "Host OS/domain boundary 10.10.10.172 Windows Server 2008 R2 Standard 6.1.7601 SYSTEM/Domain Admins VPN reachable MEGABANK.LOCAL",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:component:C1",
+        "title": "AD DS stack",
+        "summary": "Service stack DNS/Kerberos/LDAP/GC/RPC 53,88,389,636,3268,3269,135/high RPC Active Directory SYSTEM Public/authenticated Single DC and SMB Monteverde DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:component:C2",
+        "title": "SMB server",
+        "summary": "Service Domain shares 139,445/tcp Windows SMB SYSTEM Public Users$, mhope and service shares Monteverde DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:component:C3",
+        "title": "SABatchJobs",
+        "summary": "Identity Domain service account MEGABANK\\SABatchJobs AD account domain user SMB authentication Password reused as account secret AD DS stack",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:component:C4",
+        "title": "Azure AD Connect",
+        "summary": "Service Directory synchronization C:\\Program Files\\Microsoft Azure AD Sync Azure AD Connect SYSTEM/service account Local Local DB stores sync credential Monteverde DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:component:C5",
+        "title": "ADSync database",
+        "summary": "Database Credential store Local SQL/ADSync DB Azure AD Connect DB SYSTEM Local/authenticated Decryptable sync account password Azure AD Connect",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:permission:0",
+        "title": "remote client C2/C3",
+        "summary": "authenticate SMB C2/C3 SABatchJobs secret guessed/reused read Users$/mhope data",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:permission:1",
+        "title": "SABatchJobs C2 mhope/azure.xml",
+        "summary": "read C2 mhope/azure.xml share ACL Azure sync configuration disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:permission:2",
+        "title": "mhope C4/C5",
+        "summary": "read/decrypt C4/C5 local Azure AD Connect access sync account credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:permission:3",
+        "title": "sync account AD DS stack",
+        "summary": "replicate/control AD DS stack privileged Azure/AD rights Administrator material",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:vulnerability:V1",
+        "title": "Password reuse/weak service secret C2+C3",
+        "summary": "C2+C3 SMB/domain accounts SMB reachable; user names known SABatchJobs password is guessable/reused SABatchJobs SMB session Service password not unique",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:vulnerability:V2",
+        "title": "Sync credential decryptable by local user C4+C5",
+        "summary": "C4+C5 Azure AD Connect mhope can read configuration/DB Credential is recoverable from local sync database privileged domain credential Database ACL and encryption key accessible",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "monteverde:vulnerability:V3",
+        "title": "Sync account over-privileged AD DS stack",
+        "summary": "AD DS stack AD DS Recovered sync credentials Replication/administrative rights expose domain secrets Administrator/domain control Service account tiering failure",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "administrator",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "mhope"
+      ],
+      [
+        "artifact",
+        "mhope",
+        "server",
+        "sync"
+      ],
+      [
+        "account",
+        "sync"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "control",
+        "administrator"
+      ],
+      [
+        "rights",
+        "administrator"
+      ],
+      [
+        "administrative",
+        "administrator"
+      ],
+      [
+        "credentials",
+        "administrator"
+      ],
+      [
+        "expose",
+        "administrator"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "stack",
+        "administrator"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "stack",
+        "administrator"
+      ],
+      [
+        "monteverde",
+        "stack",
+        "administrator"
+      ],
+      [
+        "server",
+        "domain",
+        "administrator"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "stack",
+        "administrator"
+      ],
+      [
+        "monteverde",
+        "stack",
+        "administrator"
+      ],
+      [
+        "server",
+        "domain",
+        "administrator"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "stack",
+        "kerberos",
+        "ldap",
+        "active",
+        "directory",
+        "sync",
+        "account",
+        "over-privileged",
+        "administrator"
+      ],
+      [
+        "stack",
+        "kerberos",
+        "ldap",
+        "active",
+        "directory",
+        "administrator"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 3,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

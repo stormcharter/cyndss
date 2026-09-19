@@ -1,0 +1,207 @@
+{
+  "machine": "Sauna",
+  "split": "demo",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 96,
+    "graph_edges": 1022,
+    "entry_concepts": [
+      "core",
+      "microsoft",
+      "sauna",
+      "winrm"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "sauna:host:0",
+        "title": "Sauna",
+        "summary": "Windows Server 2019 Active Directory DC EGOTISTICAL-BANK.LOCAL DC plus corporate web app",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:component:H1",
+        "title": "Sauna DC",
+        "summary": "Domain controller Domain/OS boundary 10.10.10.175 Windows Server 2019 SYSTEM/Domain Admins VPN reachable EGOTISTICAL-BANK.LOCAL",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:component:C1",
+        "title": "AD DS core",
+        "summary": "Service stack DNS/Kerberos/LDAP/GC 53,88,389/636,3268/3269 AD DS SYSTEM Public SMB/RPC exposed Sauna DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:component:C2",
+        "title": "Microsoft IIS",
+        "summary": "Service Corporate website 0.0.0.0:80/tcp IIS 10.0 web app pool Public Employee names published Sauna DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:component:C3",
+        "title": "WinRM",
+        "summary": "Service Remote PowerShell 5985/tcp WinRM authenticated users Public/authenticated FSmith can connect Sauna DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:component:C4",
+        "title": "Winlogon AutoLogon values",
+        "summary": "Registry artifact Automatic interactive logon HKLM\\...\\Winlogon Windows registry SYSTEM Local/authenticated read Stores svc_loanmanager plaintext credential; account used as svc_loanmgr Sauna DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:component:C5",
+        "title": "Domain replication rights",
+        "summary": "Directory ACL DCSync control plane domain root AD DS svc_loanmgr Directory GetChanges + GetChangesAll AD DS core",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:permission:0",
+        "title": "anonymous Microsoft IIS",
+        "summary": "read employee names Microsoft IIS public website Candidate account names generated",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:permission:1",
+        "title": "unauthenticated Kerberos client FSmith",
+        "summary": "request AS-REP FSmith DONT_REQ_PREAUTH Offline crack material",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:permission:2",
+        "title": "FSmith C4 AutoLogon values",
+        "summary": "read C4 AutoLogon values local WinRM session/registry access svc_loanmgr plaintext credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:permission:3",
+        "title": "svc_loanmgr C5/domain root",
+        "summary": "DCSync C5/domain root replication ACLs Administrator secret",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:vulnerability:V1",
+        "title": "Preauthentication disabled plus weak password AD DS core",
+        "summary": "AD DS core Kerberos account FSmith Username inferred from public names AS-REP can be cracked offline FSmith credential DONT_REQ_PREAUTH and weak secret",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:vulnerability:V2",
+        "title": "Plaintext service credential in registry Winlogon AutoLogon values",
+        "summary": "Winlogon AutoLogon values Windows AutoLogon FSmith local session Registry exposes reusable svc_loanmgr secret Lateral service account Credential stored in reversible/plain form",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sauna:vulnerability:V3",
+        "title": "Service account has replication rights Domain replication rights",
+        "summary": "Domain replication rights AD domain ACL svc_loanmgr authentication Directory replication returns privileged hashes Administrator/domain compromise GetChanges + GetChangesAll delegated excessively",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "secret",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "fsmith"
+      ],
+      [
+        "credential",
+        "loanmgr"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "acls",
+        "secret"
+      ],
+      [
+        "cracked",
+        "secret"
+      ],
+      [
+        "disabled",
+        "secret"
+      ],
+      [
+        "exposes",
+        "secret"
+      ],
+      [
+        "form",
+        "secret"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "core",
+        "secret"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "microsoft",
+        "names",
+        "secret"
+      ],
+      [
+        "winrm",
+        "fsmith",
+        "secret"
+      ],
+      [
+        "sauna",
+        "windows",
+        "secret"
+      ],
+      [
+        "core",
+        "secret"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "microsoft",
+        "names",
+        "secret"
+      ],
+      [
+        "winrm",
+        "fsmith",
+        "secret"
+      ],
+      [
+        "sauna",
+        "windows",
+        "secret"
+      ],
+      [
+        "core",
+        "secret"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.5
+  }
+}

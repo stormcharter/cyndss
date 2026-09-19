@@ -1,0 +1,210 @@
+{
+  "machine": "Sense",
+  "split": "demo",
+  "input": {
+    "documents": 10,
+    "graph_nodes": 73,
+    "graph_edges": 652,
+    "entry_concepts": [
+      "firewall",
+      "lighttpd",
+      "pfsense",
+      "sense",
+      "system-users",
+      "webconfigurator"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "sense:host:0",
+        "title": "Sense",
+        "summary": "FreeBSD pfSense appliance Firewall management appliance",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:component:H1",
+        "title": "Sense firewall",
+        "summary": "Appliance OS/appliance boundary 10.10.10.60 FreeBSD / pfSense root VPN reachable Management plane is the challenge surface",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:component:C1",
+        "title": "lighttpd HTTP",
+        "summary": "Service Redirect to TLS management 0.0.0.0:80/tcp lighttpd root/web Public Redirect only Sense firewall",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:component:C2",
+        "title": "pfSense WebConfigurator",
+        "summary": "Application Firewall administration GUI 0.0.0.0:443/tcp pfSense 2.1.3-RELEASE root Public login Authenticated PHP actions run privileged Sense firewall",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:component:C3",
+        "title": "status_rrd_graph_img.php",
+        "summary": "Application endpoint RRD graph generation HTTPS status graph path pfSense 2.1.3 root Authenticated Command injection endpoint pfSense WebConfigurator",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:component:C4",
+        "title": "system-users.txt",
+        "summary": "Static artifact Support-ticket text /system-users.txt text file web server Public Discloses username/password policy clue pfSense WebConfigurator",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:permission:0",
+        "title": "anonymous C4 system-users.txt",
+        "summary": "read C4 system-users.txt public HTTPS Rohit username and default-password clue",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:permission:1",
+        "title": "Rohit status_rrd_graph_img.php",
+        "summary": "invoke graph function status_rrd_graph_img.php authenticated GUI session command processed by root PHP context",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:vulnerability:V1",
+        "title": "Public operational note + unchanged default-derived credential C4/C2",
+        "summary": "C4/C2 pfSense 2.1.3 Public file readable Attacker derives valid admin login Rohit/pfSense admin Sensitive support data and weak password practice",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sense:vulnerability:V2",
+        "title": "Authenticated graph command injection status_rrd_graph_img.php",
+        "summary": "status_rrd_graph_img.php pfSense 2.1.3 Valid WebConfigurator session Unsanitized graph parameter reaches shell root code execution Root web back end executes untrusted data",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "rohit"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "authenticated",
+        "root"
+      ],
+      [
+        "command",
+        "root"
+      ],
+      [
+        "graph",
+        "root"
+      ],
+      [
+        "status",
+        "root"
+      ],
+      [
+        "application",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "lighttpd",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "lighttpd",
+        "root"
+      ],
+      [
+        "firewall",
+        "root"
+      ],
+      [
+        "sense",
+        "root"
+      ],
+      [
+        "webconfigurator",
+        "root"
+      ],
+      [
+        "system-users",
+        "webconfigurator",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "lighttpd",
+        "root"
+      ],
+      [
+        "firewall",
+        "root"
+      ],
+      [
+        "sense",
+        "root"
+      ],
+      [
+        "webconfigurator",
+        "root"
+      ],
+      [
+        "system-users",
+        "webconfigurator",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "lighttpd",
+        "redirect",
+        "management",
+        "root"
+      ],
+      [
+        "pfsense",
+        "webconfigurator",
+        "firewall",
+        "administration",
+        "release",
+        "root"
+      ],
+      [
+        "sense",
+        "firewall",
+        "appliance",
+        "boundary",
+        "freebsd",
+        "pfsense",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

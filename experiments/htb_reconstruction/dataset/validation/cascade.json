@@ -1,0 +1,336 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Cascade",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/07/25/htb-cascade.html",
+    "title": "HTB Cascade writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Active Directory host",
+    "deployment_role": "LDAP/RPC/SMB credential recovery, TightVNC and deleted-object ACL"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Cascade DC",
+      "role": "OS/domain boundary",
+      "binding_or_path": "10.10.10.182",
+      "software_or_version": "Windows Active Directory",
+      "runs_as": "SYSTEM/Domain Admins",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "CASC-DC1 domain controller"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service stack",
+      "name": "LDAP/RPC",
+      "role": "Directory enumeration",
+      "binding_or_path": "389/636,135/high RPC",
+      "software_or_version": "AD DS/RPC",
+      "runs_as": "SYSTEM",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "User descriptions and deleted objects readable"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB",
+      "role": "Domain shares",
+      "binding_or_path": "139,445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Audit$, Data, IT shares"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "TightVNC",
+      "role": "Remote desktop service",
+      "binding_or_path": "5900/tcp/config",
+      "software_or_version": "TightVNC",
+      "runs_as": "s.smith",
+      "exposure": "Local/SMB config",
+      "evidence": "Explicit",
+      "analysis_note": "Password stored in reversible form"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Database",
+      "name": "Audit.db",
+      "role": "SQLite audit database",
+      "binding_or_path": "Audit$\\DB\\Audit.db",
+      "software_or_version": "SQLite",
+      "runs_as": "ArkSvc",
+      "exposure": "SMB read",
+      "evidence": "Explicit",
+      "analysis_note": "CascAudit reads account data"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C2",
+      "layer_or_type": "Binary",
+      "name": "CascAudit.exe",
+      "role": ".NET audit parser",
+      "binding_or_path": "Audit$\\CascAudit.exe",
+      "software_or_version": ".NET/PE32",
+      "runs_as": "ArkSvc",
+      "exposure": "SMB read/execute",
+      "evidence": "Explicit",
+      "analysis_note": "Decrypts service password from DB"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "C1",
+      "layer_or_type": "Directory",
+      "name": "AD Recycle Bin",
+      "role": "Deleted directory objects",
+      "binding_or_path": "LDAP deleted objects",
+      "software_or_version": "Active Directory",
+      "runs_as": "Domain Admins",
+      "exposure": "Authenticated query",
+      "evidence": "Explicit",
+      "analysis_note": "TempAdmin object retains usable password"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "s.smith",
+      "principal_type": "domain user",
+      "operational_role": "initial authenticated user",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "LDAP/SMB after credential from description",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "ArkSvc",
+      "principal_type": "domain service account",
+      "operational_role": "audit task/service",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "runs CascAudit; password recovered",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "TempAdmin",
+      "principal_type": "deleted domain user",
+      "operational_role": "temporary administrator",
+      "groups_or_nesting": "Domain Admins (historical)",
+      "authentication_or_effective_access": "deleted object retains credential material",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "domain administrator",
+      "operational_role": "final principal",
+      "groups_or_nesting": "Domain Admins",
+      "authentication_or_effective_access": "password reused by main admin",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "DC authority",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous/low-priv LDAP",
+      "permission_or_action": "read",
+      "object": "C1 user descriptions",
+      "condition_or_scope": "directory-readable",
+      "security_consequence": "s.smith credential clue",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "s.smith",
+      "permission_or_action": "read",
+      "object": "C2 TightVNC config",
+      "condition_or_scope": "SMB ACL",
+      "security_consequence": "VNC password for service user",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "ArkSvc",
+      "permission_or_action": "read/execute",
+      "object": "C4/C5 Audit.db/CascAudit",
+      "condition_or_scope": "Audit share ACL",
+      "security_consequence": "decrypts password",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "ArkSvc",
+      "permission_or_action": "query deleted objects",
+      "object": "C6",
+      "condition_or_scope": "AD Recycle Bin readable",
+      "security_consequence": "TempAdmin secret",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "TempAdmin",
+      "permission_or_action": "authenticate",
+      "object": "H1/C2",
+      "condition_or_scope": "password reused by Administrator",
+      "security_consequence": "domain admin",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "LDAP user description",
+      "hosted_on": "C1",
+      "purpose": "credential hint",
+      "owner_or_authority": "AD user",
+      "read_access": "low-priv read",
+      "write_or_execute_access": "directory admins write",
+      "security_significance": "Identity-to-auth bridge",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "TightVNC registry/config",
+      "hosted_on": "C3/C2",
+      "purpose": "remote desktop password",
+      "owner_or_authority": "s.smith",
+      "read_access": "SMB read",
+      "write_or_execute_access": "VNC service writes",
+      "security_significance": "Reversible secret",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Audit.db",
+      "hosted_on": "C4",
+      "purpose": "service credential database",
+      "owner_or_authority": "ArkSvc",
+      "read_access": "s.smith read",
+      "write_or_execute_access": "audit service writes",
+      "security_significance": "Decryptor input",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "CascAudit.exe",
+      "hosted_on": "C5",
+      "purpose": "DB password decryptor",
+      "owner_or_authority": "ArkSvc/developer",
+      "read_access": "SMB read",
+      "write_or_execute_access": "audit admins write",
+      "security_significance": "Executable contains key/algorithm",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "deleted TempAdmin object",
+      "hosted_on": "C6",
+      "purpose": "historical admin account",
+      "owner_or_authority": "AD Recycle Bin",
+      "read_access": "ArkSvc query",
+      "write_or_execute_access": "AD admins manage",
+      "security_significance": "Deleted does not mean secret revoked",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "AD LDAP",
+      "issue": "Credential in readable user description",
+      "preconditions": "LDAP query allowed",
+      "vulnerable_behavior": "Low-priv user reads secret clue",
+      "resulting_access": "s.smith",
+      "reference": "Information disclosure",
+      "failed_control": "Sensitive data in directory metadata",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3+C2",
+      "affected_version": "TightVNC",
+      "issue": "Reversible password stored in config",
+      "preconditions": "SMB access",
+      "vulnerable_behavior": "Config decrypts to service credential",
+      "resulting_access": "ArkSvc/s.smith",
+      "reference": "Credential storage weakness",
+      "failed_control": "VNC secret not protected",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5+C6",
+      "affected_version": "CascAudit/AD Recycle Bin",
+      "issue": "Decryptor and deleted admin object expose reusable admin password",
+      "preconditions": "ArkSvc access",
+      "vulnerable_behavior": ".NET decryptor plus deleted account data recovers password",
+      "resulting_access": "Administrator",
+      "reference": "Configuration/credential reuse",
+      "failed_control": "Deleted account and admin password not rotated",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "low-priv LDAP client",
+      "action": "read description and authenticate SMB",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "directory read",
+      "resulting_principal_or_access": "s.smith",
+      "boundary_crossed": "network → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "s.smith",
+      "action": "read VNC config",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "SMB access",
+      "resulting_principal_or_access": "ArkSvc credential",
+      "boundary_crossed": "user → service credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "ArkSvc",
+      "action": "run CascAudit/decrypt DB and query deleted objects",
+      "target_component_or_artifact": "C4-C6",
+      "prerequisite": "share/service access",
+      "resulting_principal_or_access": "TempAdmin/Admin password",
+      "boundary_crossed": "service → admin credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "TempAdmin credential",
+      "action": "authenticate as Administrator",
+      "target_component_or_artifact": "H1/C2",
+      "prerequisite": "password reuse",
+      "resulting_principal_or_access": "domain admin",
+      "boundary_crossed": "credential → domain admin",
+      "evidence": "Explicit"
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Active",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/12/08/htb-active.html",
+    "title": "HTB Active writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2008 R2 Active Directory DC",
+    "deployment_role": "Single-host active.htb domain controller"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Domain controller",
+      "name": "Active DC",
+      "role": "Domain/OS boundary",
+      "binding_or_path": "10.10.10.100",
+      "software_or_version": "Windows Server 2008 R2",
+      "runs_as": "SYSTEM/Domain Admins",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "active.htb forest/domain"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service stack",
+      "name": "AD DS core services",
+      "role": "Identity, DNS and directory",
+      "binding_or_path": "53 DNS; 88 Kerberos; 389/636 LDAP; 3268/3269 GC",
+      "software_or_version": "AD DS",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Single DC"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB Server",
+      "role": "Policy/file distribution",
+      "binding_or_path": "139,445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Anonymous access differs by share"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Share",
+      "name": "Replication",
+      "role": "GPO replica",
+      "binding_or_path": "\\ACTIVE\\Replication",
+      "software_or_version": "SMB share",
+      "runs_as": "SYSTEM/GPO editors",
+      "exposure": "Anonymous read",
+      "evidence": "Explicit",
+      "analysis_note": "Contains policy tree"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C3",
+      "layer_or_type": "Artifact",
+      "name": "Groups.xml",
+      "role": "Group Policy Preferences local-group config",
+      "binding_or_path": "...\\Policies\\{GUID}\\MACHINE\\Preferences\\Groups\\Groups.xml",
+      "software_or_version": "GPP XML",
+      "runs_as": "Domain/GPO admin",
+      "exposure": "Anonymous read",
+      "evidence": "Explicit",
+      "analysis_note": "Contains SVC_TGS cpassword"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C1",
+      "layer_or_type": "Protocol",
+      "name": "Kerberos TGS service",
+      "role": "Service-ticket issuance",
+      "binding_or_path": "88/tcp",
+      "software_or_version": "Kerberos",
+      "runs_as": "krbtgt/KDC",
+      "exposure": "Authenticated domain users",
+      "evidence": "Explicit",
+      "analysis_note": "Administrator owns active/CIFS:445 SPN"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "C2",
+      "layer_or_type": "Shares",
+      "name": "SYSVOL/NETLOGON/Users/admin shares",
+      "role": "Domain policy/logon/data/admin namespaces",
+      "binding_or_path": "SMB",
+      "software_or_version": "Windows shares",
+      "runs_as": "SYSTEM",
+      "exposure": "Mixed ACLs",
+      "evidence": "Explicit",
+      "analysis_note": "SVC_TGS can read domain shares; admin shares require admin"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "SMB guest",
+      "operational_role": "initial share reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "read Replication only",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "ACTIVE\\SVC_TGS",
+      "principal_type": "domain service user",
+      "operational_role": "service identity",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "read NETLOGON/Replication/SYSVOL/Users; request TGS",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "ACTIVE\\Administrator",
+      "principal_type": "domain administrator/service principal",
+      "operational_role": "Domain Admin and CIFS SPN owner",
+      "groups_or_nesting": "Domain Admins; Group Policy Creator Owners",
+      "authentication_or_effective_access": "full domain/DC control; Kerberoast target",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read/list",
+      "object": "C3 Replication",
+      "condition_or_scope": "share ACL",
+      "security_consequence": "GPO data disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read",
+      "object": "C4 Groups.xml",
+      "condition_or_scope": "inherited share/file ACL",
+      "security_consequence": "GPP cpassword obtained",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "SVC_TGS",
+      "permission_or_action": "request service ticket",
+      "object": "C5 Administrator SPN",
+      "condition_or_scope": "valid domain credential",
+      "security_consequence": "Offline-crackable Administrator service ticket",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Administrator",
+      "permission_or_action": "full control",
+      "object": "H1/C6 admin shares/domain",
+      "condition_or_scope": "credential recovered",
+      "security_consequence": "Domain compromise",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Groups.xml",
+      "hosted_on": "C4",
+      "purpose": "GPP local-group deployment config",
+      "owner_or_authority": "GPO editor",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "GPO admins write",
+      "security_significance": "Encrypted SVC_TGS secret uses published static AES key",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Administrator TGS",
+      "hosted_on": "C5",
+      "purpose": "Kerberos service ticket",
+      "owner_or_authority": "KDC/Administrator key",
+      "read_access": "SVC_TGS can request",
+      "write_or_execute_access": "KDC issues",
+      "security_significance": "Offline password-cracking oracle for privileged account",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C4",
+      "affected_version": "Group Policy Preferences",
+      "issue": "Recoverable cpassword exposed on readable policy share",
+      "preconditions": "Anonymous Replication read",
+      "vulnerable_behavior": "Published AES key decrypts cpassword",
+      "resulting_access": "SVC_TGS credential",
+      "reference": "MS14-025 / CVE-2014-1812",
+      "failed_control": "Legacy reversible password storage + excessive share read",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "Kerberos/SPN configuration",
+      "issue": "Privileged Administrator account is Kerberoastable with weak secret",
+      "preconditions": "Any domain user",
+      "vulnerable_behavior": "TGS encrypted with Administrator key is cracked offline",
+      "resulting_access": "Domain Administrator",
+      "reference": "Configuration weakness",
+      "failed_control": "Privileged human account doubles as service principal",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "read Replication/Groups.xml and decrypt cpassword",
+      "target_component_or_artifact": "C3/C4",
+      "prerequisite": "anonymous share ACL",
+      "resulting_principal_or_access": "SVC_TGS credential",
+      "boundary_crossed": "network → domain user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "SVC_TGS",
+      "action": "request/crack Administrator TGS",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "domain authentication + weak service secret",
+      "resulting_principal_or_access": "Administrator",
+      "boundary_crossed": "domain user → domain admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "Administrator",
+      "action": "access C$/ADMIN$",
+      "target_component_or_artifact": "C6",
+      "prerequisite": "Domain Admin",
+      "resulting_principal_or_access": "full DC",
+      "boundary_crossed": "domain admin → host control",
+      "evidence": "Explicit"
+    }
+  ]
+}

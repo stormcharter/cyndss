@@ -1,0 +1,244 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Postman",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/03/14/htb-postman.html",
+    "title": "HTB Postman writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Redis service plus Webmin administration panel"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Postman host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.160",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Redis key injection creates redis shell"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Web content/credential clues"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "Redis",
+      "role": "In-memory database",
+      "binding_or_path": "0.0.0.0:6379/tcp",
+      "software_or_version": "Redis",
+      "runs_as": "redis",
+      "exposure": "Public; no auth",
+      "evidence": "Explicit",
+      "analysis_note": "CONFIG can write SSH authorized_keys"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "Webmin",
+      "role": "System administration UI",
+      "binding_or_path": "0.0.0.0:10000/tcp",
+      "software_or_version": "Webmin 1.890",
+      "runs_as": "root",
+      "exposure": "Public HTTPS",
+      "evidence": "Explicit",
+      "analysis_note": "Authenticated command execution/RCE"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "redis",
+      "principal_type": "local service account",
+      "operational_role": "Redis process owner",
+      "groups_or_nesting": "redis",
+      "authentication_or_effective_access": "can write its home/.ssh through CONFIG",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Matt",
+      "principal_type": "local user",
+      "operational_role": "Webmin/flag user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "SSH after Redis pivot; Webmin credential reuse",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "Webmin/system owner",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "write Redis config/key",
+      "object": "C3",
+      "condition_or_scope": "Redis unauthenticated on 6379",
+      "security_consequence": "redis SSH key login",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "redis",
+      "permission_or_action": "write",
+      "object": "/var/lib/redis/.ssh/authorized_keys",
+      "condition_or_scope": "CONFIG and filesystem rights",
+      "security_consequence": "redis shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "redis/Matt",
+      "permission_or_action": "authenticate Webmin",
+      "object": "C4",
+      "condition_or_scope": "credential reuse/weak secret",
+      "security_consequence": "root command execution",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Webmin",
+      "permission_or_action": "execute command",
+      "object": "C4",
+      "condition_or_scope": "Webmin 1.890 exploit",
+      "security_consequence": "root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Redis CONFIG",
+      "hosted_on": "C3",
+      "purpose": "runtime file-write primitive",
+      "owner_or_authority": "redis",
+      "read_access": "remote client can issue",
+      "write_or_execute_access": "redis writes",
+      "security_significance": "Turns network DB into SSH credential writer",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "redis authorized_keys",
+      "hosted_on": "C1/C3",
+      "purpose": "SSH key artifact",
+      "owner_or_authority": "redis",
+      "read_access": "attacker writes via Redis",
+      "write_or_execute_access": "sshd reads",
+      "security_significance": "Network-to-login boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Webmin session/command",
+      "hosted_on": "C4",
+      "purpose": "system administration action",
+      "owner_or_authority": "root",
+      "read_access": "Matt/recovered creds",
+      "write_or_execute_access": "Webmin executes",
+      "security_significance": "Root execution sink",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Redis no-auth",
+      "issue": "Unauthenticated CONFIG/authorized_keys write",
+      "preconditions": "6379 public and no password",
+      "vulnerable_behavior": "CONFIG SET dir/dbfilename writes attacker key",
+      "resulting_access": "redis shell",
+      "reference": "Redis configuration weakness",
+      "failed_control": "Database exposed without authentication",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Webmin 1.890",
+      "issue": "Authenticated remote command execution",
+      "preconditions": "Webmin reachable and credential recovered",
+      "vulnerable_behavior": "Crafted request executes command as root",
+      "resulting_access": "root",
+      "reference": "CVE-2019-12840",
+      "failed_control": "Outdated admin panel and exposed port",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "write SSH key through Redis",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "6379 unauthenticated",
+      "resulting_principal_or_access": "redis",
+      "boundary_crossed": "network → service account",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "SSH as redis and reuse credentials",
+      "target_component_or_artifact": "C1/C4",
+      "prerequisite": "key/credential recovered",
+      "resulting_principal_or_access": "Matt/root path",
+      "boundary_crossed": "credential → users",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "Matt/redis",
+      "action": "exploit Webmin",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "Webmin 1.890 and auth",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → host root",
+      "evidence": "Explicit"
+    }
+  ]
+}

@@ -1,0 +1,253 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Valentine",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/07/28/htb-valentine.html",
+    "title": "HTB Valentine writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 16.04 Linux",
+    "deployment_role": "TLS/SSH host with privileged tmux session"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Valentine VM",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.79",
+      "software_or_version": "Ubuntu 16.04",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH 7.2p2 Ubuntu",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Accepts hype key"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache HTTP/HTTPS",
+      "role": "Web/TLS front end",
+      "binding_or_path": "0.0.0.0:80,443/tcp",
+      "software_or_version": "Apache 2.4.18",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "TLS links vulnerable OpenSSL"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Library",
+      "name": "OpenSSL heartbeat",
+      "role": "TLS cryptographic library",
+      "binding_or_path": "HTTPS handshake/heartbeat",
+      "software_or_version": "OpenSSL 1.0.1f-class",
+      "runs_as": "Apache",
+      "exposure": "Public TLS",
+      "evidence": "Explicit",
+      "analysis_note": "Heartbleed memory disclosure"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Web directory",
+      "name": "/dev",
+      "role": "Development artifacts",
+      "binding_or_path": "HTTP path /dev",
+      "software_or_version": "static files",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Exposes encrypted hype private key/decoder material"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Service/session",
+      "name": "root tmux server",
+      "role": "Privileged persistent shell",
+      "binding_or_path": "socket /.devs/dev_sess",
+      "software_or_version": "tmux 2.1",
+      "runs_as": "root",
+      "exposure": "Local socket",
+      "evidence": "Explicit",
+      "analysis_note": "Socket group grants hype read/write"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "hype",
+      "principal_type": "local SSH user",
+      "operational_role": "developer/account with tmux socket group access",
+      "groups_or_nesting": "hype-related group",
+      "authentication_or_effective_access": "SSH login; read/write root tmux socket",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "superuser/tmux session owner",
+      "operational_role": "existing privileged session",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read encrypted private key",
+      "object": "C4",
+      "condition_or_scope": "public web path",
+      "security_consequence": "Obtains hype SSH key ciphertext",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote TLS client",
+      "permission_or_action": "read process memory",
+      "object": "C3",
+      "condition_or_scope": "Heartbleed",
+      "security_consequence": "Leaks passphrase/key material",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "hype",
+      "permission_or_action": "attach read/write",
+      "object": "C5 tmux socket",
+      "condition_or_scope": "socket mode/group permits",
+      "security_consequence": "Control existing root shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "hype_key",
+      "hosted_on": "C4",
+      "purpose": "encrypted SSH private key",
+      "owner_or_authority": "hype/developer",
+      "read_access": "public HTTP read",
+      "write_or_execute_access": "server write",
+      "security_significance": "Authentication key improperly published",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/.devs/dev_sess",
+      "hosted_on": "C5",
+      "purpose": "tmux IPC socket",
+      "owner_or_authority": "root:hype-group",
+      "read_access": "hype read/write",
+      "write_or_execute_access": "root server owns",
+      "security_significance": "IPC ACL grants direct privileged session control",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "OpenSSL 1.0.1f-class",
+      "issue": "Heartbeat memory disclosure",
+      "preconditions": "HTTPS reachable",
+      "vulnerable_behavior": "Oversized heartbeat response leaks Apache memory",
+      "resulting_access": "SSH key passphrase disclosure",
+      "reference": "CVE-2014-0160",
+      "failed_control": "Vulnerable TLS library",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "web content",
+      "issue": "Encrypted private key exposed publicly",
+      "preconditions": "HTTP access",
+      "vulnerable_behavior": "Attacker downloads hype key",
+      "resulting_access": "Credential material",
+      "reference": "Configuration weakness",
+      "failed_control": "Secrets in document root",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "tmux 2.1 session socket",
+      "issue": "Group-writable root tmux socket",
+      "preconditions": "Local hype shell",
+      "vulnerable_behavior": "Attach to existing root session",
+      "resulting_access": "root shell",
+      "reference": "Configuration weakness",
+      "failed_control": "Privileged IPC object grants lower-user access",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "download hype private key",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "HTTP",
+      "resulting_principal_or_access": "encrypted credential",
+      "boundary_crossed": "network → secret",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "anonymous",
+      "action": "Heartbleed Apache memory",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "vulnerable TLS",
+      "resulting_principal_or_access": "key passphrase",
+      "boundary_crossed": "network → process memory",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "attacker",
+      "action": "SSH as hype",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "key + passphrase",
+      "resulting_principal_or_access": "hype",
+      "boundary_crossed": "credential → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "hype",
+      "action": "attach root tmux",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "socket ACL",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "local user → root session",
+      "evidence": "Explicit"
+    }
+  ]
+}

@@ -1,0 +1,295 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Remote",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/09/05/htb-remote.html",
+    "title": "HTB Remote writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server host",
+    "deployment_role": "NFS export, Umbraco CMS and TeamViewer credential store"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Remote host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.180",
+      "software_or_version": "Windows Server",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "NFS",
+      "role": "Network filesystem",
+      "binding_or_path": "2049/tcp/udp",
+      "software_or_version": "Windows NFS",
+      "runs_as": "SYSTEM",
+      "exposure": "Public export",
+      "evidence": "Explicit",
+      "analysis_note": "Exports C:\\ to unauthenticated client"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "IIS",
+      "role": "HTTP front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "IIS",
+      "runs_as": "IIS APPPOOL\\Umbraco",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts Umbraco admin"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Umbraco",
+      "role": "CMS",
+      "binding_or_path": "/umbraco",
+      "software_or_version": "7.12.4",
+      "runs_as": "IIS app pool",
+      "exposure": "Public/admin",
+      "evidence": "Explicit",
+      "analysis_note": "SQL CE-backed admin RCE"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "TeamViewer",
+      "role": "Remote support service",
+      "binding_or_path": "local/registry",
+      "software_or_version": "TeamViewer 7",
+      "runs_as": "SYSTEM",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Registry stores reversible credentials"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "WinRM/PSExec",
+      "role": "Remote management",
+      "binding_or_path": "5985/tcp/SMB",
+      "software_or_version": "WinRM",
+      "runs_as": "Administrator",
+      "exposure": "Authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Final host access"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous NFS client",
+      "principal_type": "network principal",
+      "operational_role": "export reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "mount/read exported filesystem",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "IIS APPPOOL\\Umbraco",
+      "principal_type": "service identity",
+      "operational_role": "CMS worker",
+      "groups_or_nesting": "IIS_IUSRS",
+      "authentication_or_effective_access": "Umbraco code execution",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "administrator",
+      "principal_type": "local administrator",
+      "operational_role": "TeamViewer/host admin",
+      "groups_or_nesting": "Administrators",
+      "authentication_or_effective_access": "credential recovered from registry",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "service/kernel superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous NFS client",
+      "permission_or_action": "read",
+      "object": "C1 export",
+      "condition_or_scope": "NFS export allows broad root",
+      "security_consequence": "Umbraco hash/config disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "authenticate Umbraco",
+      "object": "C3",
+      "condition_or_scope": "hash cracked from NFS config",
+      "security_consequence": "CMS admin",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Umbraco admin",
+      "permission_or_action": "execute command",
+      "object": "C3/C2",
+      "condition_or_scope": "Umbraco 7.12.4 admin RCE",
+      "security_consequence": "IIS shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "IIS shell",
+      "permission_or_action": "read TeamViewer registry",
+      "object": "C4",
+      "condition_or_scope": "local service/config readable",
+      "security_consequence": "Administrator credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "administrator",
+      "permission_or_action": "WinRM/PSExec",
+      "object": "C5",
+      "condition_or_scope": "recovered credential",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "NFS export",
+      "hosted_on": "C1",
+      "purpose": "Windows filesystem/config",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "system writes",
+      "security_significance": "Network FS bypasses host ACL",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Umbraco.sdf/web.config",
+      "hosted_on": "C1/C3",
+      "purpose": "CMS DB/hash/config",
+      "owner_or_authority": "Umbraco",
+      "read_access": "NFS read",
+      "write_or_execute_access": "IIS writes",
+      "security_significance": "Credential source",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "TeamViewer registry values",
+      "hosted_on": "C4",
+      "purpose": "reversible remote-support secret",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "IIS shell read",
+      "write_or_execute_access": "TeamViewer writes",
+      "security_significance": "Admin credential",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "Windows NFS",
+      "issue": "Over-broad export exposes host files",
+      "preconditions": "NFS public",
+      "vulnerable_behavior": "Client mounts export and reads application config",
+      "resulting_access": "Umbraco credential",
+      "reference": "Configuration weakness",
+      "failed_control": "Export not restricted to required paths/hosts",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "Umbraco 7.12.4",
+      "issue": "Authenticated admin command execution",
+      "preconditions": "Admin hash cracked",
+      "vulnerable_behavior": "Umbraco parameter reaches server-side process",
+      "resulting_access": "IIS app pool",
+      "reference": "Umbraco RCE",
+      "failed_control": "Outdated CMS and weak credential",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C4",
+      "affected_version": "TeamViewer 7",
+      "issue": "Reversible credentials in registry",
+      "preconditions": "Local shell",
+      "vulnerable_behavior": "Registry bytes decrypt to Administrator password",
+      "resulting_access": "Administrator",
+      "reference": "Credential storage weakness",
+      "failed_control": "Remote-support secret accessible to service user",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous NFS client",
+      "action": "mount/read export",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "NFS ACL",
+      "resulting_principal_or_access": "Umbraco hash",
+      "boundary_crossed": "network → filesystem",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "crack hash and login Umbraco",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "config read",
+      "resulting_principal_or_access": "IIS app shell",
+      "boundary_crossed": "filesystem → app",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "IIS shell",
+      "action": "decrypt TeamViewer secret",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "registry read",
+      "resulting_principal_or_access": "Administrator",
+      "boundary_crossed": "service → admin credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "administrator",
+      "action": "WinRM/PSExec",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "valid admin secret",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "credential → host",
+      "evidence": "Explicit"
+    }
+  ]
+}

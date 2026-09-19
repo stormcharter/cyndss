@@ -1,0 +1,310 @@
+{
+  "machine": "Admirer",
+  "split": "validation",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 87,
+    "graph_edges": 891,
+    "entry_concepts": [
+      "adminer",
+      "admirer",
+      "apache",
+      "host",
+      "openssh",
+      "vsftpd"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "admirer:host:0",
+        "title": "Admirer",
+        "summary": "Debian 9 Linux Apache art site, FTP source disclosure and Adminer/Python sudo",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:component:H1",
+        "title": "Admirer host",
+        "summary": "Host OS/security boundary 10.10.10.187 Debian 9 Stretch root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:component:C1",
+        "title": "vsftpd",
+        "summary": "Service FTP service 21/tcp vsftpd 3.0.3 ftp Public/authenticated Credentials from web allow source download Admirer host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:component:C2",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH 7.4p1 Debian root daemon Public waldo login Admirer host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:component:C3",
+        "title": "Apache/PHP",
+        "summary": "Service Art web site 80/tcp Apache 2.4.25 www-data Public robots/admin-dir exposes utility sources Admirer host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:component:C4",
+        "title": "Adminer",
+        "summary": "Application Database web interface /adminer.php/internal Adminer www-data Internal/public after source Queries attacker-controlled DB and reads local files Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:component:C5",
+        "title": "sudo Python backup",
+        "summary": "Authorization Privilege helper /opt/scripts/admin_tasks.sh Python waldo as sudo Local Allows PYTHONPATH and imports shutil/archive module Admirer host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:permission:0",
+        "title": "remote client Apache/PHP",
+        "summary": "read robots/admin-dir/source Apache/PHP public web FTP credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:permission:1",
+        "title": "ftpuser vsftpd",
+        "summary": "read/upload source over FTP vsftpd recovered credential Adminer path/source",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:permission:2",
+        "title": "remote client Adminer",
+        "summary": "use Adminer to read local source Adminer Adminer reachable and DB endpoint controlled waldo credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:permission:3",
+        "title": "waldo sudo Python backup",
+        "summary": "sudo run backup with PYTHONPATH sudo Python backup NOPASSWD environment root Python library hijack",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:vulnerability:V1",
+        "title": "Source and credential disclosure Apache/PHP",
+        "summary": "Apache/PHP Apache/robots/admin-dir Public web Hidden directory exposes FTP/source files ftpuser/waldo credential Sensitive development directory web-readable",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:vulnerability:V2",
+        "title": "Database/local file access through attacker-controlled connection Adminer",
+        "summary": "Adminer Adminer Adminer reachable; local DB source Adminer can connect to attacker DB and issue LOAD DATA/local reads waldo secret Database interface not isolated",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "admirer:vulnerability:V3",
+        "title": "PYTHONPATH/library hijack sudo Python backup",
+        "summary": "sudo Python backup sudo Python backup waldo shell; sudo permits env Root script imports attacker-controlled module root Environment and import path not constrained",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "apache",
+        "credential",
+        "ftpuser"
+      ],
+      [
+        "credential",
+        "waldo"
+      ],
+      [
+        "openssh",
+        "waldo"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "environment",
+        "root"
+      ],
+      [
+        "hijack",
+        "root"
+      ],
+      [
+        "library",
+        "root"
+      ],
+      [
+        "shell",
+        "root"
+      ],
+      [
+        "admin",
+        "backup",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "vsftpd",
+        "path",
+        "root"
+      ],
+      [
+        "apache",
+        "debian",
+        "root"
+      ],
+      [
+        "adminer",
+        "reachable",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "vsftpd",
+        "path",
+        "root"
+      ],
+      [
+        "apache",
+        "debian",
+        "root"
+      ],
+      [
+        "adminer",
+        "reachable",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "apache",
+        "site",
+        "source",
+        "credential",
+        "disclosure",
+        "robots",
+        "admin-dir",
+        "waldo",
+        "sudo",
+        "python",
+        "backup",
+        "privilege",
+        "helper",
+        "pythonpath",
+        "library",
+        "hijack",
+        "root"
+      ],
+      [
+        "adminer",
+        "database",
+        "interface",
+        "local",
+        "access",
+        "attacker-controlled",
+        "connection",
+        "waldo",
+        "sudo",
+        "python",
+        "backup",
+        "privilege",
+        "helper",
+        "pythonpath",
+        "library",
+        "hijack",
+        "root"
+      ],
+      [
+        "apache",
+        "site",
+        "source",
+        "credential",
+        "disclosure",
+        "robots",
+        "admin-dir",
+        "waldo",
+        "sudo",
+        "python",
+        "backup",
+        "privilege",
+        "helper",
+        "root"
+      ],
+      [
+        "adminer",
+        "database",
+        "interface",
+        "waldo",
+        "sudo",
+        "python",
+        "backup",
+        "privilege",
+        "helper",
+        "pythonpath",
+        "library",
+        "hijack",
+        "root"
+      ],
+      [
+        "adminer",
+        "database",
+        "interface",
+        "local",
+        "access",
+        "attacker-controlled",
+        "connection",
+        "waldo",
+        "sudo",
+        "python",
+        "backup",
+        "privilege",
+        "helper",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.3333333333333333,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.5,
+    "c_coverage_topk": 0.6666666666666666
+  }
+}

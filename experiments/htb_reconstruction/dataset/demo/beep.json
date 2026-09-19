@@ -1,0 +1,306 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Beep",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/02/23/htb-beep.html",
+    "title": "HTB Beep writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "CentOS 5-era Linux",
+    "deployment_role": "PBX appliance with mail, database and admin stack"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Beep PBX",
+      "role": "OS/appliance boundary",
+      "binding_or_path": "10.10.10.7",
+      "software_or_version": "CentOS 5-era",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Large legacy service surface"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service stack",
+      "name": "Mail services",
+      "role": "SMTP/POP/IMAP/user enumeration",
+      "binding_or_path": "25,110,143,993,995/tcp",
+      "software_or_version": "Postfix; Cyrus 2.3.7",
+      "runs_as": "postfix/cyrus",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SMTP VRFY reveals accounts"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache HTTPS",
+      "role": "PBX web front end",
+      "binding_or_path": "80,443/tcp",
+      "software_or_version": "Apache 2.2.3",
+      "runs_as": "apache",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts Elastix/FreePBX/vTiger"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Elastix / FreePBX",
+      "role": "PBX administration",
+      "binding_or_path": "/ and PBX paths",
+      "software_or_version": "Elastix 2.2.0; FreePBX 2.10.0",
+      "runs_as": "asterisk/apache",
+      "exposure": "Public/login",
+      "evidence": "Explicit",
+      "analysis_note": "Old PHP application"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C3",
+      "layer_or_type": "Application",
+      "name": "vTiger CRM graph.php",
+      "role": "CRM graph rendering",
+      "binding_or_path": "/vtigercrm/graph.php",
+      "software_or_version": "Elastix bundle",
+      "runs_as": "apache",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "current_language LFI"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "MySQL",
+      "role": "PBX application database",
+      "binding_or_path": "0.0.0.0:3306/tcp",
+      "software_or_version": "MySQL",
+      "runs_as": "mysql",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Credentials appear in config"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Webmin",
+      "role": "System management",
+      "binding_or_path": "0.0.0.0:10000/tcp",
+      "software_or_version": "Webmin legacy TLS",
+      "runs_as": "root",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Credential-reuse route"
+    },
+    {
+      "component_id": "C7",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Asterisk Manager/SIP/FAX",
+      "role": "Telephony control plane",
+      "binding_or_path": "4559,5038 and SIP-related ports",
+      "software_or_version": "Asterisk/HylaFAX",
+      "runs_as": "asterisk",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Extension 233 discoverable"
+    },
+    {
+      "component_id": "C8",
+      "parent_id": "H1",
+      "layer_or_type": "Policy",
+      "name": "asterisk sudoers",
+      "role": "Privilege delegation",
+      "binding_or_path": "local",
+      "software_or_version": "sudo",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "NOPASSWD nmap/yum/chmod/chown/service etc."
+    }
+  ],
+  "identities": [
+    {
+      "principal": "asterisk",
+      "principal_type": "service account",
+      "operational_role": "PBX daemon/application identity",
+      "groups_or_nesting": "asterisk",
+      "authentication_or_effective_access": "execute PBX code; broad NOPASSWD root binaries",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "fanis",
+      "principal_type": "local user",
+      "operational_role": "profile account",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "enumerated by SMTP/passwd",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "system administrator",
+      "operational_role": "Webmin/SSH and host owner",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "cyrus",
+      "principal_type": "service account",
+      "operational_role": "mail identity",
+      "groups_or_nesting": "mail",
+      "authentication_or_effective_access": "SMTP VRFY-visible",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "SMTP VRFY enumerate",
+      "object": "C1",
+      "condition_or_scope": "SMTP reachable",
+      "security_consequence": "Valid local usernames disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "traverse current_language",
+      "object": "C4",
+      "condition_or_scope": "old PHP null-byte behavior",
+      "security_consequence": "Read local PBX config/credentials",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "invoke FreePBX/Elastix RCE",
+      "object": "C3/C7",
+      "condition_or_scope": "extension known; vulnerable app",
+      "security_consequence": "Code as asterisk",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "asterisk",
+      "permission_or_action": "sudo NOPASSWD",
+      "object": "C8 approved binaries",
+      "condition_or_scope": "local shell",
+      "security_consequence": "root execution",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "PBX configuration files",
+      "hosted_on": "H1/C3",
+      "purpose": "database/admin credentials",
+      "owner_or_authority": "root/asterisk",
+      "read_access": "readable via LFI",
+      "write_or_execute_access": "application write",
+      "security_significance": "Secrets enable Webmin/SSH/app access",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/etc/passwd",
+      "hosted_on": "H1",
+      "purpose": "local account list",
+      "owner_or_authority": "root",
+      "read_access": "readable via LFI",
+      "write_or_execute_access": "root write",
+      "security_significance": "Confirms SMTP-enumerated users",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C4",
+      "affected_version": "Elastix 2.2.0 bundle",
+      "issue": "Local file inclusion via current_language",
+      "preconditions": "HTTP access; null-byte-compatible PHP",
+      "vulnerable_behavior": "Path traversal reads arbitrary local files",
+      "resulting_access": "Credential disclosure",
+      "reference": "EDB-37637",
+      "failed_control": "Unsanitized include path",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3/C7",
+      "affected_version": "FreePBX 2.10.0 / Elastix 2.2.0",
+      "issue": "Remote command execution",
+      "preconditions": "Reach PBX and identify valid extension",
+      "vulnerable_behavior": "Crafted PBX request executes command",
+      "resulting_access": "asterisk shell",
+      "reference": "EDB-18650",
+      "failed_control": "Legacy unauthenticated PBX handler",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C8",
+      "affected_version": "sudoers",
+      "issue": "Broad passwordless admin binaries",
+      "preconditions": "Local asterisk shell",
+      "vulnerable_behavior": "Allowed tools provide shell/file ownership primitives",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "Service account has excessive sudo authority",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "LFI read PBX config",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "HTTP reachable",
+      "resulting_principal_or_access": "application credentials",
+      "boundary_crossed": "network → secret data",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "unauthenticated",
+      "action": "exploit PBX handler",
+      "target_component_or_artifact": "C3/C7",
+      "prerequisite": "extension 233 + vulnerable stack",
+      "resulting_principal_or_access": "asterisk",
+      "boundary_crossed": "network → service user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "asterisk",
+      "action": "abuse NOPASSWD binary",
+      "target_component_or_artifact": "C8",
+      "prerequisite": "sudo rule",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "service user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

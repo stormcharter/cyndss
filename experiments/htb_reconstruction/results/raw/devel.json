@@ -1,0 +1,210 @@
+{
+  "machine": "Devel",
+  "split": "demo",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 73,
+    "graph_edges": 671,
+    "entry_concepts": [
+      "devel",
+      "microsoft",
+      "service",
+      "shared",
+      "webroot",
+      "workstation"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "devel:host:0",
+        "title": "Devel",
+        "summary": "Windows 7 Enterprise build 7600 x86 FTP and IIS share one content root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:component:H1",
+        "title": "Devel workstation",
+        "summary": "Host OS boundary 10.10.10.5 Windows 7 Enterprise 6.1.7600 x86 SYSTEM VPN reachable No hotfixes",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:component:C1",
+        "title": "Microsoft FTP service",
+        "summary": "Service Content upload 0.0.0.0:21/tcp Microsoft ftpd service account Public; anonymous read/write FTP root is IIS webroot Devel workstation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:component:C2",
+        "title": "Microsoft IIS",
+        "summary": "Service Web application server 0.0.0.0:80/tcp IIS 7.5 / ASP.NET IIS APPPOOL\\Web Public Executes ASPX in shared root Devel workstation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:component:C3",
+        "title": "IIS/FTP shared webroot",
+        "summary": "Directory Published executable content FTP root = HTTP document root NTFS IIS/FTP identities Public through both services Contains aspnet_client, iisstart.htm, welcome.png Devel workstation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:component:C4",
+        "title": "Windows kernel",
+        "summary": "Kernel Privilege boundary local build 7600 unpatched SYSTEM Local only EoP target Devel workstation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:permission:0",
+        "title": "anonymous C3 shared webroot",
+        "summary": "create files C3 shared webroot FTP anonymous write Attacker controls executable web content",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:permission:1",
+        "title": "C2 IIS uploaded .aspx in C3",
+        "summary": "execute uploaded .aspx in C3 HTTP request Code runs as IIS APPPOOL\\Web",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:permission:2",
+        "title": "IIS APPPOOL\\Web Windows kernel",
+        "summary": "exploit local kernel Windows kernel unpatched build SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:vulnerability:V1",
+        "title": "Anonymous write into executable webroot C1+C2+C3",
+        "summary": "C1+C2+C3 Microsoft FTP + IIS 7.5 Anonymous FTP enabled Uploaded ASPX is served and executed by IIS IIS APPPOOL\\Web shell Storage and code-execution boundaries collapse",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:vulnerability:V2",
+        "title": "Kernel-mode privilege escalation Windows kernel",
+        "summary": "Windows kernel Windows 7 build 7600 Local code execution Unpatched kernel flaw elevates token SYSTEM No hotfixes",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devel:vulnerability:A1",
+        "title": "Alternate kernel EoP Windows kernel",
+        "summary": "Windows kernel Windows 7 build 7600 Local code execution KiTrap0D path on affected 32-bit build SYSTEM Unpatched OS",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "attacker",
+        "executable",
+        "root",
+        "shared",
+        "webroot"
+      ],
+      [
+        "apppool"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "kernel",
+        "system"
+      ],
+      [
+        "local",
+        "system"
+      ],
+      [
+        "unpatched",
+        "system"
+      ],
+      [
+        "windows",
+        "system"
+      ],
+      [
+        "build",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "workstation",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "service",
+        "workstation",
+        "system"
+      ],
+      [
+        "microsoft",
+        "workstation",
+        "system"
+      ],
+      [
+        "shared",
+        "workstation",
+        "system"
+      ],
+      [
+        "webroot",
+        "workstation",
+        "system"
+      ],
+      [
+        "workstation",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "service",
+        "workstation",
+        "system"
+      ],
+      [
+        "microsoft",
+        "workstation",
+        "system"
+      ],
+      [
+        "shared",
+        "workstation",
+        "system"
+      ],
+      [
+        "webroot",
+        "workstation",
+        "system"
+      ],
+      [
+        "workstation",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.5
+  }
+}

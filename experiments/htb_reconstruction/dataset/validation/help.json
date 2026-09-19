@@ -1,0 +1,277 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Help",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/06/08/htb-help.html",
+    "title": "HTB Help writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 16.04 Linux kernel 4.4.0-116",
+    "deployment_role": "GraphQL API, HelpDeskZ and SSH/kernel EoP"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Help host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.121",
+      "software_or_version": "Ubuntu 16.04 Xenial; kernel 4.4.0-116-generic",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH 7.2p2 Ubuntu",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "help user login after DB dump"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache",
+      "role": "HTTP front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "Apache 2.4.18 Ubuntu",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Default page and /support HelpDeskZ"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "Node/Express GraphQL",
+      "role": "Credential API",
+      "binding_or_path": "3000/tcp/graphql",
+      "software_or_version": "Node.js Express",
+      "runs_as": "node",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Introspection exposes helpme hash"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "HelpDeskZ",
+      "role": "Ticket/support CMS",
+      "binding_or_path": "/support",
+      "software_or_version": "1.0.2 (2015)",
+      "runs_as": "www-data",
+      "exposure": "Public/login",
+      "evidence": "Explicit",
+      "analysis_note": "Authenticated SQLi and unauthenticated upload bypass"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Kernel",
+      "name": "Linux kernel",
+      "role": "Privilege boundary",
+      "binding_or_path": "local",
+      "software_or_version": "4.4.0-116",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "CVE-2017-16995/CVE-2017-5899 targets"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "node",
+      "principal_type": "service identity",
+      "operational_role": "GraphQL process",
+      "groups_or_nesting": "node",
+      "authentication_or_effective_access": "returns user credential hash",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "helpme@helpme.com",
+      "principal_type": "application account",
+      "operational_role": "HelpDeskZ login",
+      "groups_or_nesting": "staff/user",
+      "authentication_or_effective_access": "password cracked from GraphQL hash",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "help",
+      "principal_type": "local user",
+      "operational_role": "SSH/flag owner",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "SSH login from HelpDeskZ DB",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "kernel principal",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "introspect GraphQL",
+      "object": "C3",
+      "condition_or_scope": "port 3000 public",
+      "security_consequence": "helpme hash",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "helpme",
+      "permission_or_action": "authenticate HelpDeskZ",
+      "object": "C4",
+      "condition_or_scope": "cracked hash",
+      "security_consequence": "ticket/SQLi access",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "helpme",
+      "permission_or_action": "exploit HelpDeskZ SQLi or upload",
+      "object": "C4",
+      "condition_or_scope": "version 1.0.2",
+      "security_consequence": "help shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "help",
+      "permission_or_action": "run kernel exploit",
+      "object": "C5",
+      "condition_or_scope": "old kernel",
+      "security_consequence": "root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "GraphQL schema/user hash",
+      "hosted_on": "C3",
+      "purpose": "credential API data",
+      "owner_or_authority": "node",
+      "read_access": "anonymous introspection/read",
+      "write_or_execute_access": "app writes",
+      "security_significance": "Credential disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "HelpDeskZ attachment request",
+      "hosted_on": "C4",
+      "purpose": "SQLi/upload input",
+      "owner_or_authority": "helpme/www-data",
+      "read_access": "authenticated or upload path",
+      "write_or_execute_access": "web app writes",
+      "security_significance": "Webshell and DB dump source",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Linux kernel image",
+      "hosted_on": "C5",
+      "purpose": "privilege boundary",
+      "owner_or_authority": "root",
+      "read_access": "help executes exploit",
+      "write_or_execute_access": "kernel owns",
+      "security_significance": "Local EoP target",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Node/Express GraphQL",
+      "issue": "Introspection and over-broad user resolver",
+      "preconditions": "GraphQL public",
+      "vulnerable_behavior": "Schema reveals resolver and password hash",
+      "resulting_access": "helpme credential",
+      "reference": "Information disclosure",
+      "failed_control": "Sensitive resolver unauthenticated",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "HelpDeskZ 1.0.2",
+      "issue": "Authenticated blind SQLi and upload filter bypass",
+      "preconditions": "GraphQL credential or upload endpoint",
+      "vulnerable_behavior": "Ticket attachment parameter injects SQL; file type checks bypassed",
+      "resulting_access": "help/www-data shell",
+      "reference": "Exploit-DB 41200/40300",
+      "failed_control": "No parameterized query or safe upload root",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "Linux 4.4.0-116",
+      "issue": "Kernel local privilege escalation",
+      "preconditions": "Local shell",
+      "vulnerable_behavior": "Known kernel flaw corrupts/abuses kernel state",
+      "resulting_access": "root",
+      "reference": "CVE-2017-16995; CVE-2017-5899",
+      "failed_control": "Kernel unpatched for nearly a year",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "introspect GraphQL and crack hash",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "3000 public",
+      "resulting_principal_or_access": "helpme",
+      "boundary_crossed": "network → credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "helpme",
+      "action": "login/exploit HelpDeskZ",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "credential and vulnerable release",
+      "resulting_principal_or_access": "help shell",
+      "boundary_crossed": "credential → web execution",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "help",
+      "action": "SSH and exploit old kernel",
+      "target_component_or_artifact": "C1/C5",
+      "prerequisite": "local user + unpatched kernel",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → kernel",
+      "evidence": "Explicit"
+    }
+  ]
+}

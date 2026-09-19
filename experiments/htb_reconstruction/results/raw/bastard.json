@@ -1,0 +1,300 @@
+{
+  "machine": "Bastard",
+  "split": "demo",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 78,
+    "graph_edges": 695,
+    "entry_concepts": [
+      "bastard",
+      "core",
+      "drupal",
+      "endpoint",
+      "mapper",
+      "microsoft",
+      "server",
+      "services"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "bastard:host:0",
+        "title": "Bastard",
+        "summary": "Windows Server 2008 R2 Datacenter build 7600 IIS-hosted Drupal application",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:component:H1",
+        "title": "Bastard server",
+        "summary": "Host OS boundary 10.10.10.9 Windows Server 2008 R2 6.1.7600 x64 SYSTEM VPN reachable Standalone; no hotfixes",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:component:C1",
+        "title": "Microsoft IIS",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp IIS 7.5 NT AUTHORITY\\IUSR Public Hosts Drupal under C:\\inetpub Bastard server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:component:C2",
+        "title": "Drupal core",
+        "summary": "Application CMS routing/content / Drupal 7.54 IUSR via IIS Public Version leaked by CHANGELOG.txt Microsoft IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:component:C3",
+        "title": "Drupal Services",
+        "summary": "Module REST endpoint and serializers /rest Drupal 7.x Services module IUSR Public endpoint Intended RCE surface Drupal core",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:component:C4",
+        "title": "RPC Endpoint Mapper",
+        "summary": "Service Windows RPC 135/tcp and 49154/tcp Windows RPC SYSTEM Public Recon only Bastard server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:component:C5",
+        "title": "Win32k subsystem",
+        "summary": "Kernel Local privilege boundary local build 7600 unpatched SYSTEM Local MS15-051 target Bastard server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:permission:0",
+        "title": "remote client Drupal Services",
+        "summary": "submit crafted serialized REST request Drupal Services Services endpoint enabled PHP/webshell write and execution as IUSR",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:permission:1",
+        "title": "IUSR Win32k subsystem",
+        "summary": "execute local kernel exploit Win32k subsystem unpatched build SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:vulnerability:V1",
+        "title": "Object injection / endpoint RCE Drupal Services",
+        "summary": "Drupal Services Drupal 7.x Services module REST endpoint reachable Crafted payload causes PHP code/file execution NT AUTHORITY\\IUSR Unsafe deserialization/endpoint configuration",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bastard:vulnerability:A1",
+        "title": "Later alternate unauthenticated Drupalgeddon2 path Drupal core",
+        "summary": "Drupal core Drupal 7.54 Vulnerable core and reachable HTTP Crafted request executes PHP IUSR Outdated core",
+        "verified_cve_ids": "CVE-2018-7600"
+      },
+      {
+        "mongo_id": "bastard:vulnerability:V2",
+        "title": "Win32k kernel EoP Win32k subsystem",
+        "summary": "Win32k subsystem Windows build 7600 Local IUSR shell Kernel flaw elevates process SYSTEM No hotfixes",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "drupal",
+        "iusr",
+        "services"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2018-7600",
+        "reachable",
+        "system"
+      ],
+      [
+        "kernel",
+        "system"
+      ],
+      [
+        "local",
+        "system"
+      ],
+      [
+        "subsystem",
+        "system"
+      ],
+      [
+        "win32k",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "mapper",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "mapper",
+        "system"
+      ],
+      [
+        "services",
+        "endpoint",
+        "system"
+      ],
+      [
+        "bastard",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ],
+      [
+        "microsoft",
+        "service",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "mapper",
+        "system"
+      ],
+      [
+        "services",
+        "endpoint",
+        "system"
+      ],
+      [
+        "bastard",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ],
+      [
+        "microsoft",
+        "service",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "drupal",
+        "core",
+        "routing",
+        "content",
+        "later",
+        "alternate",
+        "unauthenticated",
+        "drupalgeddon2",
+        "path",
+        "iusr",
+        "win32k",
+        "subsystem",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "kernel",
+        "windows",
+        "system"
+      ],
+      [
+        "drupal",
+        "services",
+        "rest",
+        "endpoint",
+        "serializers",
+        "module",
+        "object",
+        "injection",
+        "iusr",
+        "win32k",
+        "subsystem",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "kernel",
+        "windows",
+        "system"
+      ],
+      [
+        "microsoft",
+        "front",
+        "iusr",
+        "win32k",
+        "subsystem",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "kernel",
+        "windows",
+        "system"
+      ],
+      [
+        "drupal",
+        "core",
+        "routing",
+        "content",
+        "later",
+        "alternate",
+        "unauthenticated",
+        "drupalgeddon2",
+        "path",
+        "iusr",
+        "win32k",
+        "subsystem",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "system"
+      ],
+      [
+        "drupal",
+        "core",
+        "routing",
+        "content",
+        "iusr",
+        "win32k",
+        "subsystem",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "kernel",
+        "windows",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 1.0
+  }
+}

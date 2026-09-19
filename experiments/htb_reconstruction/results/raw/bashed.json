@@ -1,0 +1,195 @@
+{
+  "machine": "Bashed",
+  "split": "demo",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 69,
+    "graph_edges": 629,
+    "entry_concepts": [
+      "apache",
+      "bashed",
+      "phpbash"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "bashed:host:0",
+        "title": "Bashed",
+        "summary": "Ubuntu 16.04 Linux Apache development host with root automation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:component:H1",
+        "title": "Bashed VM",
+        "summary": "Host OS boundary 10.10.10.68 Ubuntu 16.04 root VPN reachable Development artifacts remain deployed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:component:C1",
+        "title": "Apache/PHP",
+        "summary": "Service Web application server 0.0.0.0:80/tcp Apache 2.4.18 + PHP www-data Public Hosts phpbash Bashed VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:component:C2",
+        "title": "phpbash",
+        "summary": "Application Browser-based shell /dev/phpbash.php phpbash development tool www-data Public Direct command execution UI Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:component:C3",
+        "title": "sudoers impersonation",
+        "summary": "Policy Privilege delegation local sudo scriptmanager target Local www-data may run commands as scriptmanager Bashed VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:component:C4",
+        "title": "/scripts",
+        "summary": "Directory Automation code directory local filesystem Python scripts scriptmanager Local Writable by scriptmanager Bashed VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:component:C5",
+        "title": "root Python runner",
+        "summary": "Scheduled task Executes every *.py in /scripts every minute cron + Python root Local Trusts directory contents Bashed VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:permission:0",
+        "title": "anonymous C2 phpbash",
+        "summary": "execute commands C2 phpbash public URL www-data shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:permission:1",
+        "title": "www-data scriptmanager",
+        "summary": "sudo as scriptmanager sudoers rule scriptmanager shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:permission:2",
+        "title": "scriptmanager /scripts",
+        "summary": "create/modify *.py /scripts directory ownership Code selected by root cron",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:permission:3",
+        "title": "root cron C4 *.py",
+        "summary": "execute C4 *.py every minute Attacker code as root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:vulnerability:V1",
+        "title": "Public development web shell phpbash",
+        "summary": "phpbash phpbash HTTP access Intended shell functionality is unauthenticated www-data code execution Administrative development artifact deployed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bashed:vulnerability:V2",
+        "title": "Writable scheduled code executed by root C3+C4+C5",
+        "summary": "C3+C4+C5 sudo/cron/Python www-data shell and sudo impersonation scriptmanager writes Python; cron imports/executes it root No ownership boundary on privileged automation inputs",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "phpbash",
+        "www-data"
+      ],
+      [
+        "impersonation",
+        "scriptmanager",
+        "sudoers"
+      ],
+      [
+        "payload",
+        "scheduled",
+        "scripts"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "cron",
+        "root"
+      ],
+      [
+        "boundary",
+        "root"
+      ],
+      [
+        "executes",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "minute",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "bashed",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "phpbash",
+        "development",
+        "root"
+      ],
+      [
+        "bashed",
+        "root"
+      ],
+      [
+        "apache",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "phpbash",
+        "development",
+        "root"
+      ],
+      [
+        "bashed",
+        "root"
+      ],
+      [
+        "apache",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 3,
+    "c_hops": 2,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.3333333333333333,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

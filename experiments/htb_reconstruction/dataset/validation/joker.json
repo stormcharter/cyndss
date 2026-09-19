@@ -1,0 +1,287 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Joker",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/08/13/htb-joker.html",
+    "title": "HTB Joker writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "TFTP/Squid proxy, localhost Flask console and wildcard tar cron"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Joker host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.21",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "TFTP",
+      "role": "UDP config transfer",
+      "binding_or_path": "69/udp",
+      "software_or_version": "TFTP",
+      "runs_as": "root",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Downloads Squid configuration"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Squid",
+      "role": "HTTP proxy",
+      "binding_or_path": "3128/tcp",
+      "software_or_version": "Squid",
+      "runs_as": "proxy",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Config contains proxy credentials and internal route"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "Flask console",
+      "role": "Python debug application",
+      "binding_or_path": "127.0.0.1:8080-ish",
+      "software_or_version": "Werkzeug/Python",
+      "runs_as": "www-data",
+      "exposure": "Local via proxy",
+      "evidence": "Explicit",
+      "analysis_note": "Python console/debug execution"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "sudo wildcard",
+      "role": "Privileged command rule",
+      "binding_or_path": "/etc/sudoers",
+      "software_or_version": "sudoedit/tar",
+      "runs_as": "user",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Wildcard and sudoedit_follow permit command/file manipulation"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Scheduled task",
+      "name": "tar cron",
+      "role": "Root archive job",
+      "binding_or_path": "/opt/scripts/*.sh",
+      "software_or_version": "tar",
+      "runs_as": "root",
+      "exposure": "Local scheduled",
+      "evidence": "Explicit",
+      "analysis_note": "Wildcard/checkpoint/symlink abuse"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "proxy",
+      "principal_type": "service account",
+      "operational_role": "Squid process",
+      "groups_or_nesting": "proxy",
+      "authentication_or_effective_access": "reads proxy config",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "joker",
+      "principal_type": "local user",
+      "operational_role": "initial shell/cron user",
+      "groups_or_nesting": "sudo policy",
+      "authentication_or_effective_access": "delegated sudo/sudoedit rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "scheduled principal",
+      "operational_role": "archive executor",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "runs tar job",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read TFTP config",
+      "object": "C1",
+      "condition_or_scope": "UDP 69 public",
+      "security_consequence": "Squid credentials",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "proxy client",
+      "permission_or_action": "authenticate Squid/reach localhost",
+      "object": "C2/C3",
+      "condition_or_scope": "credentials recovered",
+      "security_consequence": "Flask console",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "joker",
+      "permission_or_action": "escape Flask console to shell",
+      "object": "C3",
+      "condition_or_scope": "Python debug",
+      "security_consequence": "joker shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "joker",
+      "permission_or_action": "abuse sudo wildcard/sudoedit",
+      "object": "C4",
+      "condition_or_scope": "sudo rule",
+      "security_consequence": "write/execute privileged files",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root cron",
+      "permission_or_action": "run tar with wildcard",
+      "object": "C5",
+      "condition_or_scope": "file names/symlinks controlled",
+      "security_consequence": "root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "squid.conf",
+      "hosted_on": "C1/C2",
+      "purpose": "proxy credentials/routes",
+      "owner_or_authority": "proxy",
+      "read_access": "TFTP anonymous read",
+      "write_or_execute_access": "Squid writes",
+      "security_significance": "Enables internal service access",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Flask debug console",
+      "hosted_on": "C3",
+      "purpose": "Python execution context",
+      "owner_or_authority": "www-data",
+      "read_access": "proxy route only",
+      "write_or_execute_access": "app writes",
+      "security_significance": "Console-to-shell transition",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "tar archive directory",
+      "hosted_on": "C5",
+      "purpose": "root backup input",
+      "owner_or_authority": "root",
+      "read_access": "joker can create names/symlinks",
+      "write_or_execute_access": "root tar reads",
+      "security_significance": "Wildcard/checkpoint privilege edge",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "TFTP",
+      "issue": "Anonymous config disclosure",
+      "preconditions": "UDP 69 reachable",
+      "vulnerable_behavior": "TFTP GET returns Squid config",
+      "resulting_access": "proxy credentials",
+      "reference": "Configuration weakness",
+      "failed_control": "Config file publicly downloadable",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "Werkzeug/Python console",
+      "issue": "Local debug console exposed through Squid",
+      "preconditions": "Proxy auth and route",
+      "vulnerable_behavior": "Console evaluates Python and spawns commands",
+      "resulting_access": "joker/www-data",
+      "reference": "Debug configuration",
+      "failed_control": "Debug endpoint bound to reachable route",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C4+C5",
+      "affected_version": "sudo/tar",
+      "issue": "Wildcard, sudoedit-follow and tar checkpoint/symlink abuse",
+      "preconditions": "joker shell",
+      "vulnerable_behavior": "Privileged command interprets attacker-controlled file names",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "Root cron and sudo rules trust writable paths",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "download Squid config",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "TFTP public",
+      "resulting_principal_or_access": "proxy credential",
+      "boundary_crossed": "network → config",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "proxy client",
+      "action": "route to Flask console",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "Squid auth",
+      "resulting_principal_or_access": "Python shell",
+      "boundary_crossed": "proxy → internal app",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "joker",
+      "action": "escape console and abuse sudo",
+      "target_component_or_artifact": "C3/C4",
+      "prerequisite": "local shell",
+      "resulting_principal_or_access": "privileged file/control",
+      "boundary_crossed": "user → privileged rule",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "root cron",
+      "action": "archive attacker-controlled path",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "schedule",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "cron → superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

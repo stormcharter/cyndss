@@ -1,0 +1,307 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Forest",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/03/21/htb-forest.html",
+    "title": "HTB Forest writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2016 Active Directory DC",
+    "deployment_role": "HTB.LOCAL DC with Exchange-created ACL groups"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Domain controller",
+      "name": "Forest DC",
+      "role": "Domain/OS boundary",
+      "binding_or_path": "10.10.10.161",
+      "software_or_version": "Windows Server 2016",
+      "runs_as": "SYSTEM/Domain Admins",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "HTB.LOCAL"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service stack",
+      "name": "AD DS core",
+      "role": "DNS/Kerberos/LDAP/GC",
+      "binding_or_path": "53,88,389/636,3268/3269",
+      "software_or_version": "AD DS",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SMB/RPC also exposed"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "RPC/SAMR",
+      "role": "Account enumeration",
+      "binding_or_path": "135 + high RPC ports",
+      "software_or_version": "Windows RPC",
+      "runs_as": "SYSTEM",
+      "exposure": "Unauthenticated enumeration",
+      "evidence": "Explicit",
+      "analysis_note": "Reveals users"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB",
+      "role": "File and named-pipe transport",
+      "binding_or_path": "139,445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Supports RPC"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "WinRM",
+      "role": "Remote PowerShell management",
+      "binding_or_path": "5985/tcp",
+      "software_or_version": "WinRM",
+      "runs_as": "authenticated user",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "svc-alfresco may log in"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C1",
+      "layer_or_type": "Directory objects",
+      "name": "Nested service/privileged groups",
+      "role": "Authorization graph",
+      "binding_or_path": "AD groups",
+      "software_or_version": "AD DS",
+      "runs_as": "directory ACL controlled",
+      "exposure": "Authenticated-readable",
+      "evidence": "Explicit",
+      "analysis_note": "Service Accounts → Privileged IT Accounts → Account Operators"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "C1",
+      "layer_or_type": "Directory object",
+      "name": "Exchange Windows Permissions",
+      "role": "Exchange delegation group",
+      "binding_or_path": "CN=Users",
+      "software_or_version": "AD group",
+      "runs_as": "AD DS",
+      "exposure": "ACL target/member-controlled",
+      "evidence": "Explicit",
+      "analysis_note": "Account Operators has GenericAll over it"
+    },
+    {
+      "component_id": "C7",
+      "parent_id": "C1",
+      "layer_or_type": "Directory object",
+      "name": "HTB.LOCAL domain root",
+      "role": "Domain security descriptor",
+      "binding_or_path": "DC=HTB,DC=LOCAL",
+      "software_or_version": "AD object",
+      "runs_as": "Domain Admins",
+      "exposure": "Directory",
+      "evidence": "Explicit",
+      "analysis_note": "Exchange Windows Permissions has WriteDACL"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "HTB\\svc-alfresco",
+      "principal_type": "domain service user",
+      "operational_role": "Alfresco service account/WinRM user",
+      "groups_or_nesting": "Service Accounts → Privileged IT Accounts → Account Operators",
+      "authentication_or_effective_access": "DONT_REQ_PREAUTH; WinRM; inherited group rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Account Operators",
+      "principal_type": "built-in group",
+      "operational_role": "account/group management tier",
+      "groups_or_nesting": "Built-in",
+      "authentication_or_effective_access": "GenericAll over Exchange Windows Permissions",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Exchange Windows Permissions",
+      "principal_type": "domain group",
+      "operational_role": "Exchange ACL delegation",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "WriteDACL on domain root",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "HTB\\Administrator",
+      "principal_type": "domain administrator",
+      "operational_role": "final privileged principal",
+      "groups_or_nesting": "Domain Admins",
+      "authentication_or_effective_access": "full domain/DC control",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "andy/lucinda/mark/santi/sebastien",
+      "principal_type": "domain users",
+      "operational_role": "enumerated ordinary accounts",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "identities disclosed by RPC",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "unauthenticated",
+      "permission_or_action": "enumerate users",
+      "object": "C2 RPC/SAMR",
+      "condition_or_scope": "RPC reachable",
+      "security_consequence": "svc-alfresco identity discovered",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "unauthenticated Kerberos client",
+      "permission_or_action": "request AS-REP",
+      "object": "svc-alfresco",
+      "condition_or_scope": "DONT_REQ_PREAUTH",
+      "security_consequence": "Offline crack material",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "svc-alfresco via nested groups",
+      "permission_or_action": "GenericAll",
+      "object": "C6 Exchange Windows Permissions",
+      "condition_or_scope": "effective Account Operators membership",
+      "security_consequence": "Can add self to group",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Exchange Windows Permissions member",
+      "permission_or_action": "WriteDACL",
+      "object": "C7 domain root",
+      "condition_or_scope": "group membership",
+      "security_consequence": "Can grant DCSync rights",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "svc-alfresco",
+      "permission_or_action": "DCSync",
+      "object": "C7 directory",
+      "condition_or_scope": "GetChanges/GetChangesAll granted",
+      "security_consequence": "Administrator hash/secret replication",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "svc-alfresco AS-REP",
+      "hosted_on": "C1",
+      "purpose": "Kerberos response encrypted by user key",
+      "owner_or_authority": "KDC",
+      "read_access": "remote request",
+      "write_or_execute_access": "KDC issues without preauth",
+      "security_significance": "Offline password oracle",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "HTB.LOCAL security descriptor",
+      "hosted_on": "C7",
+      "purpose": "domain authorization ACL",
+      "owner_or_authority": "Domain Admins",
+      "read_access": "directory-readable",
+      "write_or_execute_access": "WriteDACL via Exchange group",
+      "security_significance": "Controls replication rights",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "Kerberos account svc-alfresco",
+      "issue": "Preauthentication disabled plus weak password",
+      "preconditions": "Username known",
+      "vulnerable_behavior": "KDC returns crackable AS-REP",
+      "resulting_access": "svc-alfresco credential",
+      "reference": "Configuration weakness",
+      "failed_control": "DONT_REQ_PREAUTH on service account",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5+C6+C7",
+      "affected_version": "AD ACL graph",
+      "issue": "Nested groups and excessive GenericAll/WriteDACL",
+      "preconditions": "svc-alfresco authentication",
+      "vulnerable_behavior": "Self-membership then domain ACL modification",
+      "resulting_access": "DCSync / Administrator secret",
+      "reference": "Configuration weakness",
+      "failed_control": "Privilege graph violates tiering/least privilege",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "enumerate and AS-REP roast",
+      "target_component_or_artifact": "C2/C1",
+      "prerequisite": "RPC + DONT_REQ_PREAUTH",
+      "resulting_principal_or_access": "svc-alfresco",
+      "boundary_crossed": "network → domain user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "svc-alfresco",
+      "action": "WinRM login",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "recovered weak password",
+      "resulting_principal_or_access": "interactive service user",
+      "boundary_crossed": "domain credential → host session",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "svc-alfresco",
+      "action": "use nested Account Operators rights to join Exchange group",
+      "target_component_or_artifact": "C5/C6",
+      "prerequisite": "GenericAll",
+      "resulting_principal_or_access": "Exchange Windows Permissions member",
+      "boundary_crossed": "service user → delegated group",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "svc-alfresco",
+      "action": "grant DCSync and replicate",
+      "target_component_or_artifact": "C7",
+      "prerequisite": "WriteDACL",
+      "resulting_principal_or_access": "Administrator secret",
+      "boundary_crossed": "delegated group → domain admin material",
+      "evidence": "Explicit"
+    }
+  ]
+}

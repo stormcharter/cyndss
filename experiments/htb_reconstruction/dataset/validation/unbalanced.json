@@ -1,0 +1,379 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Unbalanced",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/12/05/htb-unbalanced.html",
+    "title": "HTB Unbalanced writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Debian 10 Linux",
+    "deployment_role": "Rsync/EncFS backup, Squid internal proxy and Pi-hole container"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Unbalanced host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.200",
+      "software_or_version": "Debian 10; OpenSSH 7.9p1",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH 7.9p1",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SSH after XPath credential discovery"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "rsync",
+      "role": "Backup module",
+      "binding_or_path": "873/tcp",
+      "software_or_version": "rsync",
+      "runs_as": "backup",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Encrypted backup tree downloadable"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Storage",
+      "name": "EncFS",
+      "role": "Encrypted filesystem",
+      "binding_or_path": "rsync backup files",
+      "software_or_version": "EncFS",
+      "runs_as": "backup",
+      "exposure": "Local after crack",
+      "evidence": "Explicit",
+      "analysis_note": "Config reveals cipher/root path"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Squid",
+      "role": "HTTP proxy",
+      "binding_or_path": "3128/tcp",
+      "software_or_version": "Squid",
+      "runs_as": "proxy",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Stats/config expose internal IPs and credentials"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C4",
+      "layer_or_type": "Application",
+      "name": "internal management site",
+      "role": "XPath-backed auth",
+      "binding_or_path": "internal IP/vhost",
+      "software_or_version": "Python/XML",
+      "runs_as": "www-data",
+      "exposure": "Only through Squid",
+      "evidence": "Explicit",
+      "analysis_note": "XPath injection dumps users/passwords"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Container",
+      "name": "Pi-hole",
+      "role": "DNS admin container",
+      "binding_or_path": "internal web",
+      "software_or_version": "Pi-hole",
+      "runs_as": "www-data/root container",
+      "exposure": "Internal",
+      "evidence": "Explicit",
+      "analysis_note": "Upload exploit to webshell"
+    },
+    {
+      "component_id": "C7",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "root credential script",
+      "role": "Host maintenance",
+      "binding_or_path": "container/host file",
+      "software_or_version": "shell script",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Contains host root secret"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "network principal",
+      "operational_role": "rsync/proxy client",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "read rsync; Squid auth after crack",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "proxy",
+      "principal_type": "service account",
+      "operational_role": "Squid process",
+      "groups_or_nesting": "proxy",
+      "authentication_or_effective_access": "reads backup/config",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "sa",
+      "principal_type": "local user",
+      "operational_role": "SSH/flag user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "credential from XPath app",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "host superuser",
+      "operational_role": "maintenance owner",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "secret in script/full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read rsync module",
+      "object": "C2",
+      "condition_or_scope": "module allows listing",
+      "security_consequence": "EncFS backup",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "anonymous",
+      "permission_or_action": "crack EncFS password",
+      "object": "C3",
+      "condition_or_scope": "config/hash accessible",
+      "security_consequence": "Squid config/creds",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "proxy client",
+      "permission_or_action": "route internal IPs",
+      "object": "C4/C5",
+      "condition_or_scope": "Squid credentials",
+      "security_consequence": "XPath app",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "inject XPath",
+      "object": "C5",
+      "condition_or_scope": "internal site reachable",
+      "security_consequence": "sa password",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "sa",
+      "permission_or_action": "SSH login",
+      "object": "C1",
+      "condition_or_scope": "password recovered",
+      "security_consequence": "sa shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "sa",
+      "permission_or_action": "upload Pi-hole webshell",
+      "object": "C6",
+      "condition_or_scope": "internal app/API exploit",
+      "security_consequence": "container shell and root script",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root",
+      "permission_or_action": "read maintenance secret",
+      "object": "C7",
+      "condition_or_scope": "script readable",
+      "security_consequence": "root host",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "rsync backup module",
+      "hosted_on": "C2/C3",
+      "purpose": "EncFS config/files",
+      "owner_or_authority": "backup",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "backup writes",
+      "security_significance": "Encrypted backup key material",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Squid config/stats",
+      "hosted_on": "C4",
+      "purpose": "proxy credentials/internal IPs",
+      "owner_or_authority": "proxy",
+      "read_access": "cracked EncFS read",
+      "write_or_execute_access": "Squid writes",
+      "security_significance": "Expands hidden topology",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "XPath response",
+      "hosted_on": "C5",
+      "purpose": "user/password records",
+      "owner_or_authority": "www-data/app",
+      "read_access": "proxy-routed read",
+      "write_or_execute_access": "app writes",
+      "security_significance": "Credential disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Pi-hole upload",
+      "hosted_on": "C6",
+      "purpose": "container webshell",
+      "owner_or_authority": "www-data",
+      "read_access": "internal attacker write",
+      "write_or_execute_access": "web app executes",
+      "security_significance": "Container boundary crossing",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "root credential script",
+      "hosted_on": "C7",
+      "purpose": "host maintenance secret",
+      "owner_or_authority": "root",
+      "read_access": "sa/container can read",
+      "write_or_execute_access": "root writes",
+      "security_significance": "Final credential",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2+C3",
+      "affected_version": "rsync/EncFS",
+      "issue": "Anonymous encrypted backup disclosure with crackable config",
+      "preconditions": "rsync public",
+      "vulnerable_behavior": "Backup exposes EncFS metadata/password material",
+      "resulting_access": "Squid config",
+      "reference": "Configuration/cryptographic weakness",
+      "failed_control": "Backup module not access-controlled",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "XPath-backed internal app",
+      "issue": "XPath injection",
+      "preconditions": "Internal vhost reachable through proxy",
+      "vulnerable_behavior": "Malformed XPath returns users/passwords",
+      "resulting_access": "sa credential",
+      "reference": "XPath injection",
+      "failed_control": "XML query input unsanitized",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C6",
+      "affected_version": "Pi-hole",
+      "issue": "File upload/webshell exploit",
+      "preconditions": "Internal app access",
+      "vulnerable_behavior": "Upload bypass executes PHP in container",
+      "resulting_access": "container/www-data",
+      "reference": "Pi-hole web exploit",
+      "failed_control": "Outdated admin interface",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V4",
+      "affected_component": "C7",
+      "affected_version": "root maintenance script",
+      "issue": "Root secret stored in readable script",
+      "preconditions": "Container/sa shell",
+      "vulnerable_behavior": "Read script and reuse host root secret",
+      "resulting_access": "root",
+      "reference": "Credential storage weakness",
+      "failed_control": "Secret hard-coded in operational script",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "download/crack EncFS backup",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "rsync public",
+      "resulting_principal_or_access": "Squid credential",
+      "boundary_crossed": "network → config",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "proxy into internal XPath app",
+      "target_component_or_artifact": "C4/C5",
+      "prerequisite": "Squid auth",
+      "resulting_principal_or_access": "sa password",
+      "boundary_crossed": "proxy → internal app",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "sa",
+      "action": "SSH and exploit Pi-hole upload",
+      "target_component_or_artifact": "C1/C6",
+      "prerequisite": "credential/internal route",
+      "resulting_principal_or_access": "container shell",
+      "boundary_crossed": "user → container",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "sa/container",
+      "action": "read root script",
+      "target_component_or_artifact": "C7",
+      "prerequisite": "filesystem access",
+      "resulting_principal_or_access": "root credential",
+      "boundary_crossed": "container → host secret",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 5,
+      "source_principal": "root credential",
+      "action": "authenticate/control host",
+      "target_component_or_artifact": "C1/H1",
+      "prerequisite": "secret reuse",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "credential → host root",
+      "evidence": "Explicit"
+    }
+  ]
+}

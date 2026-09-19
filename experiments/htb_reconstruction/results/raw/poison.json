@@ -1,0 +1,238 @@
+{
+  "machine": "Poison",
+  "split": "demo",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 81,
+    "graph_edges": 798,
+    "entry_concepts": [
+      "apache",
+      "browse",
+      "listfiles",
+      "openssh",
+      "poison",
+      "server"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "poison:host:0",
+        "title": "Poison",
+        "summary": "FreeBSD 11.1-era Apache/PHP host with loopback-only root VNC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:component:H1",
+        "title": "Poison server",
+        "summary": "Host OS boundary 10.10.10.84 FreeBSD 11.1-era root VPN reachable Standalone",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell/tunneling 0.0.0.0:22/tcp OpenSSH 7.2 FreeBSD root daemon Public Used after credential recovery Poison server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service File-browsing web app 0.0.0.0:80/tcp Apache 2.4 + PHP www/apache identity Public browse.php accepts file parameter Poison server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:component:C3",
+        "title": "browse.php / listfiles.php",
+        "summary": "Application Local file display/listing HTTP query custom PHP web identity Public Unsanitized local include/read Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:component:C4",
+        "title": "TightVNC/Xvnc :1",
+        "summary": "Service Root GUI session 127.0.0.1:5801,5901/tcp RFB 3.8 / TightVNC root Loopback only Uses /root/.vnc/passwd Poison server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:component:C5",
+        "title": "SMTP",
+        "summary": "Service Local mail 127.0.0.1:25/tcp SMTP mail Loopback only Not used Poison server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:component:C6",
+        "title": "secret.zip",
+        "summary": "Artifact Copied VNC credential material charix home ZIP archive charix Local after SSH Extracted value matches root VNC password file Poison server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:permission:0",
+        "title": "remote client browse.php / listfiles.php",
+        "summary": "choose arbitrary file path browse.php / listfiles.php HTTP reachable PHP returns local credential material",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:permission:1",
+        "title": "charix C1 → C4",
+        "summary": "create SSH local port forward C1 → C4 valid SSH login Loopback-only VNC becomes attacker-reachable",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:permission:2",
+        "title": "charix/attacker TightVNC/Xvnc :1",
+        "summary": "authenticate with recovered VNC secret TightVNC/Xvnc :1 secret extracted from C6 Root desktop session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:vulnerability:V1",
+        "title": "Arbitrary local file inclusion/read browse.php / listfiles.php",
+        "summary": "browse.php / listfiles.php custom PHP HTTP access Unsanitized file parameter reads server files charix credential disclosure No allowlist/path confinement",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "poison:vulnerability:V2",
+        "title": "Recoverable/copied VNC credential plus tunnel C4+C6",
+        "summary": "C4+C6 TightVNC root session charix SSH + secret.zip Attacker forwards loopback service and reuses secret root GUI access Root remote desktop protected by recoverable shared secret",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "browse",
+        "charix",
+        "credential",
+        "listfiles"
+      ],
+      [
+        "charix",
+        "openssh"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "freebsd",
+        "root"
+      ],
+      [
+        "secret",
+        "root"
+      ],
+      [
+        "session",
+        "root"
+      ],
+      [
+        "tightvnc",
+        "root"
+      ],
+      [
+        "allowlist",
+        "access",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "poison",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "poison",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "listfiles",
+        "credential",
+        "root"
+      ],
+      [
+        "browse",
+        "credential",
+        "root"
+      ],
+      [
+        "server",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "poison",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "listfiles",
+        "credential",
+        "root"
+      ],
+      [
+        "browse",
+        "credential",
+        "root"
+      ],
+      [
+        "server",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "browse",
+        "listfiles",
+        "local",
+        "display",
+        "listing",
+        "custom",
+        "arbitrary",
+        "inclusion",
+        "read",
+        "charix",
+        "tightvnc",
+        "xvnc",
+        "root",
+        "session"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "tunneling",
+        "freebsd",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 1.0
+  }
+}

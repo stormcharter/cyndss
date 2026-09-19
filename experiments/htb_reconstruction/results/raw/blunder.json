@@ -1,0 +1,223 @@
+{
+  "machine": "Blunder",
+  "split": "validation",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 71,
+    "graph_edges": 575,
+    "entry_concepts": [
+      "apache",
+      "bludit",
+      "blunder",
+      "host",
+      "uploads"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "blunder:host:0",
+        "title": "Blunder",
+        "summary": "Ubuntu Linux Bludit CMS with brute-force bypass/upload and sudo uid parsing flaw",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:component:H1",
+        "title": "Blunder host",
+        "summary": "Host OS/security boundary 10.10.10.191 Ubuntu Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:component:C1",
+        "title": "Apache/PHP",
+        "summary": "Service HTTP front end 80/tcp Apache 2.4.x + PHP www-data Public Bludit blog/admin Blunder host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:component:C2",
+        "title": "Bludit",
+        "summary": "Application CMS /admin 3.9.2 www-data Public login Brute-force protection bypass and upload traversal Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:component:C3",
+        "title": "uploads",
+        "summary": "Directory PHP upload directory /bl-content/tmp PHP www-data Public after upload Uploaded PHP executes Bludit",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:component:C4",
+        "title": "sudo",
+        "summary": "Authorization Local authorization /etc/sudoers sudo 1.8.25p1 root Local hugo can run bash as non-root uid; -1 bypass Blunder host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:permission:0",
+        "title": "remote client Bludit",
+        "summary": "bypass Bludit login rate limit Bludit X-Forwarded-For/user-agent rotation admin session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:permission:1",
+        "title": "admin C2/C3",
+        "summary": "upload PHP payload C2/C3 Bludit 3.9.2 upload traversal www-data shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:permission:2",
+        "title": "www-data C1/C2",
+        "summary": "read config/reuse Hugo password C1/C2 app files hugo shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:permission:3",
+        "title": "hugo sudo",
+        "summary": "sudo -u#-1 bash sudo sudo <1.8.28 root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:vulnerability:V1",
+        "title": "Brute-force protection bypass Bludit",
+        "summary": "Bludit Bludit 3.9.2 Login public X-Forwarded-For or rotating header bypasses per-IP control admin session Rate limit trusts client header",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:vulnerability:V2",
+        "title": "Directory traversal/upload filter bypass C2+C3",
+        "summary": "C2+C3 Bludit 3.9.2 Admin session Path traversal places PHP in executable directory www-data No canonical path or safe extension policy",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blunder:vulnerability:V3",
+        "title": "CVE-2019-14287 negative UID bypass sudo",
+        "summary": "sudo sudo 1.8.25p1 hugo shell and sudo rule -u#-1 resolves to uid 0 root Sudo parser mishandles negative uid",
+        "verified_cve_ids": "CVE-2019-14287"
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "session"
+      ],
+      [
+        "www-data"
+      ],
+      [
+        "apache",
+        "hugo"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2019-14287",
+        "root"
+      ],
+      [
+        "shell",
+        "CVE-2019-14287",
+        "root"
+      ],
+      [
+        "payload",
+        "shell",
+        "CVE-2019-14287",
+        "root"
+      ],
+      [
+        "www-data",
+        "shell",
+        "CVE-2019-14287",
+        "root"
+      ],
+      [
+        "traversal",
+        "shell",
+        "CVE-2019-14287",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "host",
+        "root"
+      ],
+      [
+        "uploads",
+        "public",
+        "host",
+        "root"
+      ],
+      [
+        "blunder",
+        "root"
+      ],
+      [
+        "bludit",
+        "bypass",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "host",
+        "root"
+      ],
+      [
+        "uploads",
+        "public",
+        "host",
+        "root"
+      ],
+      [
+        "blunder",
+        "root"
+      ],
+      [
+        "bludit",
+        "bypass",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

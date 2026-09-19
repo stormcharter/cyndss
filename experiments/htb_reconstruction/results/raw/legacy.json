@@ -1,0 +1,206 @@
+{
+  "machine": "Legacy",
+  "split": "demo",
+  "input": {
+    "documents": 9,
+    "graph_nodes": 68,
+    "graph_edges": 587,
+    "entry_concepts": [
+      "legacy",
+      "name",
+      "netbios",
+      "server",
+      "service",
+      "smbv1",
+      "workstation"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "legacy:host:0",
+        "title": "Legacy",
+        "summary": "Windows XP SP3 build 2600 Standalone legacy workstation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:component:H1",
+        "title": "Legacy workstation",
+        "summary": "Host OS/security boundary 10.10.10.4 Windows XP SP3 5.1.2600 SYSTEM VPN reachable HTB workgroup",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:component:C1",
+        "title": "NetBIOS Name Service",
+        "summary": "Service Legacy name resolution 0.0.0.0:137/udp Windows NetBIOS SYSTEM Public Supports SMB discovery Legacy workstation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:component:C2",
+        "title": "SMBv1 Server",
+        "summary": "Service File/RPC transport 0.0.0.0:139,445/tcp Windows XP SP3 SMBv1 SYSTEM Public; signing disabled Null-session authentication is denied Legacy workstation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:component:C3",
+        "title": "srvsvc/browser RPC",
+        "summary": "RPC endpoint Remote file-service procedures named pipes over SMB XP SP3 SYSTEM Pre-auth reachable Attack surface for MS08-067 SMBv1 Server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:permission:0",
+        "title": "remote unauthenticated client C3 srvsvc path parser",
+        "summary": "invoke vulnerable RPC C3 srvsvc path parser SMBv1/RPC reachable Arbitrary code in SYSTEM service",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:permission:1",
+        "title": "SYSTEM entire host",
+        "summary": "read/write/execute entire host successful exploit Full compromise",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:vulnerability:V1",
+        "title": "RPC path canonicalization overflow srvsvc/browser RPC",
+        "summary": "srvsvc/browser RPC Windows XP SP3 SMB/RPC reachable Malformed path corrupts memory SYSTEM code execution EOL/unpatched RPC service",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "legacy:vulnerability:V2",
+        "title": "SMBv1 remote-code-execution family SMBv1 Server",
+        "summary": "SMBv1 Server Windows XP SMBv1 SMBv1 reachable Crafted SMB traffic triggers kernel/service flaw SYSTEM code execution SMBv1 enabled and unpatched",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "browser",
+        "srvsvc",
+        "system"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "reachable",
+        "system"
+      ],
+      [
+        "service",
+        "system"
+      ],
+      [
+        "smbv1",
+        "system"
+      ],
+      [
+        "code",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "service",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "service",
+        "system"
+      ],
+      [
+        "smbv1",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ],
+      [
+        "name",
+        "system"
+      ],
+      [
+        "netbios",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "service",
+        "system"
+      ],
+      [
+        "smbv1",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ],
+      [
+        "name",
+        "system"
+      ],
+      [
+        "netbios",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "smbv1",
+        "server",
+        "transport",
+        "windows",
+        "remote-code-execution",
+        "family",
+        "system"
+      ],
+      [
+        "netbios",
+        "name",
+        "service",
+        "legacy",
+        "resolution",
+        "windows",
+        "system"
+      ],
+      [
+        "smbv1",
+        "server",
+        "transport",
+        "windows",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 1.0,
+    "a_ordered": 1.0,
+    "a_precision": 0.5,
+    "a_coverage_topk": 1.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 1.0,
+    "b_ordered": 1.0,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 1.0,
+    "c_ordered": 1.0,
+    "c_precision": 0.5,
+    "c_coverage_topk": 1.0
+  }
+}

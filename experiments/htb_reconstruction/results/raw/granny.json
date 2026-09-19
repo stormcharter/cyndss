@@ -1,0 +1,278 @@
+{
+  "machine": "Granny",
+  "split": "demo",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 67,
+    "graph_edges": 683,
+    "entry_concepts": [
+      "document",
+      "granny",
+      "microsoft",
+      "root",
+      "server",
+      "webdav"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "granny:host:0",
+        "title": "Granny",
+        "summary": "Windows Server 2003 SP2 Writable IIS/WebDAV content server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:component:H1",
+        "title": "Granny server",
+        "summary": "Host OS boundary 10.10.10.15 Windows Server 2003 SP2 SYSTEM VPN reachable EOL host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:component:C1",
+        "title": "Microsoft IIS",
+        "summary": "Service HTTP/ASP.NET server 0.0.0.0:80/tcp IIS 6.0 / ASP.NET NT AUTHORITY\\NETWORK SERVICE Public WebDAV authoring enabled Granny server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:component:C2",
+        "title": "WebDAV",
+        "summary": "Protocol module Remote content authoring PUT and MOVE methods IIS 6.0 WebDAV NETWORK SERVICE Public unauthenticated Extension checks differ between upload and rename Microsoft IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:component:C3",
+        "title": "IIS document root",
+        "summary": "Directory Published executable content HTTP namespace NTFS NETWORK SERVICE Public Writable through WebDAV Microsoft IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:component:C4",
+        "title": "Windows service token",
+        "summary": "Token boundary Local privilege surface local Server 2003 SP2 NETWORK SERVICE Local Impersonation privileges Granny server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:permission:0",
+        "title": "anonymous IIS document root",
+        "summary": "PUT non-executable file IIS document root WebDAV write enabled Attacker content stored",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:permission:1",
+        "title": "anonymous payload extension",
+        "summary": "MOVE/rename payload extension WebDAV MOVE allowed File becomes .aspx and executable",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:permission:2",
+        "title": "NETWORK SERVICE Windows service token",
+        "summary": "abuse impersonation/kernel path Windows service token service token and unpatched OS SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:vulnerability:V1",
+        "title": "PUT/MOVE extension-filter bypass C2/C3",
+        "summary": "C2/C3 IIS 6.0 WebDAV Unauthenticated authoring methods enabled Upload benign extension then MOVE to .aspx NETWORK SERVICE code execution Write and execute allowed in same namespace; inconsistent checks",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "granny:vulnerability:V2",
+        "title": "Service-token privilege escalation Windows service token",
+        "summary": "Windows service token Windows Server 2003 SP2 Local Network Service shell Impersonation path yields privileged token SYSTEM Over-privileged legacy service token",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "payload",
+        "stored"
+      ],
+      [
+        "network",
+        "service"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "path",
+        "system"
+      ],
+      [
+        "windows",
+        "system"
+      ],
+      [
+        "abuse",
+        "system"
+      ],
+      [
+        "escalation",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "server",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "server",
+        "system"
+      ],
+      [
+        "microsoft",
+        "network",
+        "system"
+      ],
+      [
+        "granny",
+        "system"
+      ],
+      [
+        "document",
+        "network",
+        "system"
+      ],
+      [
+        "root",
+        "network",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "server",
+        "system"
+      ],
+      [
+        "microsoft",
+        "network",
+        "system"
+      ],
+      [
+        "granny",
+        "system"
+      ],
+      [
+        "document",
+        "network",
+        "system"
+      ],
+      [
+        "root",
+        "network",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "microsoft",
+        "server",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "local",
+        "privilege",
+        "surface",
+        "service-token",
+        "escalation",
+        "system"
+      ],
+      [
+        "webdav",
+        "remote",
+        "content",
+        "authoring",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "local",
+        "privilege",
+        "surface",
+        "server",
+        "service-token",
+        "escalation",
+        "system"
+      ],
+      [
+        "document",
+        "root",
+        "published",
+        "executable",
+        "content",
+        "ntfs",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "local",
+        "privilege",
+        "surface",
+        "server",
+        "service-token",
+        "escalation",
+        "system"
+      ],
+      [
+        "microsoft",
+        "server",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "local",
+        "privilege",
+        "surface",
+        "system"
+      ],
+      [
+        "webdav",
+        "remote",
+        "content",
+        "authoring",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "local",
+        "privilege",
+        "surface",
+        "server",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.5
+  }
+}

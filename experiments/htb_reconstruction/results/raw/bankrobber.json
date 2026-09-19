@@ -1,0 +1,203 @@
+{
+  "machine": "Bankrobber",
+  "split": "validation",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 107,
+    "graph_edges": 1254,
+    "entry_concepts": [
+      "apache",
+      "bankrobber",
+      "host"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "bankrobber:host:0",
+        "title": "Bankrobber",
+        "summary": "Windows 7–10-era host Apache E-coin app, localhost admin helper and SYSTEM buffer overflow",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:component:H1",
+        "title": "Bankrobber host",
+        "summary": "Host OS/security boundary 10.10.10.154 Windows 7–10 workgroup host SYSTEM VPN reachable SMB signing disabled",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:component:C1",
+        "title": "Apache/PHP",
+        "summary": "Service E-coin web app 0.0.0.0:80,443/tcp Apache 2.4.39 / PHP 7.3.4 / OpenSSL 1.1.1b www-data Public XSS, admin cookie and SQLi surfaces Bankrobber host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:component:C2",
+        "title": "MariaDB",
+        "summary": "Database Application database 0.0.0.0:3306/tcp MariaDB mysql Network reachable E-coin data and admin state Bankrobber host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:component:C3",
+        "title": "SMB",
+        "summary": "Service Windows file service 445/tcp Windows SMB SYSTEM Public/authenticated Signing disabled Bankrobber host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:component:C4",
+        "title": "Admin bot/browser",
+        "summary": "Application Cookie-bearing admin context local PhantomJS/browser PhantomJS admin Local/triggered by XSS Visits attacker-controlled URL and leaks cookie Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:component:C5",
+        "title": "Bankrobber helper",
+        "summary": "Binary PIN/buffer-overflow service 127.0.0.1:910/tcp custom Windows binary SYSTEM Local only Four-digit PIN then path overwrite Bankrobber host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:permission:0",
+        "title": "remote client C1/C4",
+        "summary": "submit stored/reflected XSS C1/C4 web app accepts script admin cookie",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:permission:1",
+        "title": "admin bot Admin bot/browser",
+        "summary": "visit attacker URL Admin bot/browser XSS delivery admin session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:permission:2",
+        "title": "admin C1/C5",
+        "summary": "send localhost request via SQLi/RCE page C1/C5 admin cookie and SQLi user shell from local helper",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:permission:3",
+        "title": "bankrobber user Bankrobber helper",
+        "summary": "tunnel localhost:910 and brute PIN Bankrobber helper local-only service path overwrite primitive",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:permission:4",
+        "title": "SYSTEM helper Bankrobber helper",
+        "summary": "execute overwritten path Bankrobber helper buffer overflow SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:vulnerability:V1",
+        "title": "XSS enables admin cookie theft C1+C4",
+        "summary": "C1+C4 Apache/PHP E-coin Web input reflected/stored; admin bot visits Script sends cookie to attacker admin session No output encoding and privileged browser bot",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:vulnerability:V2",
+        "title": "SQLi leaks source and reaches code execution but localhost-only Apache/PHP",
+        "summary": "Apache/PHP PHP admin helper Admin request context Injected query exposes RCE endpoint; localhost restriction bypassed by bot web shell No parameterized queries; weak origin control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bankrobber:vulnerability:V3",
+        "title": "PIN brute-force + stack buffer overflow overwrites executable path Bankrobber helper",
+        "summary": "Bankrobber helper custom SYSTEM helper Local TCP access via shell/tunnel Correct PIN reaches vulnerable parser; path string controls child process SYSTEM No rate limit/bounds check and service runs SYSTEM",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "process",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "cookie"
+      ],
+      [
+        "bankrobber",
+        "shell"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "access",
+        "process"
+      ],
+      [
+        "bounds",
+        "process"
+      ],
+      [
+        "brute-force",
+        "process"
+      ],
+      [
+        "check",
+        "process"
+      ],
+      [
+        "child",
+        "process"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "bankrobber",
+        "process"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "apache",
+        "reaches",
+        "process"
+      ],
+      [
+        "host",
+        "system",
+        "process"
+      ],
+      [
+        "bankrobber",
+        "process"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "apache",
+        "reaches",
+        "process"
+      ],
+      [
+        "host",
+        "system",
+        "process"
+      ],
+      [
+        "bankrobber",
+        "process"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.5,
+    "b_ordered": 0.5,
+    "b_precision": 0.5,
+    "c_chains": 3,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.5
+  }
+}

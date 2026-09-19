@@ -1,0 +1,336 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Cache",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/10/10/htb-cache.html",
+    "title": "HTB Cache writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 18.04 Linux",
+    "deployment_role": "Apache/OpenEMR vhost, Memcached and Docker-group privilege"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Cache host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.188",
+      "software_or_version": "Ubuntu 18.04 Bionic-era Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22,2201/tcp",
+      "software_or_version": "OpenSSH 7.6p1 Ubuntu 4ubuntu0.3",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "ash then luffy login"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache 2.4.29",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "cache.htb and hms.htb vhosts"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "OpenEMR",
+      "role": "Medical app",
+      "binding_or_path": "hms.htb",
+      "software_or_version": "OpenEMR 5.0.0-era",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Unauthenticated info leaks/auth bypass and SQLi"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "Memcached",
+      "role": "Local cache",
+      "binding_or_path": "127.0.0.1:11211/tcp",
+      "software_or_version": "Memcached 1.5.6 Ubuntu",
+      "runs_as": "memcache",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Stores luffy password in cache"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Docker daemon",
+      "role": "Container runtime",
+      "binding_or_path": "/var/run/docker.sock",
+      "software_or_version": "Docker",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "luffy is docker group member"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "C5",
+      "layer_or_type": "Container",
+      "name": "Ubuntu image",
+      "role": "Container artifact",
+      "binding_or_path": "docker image ubuntu:latest",
+      "software_or_version": "Ubuntu latest",
+      "runs_as": "root in container",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Can mount host / into container"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/OpenEMR worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web app access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "ash",
+      "principal_type": "local user",
+      "operational_role": "initial app/SSH user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "reads app credentials; can query Memcached",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "luffy",
+      "principal_type": "local user",
+      "operational_role": "Docker operator",
+      "groups_or_nesting": "docker",
+      "authentication_or_effective_access": "can create containers and access Docker socket",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "host principal",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "bypass OpenEMR portal/read SQLi",
+      "object": "C3",
+      "condition_or_scope": "hms vhost discovered; vulnerable release",
+      "security_consequence": "app data/credentials",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "reuse OpenEMR credential",
+      "object": "C1",
+      "condition_or_scope": "credential disclosed by OpenEMR",
+      "security_consequence": "ash shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "ash",
+      "permission_or_action": "read Memcached key/value",
+      "object": "C4",
+      "condition_or_scope": "localhost cache access",
+      "security_consequence": "luffy password",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "ash",
+      "permission_or_action": "authenticate as luffy",
+      "object": "C1",
+      "condition_or_scope": "Memcached password reuse",
+      "security_consequence": "luffy shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "luffy",
+      "permission_or_action": "control Docker daemon",
+      "object": "C5/C6",
+      "condition_or_scope": "docker group",
+      "security_consequence": "container root with host filesystem mount",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "container root",
+      "permission_or_action": "read/write /mnt host root",
+      "object": "H1",
+      "condition_or_scope": "docker run -v /:/mnt",
+      "security_consequence": "host root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "OpenEMR admin.php/sql_patch.php",
+      "hosted_on": "C3",
+      "purpose": "version/database disclosure",
+      "owner_or_authority": "www-data",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "app admin writes",
+      "security_significance": "Pins vulnerable release and DB",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "OpenEMR DB records",
+      "hosted_on": "C3",
+      "purpose": "user credential data",
+      "owner_or_authority": "www-data",
+      "read_access": "SQLi/auth bypass",
+      "write_or_execute_access": "app writes",
+      "security_significance": "Credential transition",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Memcached key/value",
+      "hosted_on": "C4",
+      "purpose": "cached luffy password",
+      "owner_or_authority": "memcache",
+      "read_access": "ash can query localhost",
+      "write_or_execute_access": "app/session writes",
+      "security_significance": "Cache disclosure bridges users",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/var/run/docker.sock",
+      "hosted_on": "C5",
+      "purpose": "container control socket",
+      "owner_or_authority": "root",
+      "read_access": "luffy group read/write",
+      "write_or_execute_access": "Docker daemon executes",
+      "security_significance": "Equivalent to root",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "ubuntu:latest image",
+      "hosted_on": "C6",
+      "purpose": "container execution artifact",
+      "owner_or_authority": "root",
+      "read_access": "luffy can use",
+      "write_or_execute_access": "Docker pulls/runs",
+      "security_significance": "Host root mount path",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "OpenEMR 5.0.0-era",
+      "issue": "Authentication bypass and SQL injection",
+      "preconditions": "hms vhost public",
+      "vulnerable_behavior": "Portal registration/session and SQLi expose data",
+      "resulting_access": "ash credential material",
+      "reference": "OpenEMR vulnerability report",
+      "failed_control": "Unauthenticated pages lack access control",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Memcached 1.5.6",
+      "issue": "Unauthenticated local cache read",
+      "preconditions": "ash local shell",
+      "vulnerable_behavior": "Cache protocol returns luffy password",
+      "resulting_access": "luffy credential",
+      "reference": "Configuration weakness",
+      "failed_control": "Sensitive credential left in plaintext cache",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "Docker",
+      "issue": "docker group grants daemon control",
+      "preconditions": "luffy local session",
+      "vulnerable_behavior": "Container can mount host root",
+      "resulting_access": "root",
+      "reference": "Docker group privilege model",
+      "failed_control": "Socket ACL treated as admin boundary",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "reach hms and exploit OpenEMR",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "vhost header and public portal",
+      "resulting_principal_or_access": "ash credential",
+      "boundary_crossed": "network → app data",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "SSH as ash",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "OpenEMR credential",
+      "resulting_principal_or_access": "ash",
+      "boundary_crossed": "credential → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "ash",
+      "action": "read Memcached and reuse luffy password",
+      "target_component_or_artifact": "C4/C1",
+      "prerequisite": "localhost cache",
+      "resulting_principal_or_access": "luffy",
+      "boundary_crossed": "user → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "luffy",
+      "action": "start Ubuntu container with host mount",
+      "target_component_or_artifact": "C5/C6",
+      "prerequisite": "docker group",
+      "resulting_principal_or_access": "host filesystem root",
+      "boundary_crossed": "user → host root",
+      "evidence": "Explicit"
+    }
+  ]
+}

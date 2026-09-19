@@ -1,0 +1,299 @@
+{
+  "machine": "DevOops",
+  "split": "train",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 91,
+    "graph_edges": 910,
+    "entry_concepts": [
+      "endpoint",
+      "flask",
+      "gitter",
+      "host",
+      "openssh",
+      "pickle",
+      "python",
+      "service"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "devoops:host:0",
+        "title": "DevOops",
+        "summary": "Ubuntu 16.04.4 LTS i686 kernel 4.13 Flask XML feed service with exposed Git deployment history",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:component:H1",
+        "title": "gitter host",
+        "summary": "Host OS/security boundary 10.10.10.91 Ubuntu 16.04.4 LTS i686; kernel 4.13.0-37 root VPN reachable Single Linux host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH 7.2p2 Ubuntu root daemon Public SSH key reuse is the pivot gitter host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:component:C2",
+        "title": "Flask XML service",
+        "summary": "Application Feed upload/parser 0.0.0.0:5000/tcp Gunicorn 19.7.1 / Flask www-data Public XML parser accepts external entities gitter host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:component:C3",
+        "title": "Git repository",
+        "summary": "Artifact Deployment/source history /home/roosa/work/blogfeed/.git Git roosa Local after roosa shell Old commit contains root private key gitter host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:component:C4",
+        "title": "Python pickle endpoint",
+        "summary": "Application Serialized request handler /newpost Flask/Python 2.7 roosa Public through C2 Alternate deserialization foothold Flask XML service",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:permission:0",
+        "title": "remote unauthenticated client Flask XML service",
+        "summary": "submit XML with external entity Flask XML service feed endpoint reachable read local files such as SSH key",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:permission:1",
+        "title": "remote client Python pickle endpoint",
+        "summary": "send crafted pickle Python pickle endpoint Flask unpickles request data roosa command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:permission:2",
+        "title": "roosa Git repository",
+        "summary": "read old Git commit Git repository repository exposed/readable root private key recovered",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:permission:3",
+        "title": "root key holder OpenSSH",
+        "summary": "SSH login OpenSSH key accepted for root full host control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:vulnerability:V1",
+        "title": "External entity expansion (XXE) Flask XML service",
+        "summary": "Flask XML service Flask XML parser Feed endpoint accepts XML Parser resolves file:// entity supplied by client read as web/service user; SSH key disclosure DOCTYPE/external entities not disabled",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:vulnerability:V2",
+        "title": "Unsafe deserialization Python pickle endpoint",
+        "summary": "Python pickle endpoint Python pickle Serialized endpoint reachable Pickle opcodes invoke attacker functions roosa shell Untrusted pickle loaded",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "devoops:vulnerability:V3",
+        "title": "Sensitive secret retained in repository history Git repository",
+        "summary": "Git repository Git deployment .git publicly reachable Old commit is retrievable even after file deletion root SSH credential No history scrubbing or access control",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "flask",
+        "private",
+        "service"
+      ],
+      [
+        "openssh",
+        "roosa",
+        "shell"
+      ],
+      [
+        "private",
+        "repository",
+        "root"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "commit",
+        "root"
+      ],
+      [
+        "repository",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "gunicorn",
+        "host",
+        "root"
+      ],
+      [
+        "upload",
+        "host",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "gitter",
+        "root"
+      ],
+      [
+        "service",
+        "daemon",
+        "root"
+      ],
+      [
+        "pickle",
+        "roosa",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "gitter",
+        "root"
+      ],
+      [
+        "service",
+        "daemon",
+        "root"
+      ],
+      [
+        "pickle",
+        "roosa",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "python",
+        "pickle",
+        "endpoint",
+        "serialized",
+        "request",
+        "handler",
+        "flask",
+        "unsafe",
+        "deserialization",
+        "roosa",
+        "repository",
+        "deployment",
+        "source",
+        "history",
+        "sensitive",
+        "secret",
+        "retained",
+        "root"
+      ],
+      [
+        "python",
+        "pickle",
+        "endpoint",
+        "serialized",
+        "request",
+        "handler",
+        "flask",
+        "unsafe",
+        "deserialization",
+        "roosa",
+        "repository",
+        "deployment",
+        "source",
+        "history",
+        "root"
+      ],
+      [
+        "python",
+        "pickle",
+        "endpoint",
+        "serialized",
+        "request",
+        "handler",
+        "flask",
+        "roosa",
+        "repository",
+        "deployment",
+        "source",
+        "history",
+        "sensitive",
+        "secret",
+        "retained",
+        "root"
+      ],
+      [
+        "python",
+        "pickle",
+        "endpoint",
+        "serialized",
+        "request",
+        "handler",
+        "flask",
+        "roosa",
+        "repository",
+        "deployment",
+        "source",
+        "history",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.3333333333333333,
+    "a_ordered": 0.3333333333333333,
+    "a_precision": 0.5,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.3333333333333333,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.5,
+    "c_coverage_topk": 1.0
+  }
+}

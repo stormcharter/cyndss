@@ -1,0 +1,187 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Jerry",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/11/17/htb-jerry.html",
+    "title": "HTB Jerry writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2012 R2 build 9600",
+    "deployment_role": "Single Java application server"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Jerry server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.95",
+      "software_or_version": "Windows 6.3.9600",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Single exposed application"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache Tomcat",
+      "role": "Java servlet container",
+      "binding_or_path": "0.0.0.0:8080/tcp",
+      "software_or_version": "Tomcat 7.0.88 / Coyote 1.1",
+      "runs_as": "NT AUTHORITY\\SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Service is over-privileged"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Tomcat Manager",
+      "role": "Administrative deployment UI/API",
+      "binding_or_path": "/manager/html and /manager/text",
+      "software_or_version": "Tomcat 7.0.88",
+      "runs_as": "SYSTEM via C1",
+      "exposure": "Public; Basic auth",
+      "evidence": "Explicit",
+      "analysis_note": "Accepts weak/default credential"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Runtime",
+      "name": "Java VM",
+      "role": "Executes deployed WAR/JSP",
+      "binding_or_path": "Tomcat process",
+      "software_or_version": "Java 1.6.0_17 artifact",
+      "runs_as": "SYSTEM",
+      "exposure": "Indirectly reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Version inferred from deployed artifacts"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "Tomcat manager user",
+      "principal_type": "application account",
+      "operational_role": "deployment administrator",
+      "groups_or_nesting": "manager-gui/script",
+      "authentication_or_effective_access": "upload/deploy/execute WAR content",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "NT AUTHORITY\\SYSTEM",
+      "principal_type": "service identity",
+      "operational_role": "Tomcat process owner",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "manager user",
+      "permission_or_action": "deploy/undeploy",
+      "object": "C2 Tomcat Manager",
+      "condition_or_scope": "valid weak/default credential",
+      "security_consequence": "Attacker-controlled WAR executes",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "C1 Tomcat service",
+      "permission_or_action": "execute as",
+      "object": "SYSTEM",
+      "condition_or_scope": "service configuration",
+      "security_consequence": "Web compromise equals host compromise",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "malicious WAR",
+      "hosted_on": "C2/C1",
+      "purpose": "server-side application package",
+      "owner_or_authority": "manager user",
+      "read_access": "manager user",
+      "write_or_execute_access": "Tomcat executes JSP",
+      "security_significance": "Turns app-admin rights into OS code execution",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Java version artifact",
+      "hosted_on": "C1",
+      "purpose": "runtime metadata",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "web-readable after access",
+      "write_or_execute_access": "SYSTEM",
+      "security_significance": "Identifies obsolete JVM 1.6.0_17",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "Tomcat 7.0.88",
+      "issue": "Weak/default Manager credential with unrestricted deployment",
+      "preconditions": "Manager exposed; credential guessed",
+      "vulnerable_behavior": "Authorized deployment feature accepts attacker WAR",
+      "resulting_access": "SYSTEM code execution",
+      "reference": "Configuration weakness",
+      "failed_control": "Default secret + public admin interface",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C1",
+      "affected_version": "Tomcat service",
+      "issue": "Service runs as SYSTEM",
+      "preconditions": "Any server-side code execution",
+      "vulnerable_behavior": "Servlet code inherits SYSTEM token",
+      "resulting_access": "Full host compromise",
+      "reference": "Configuration weakness",
+      "failed_control": "No least-privilege service identity",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "authenticate with weak manager secret",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "Manager exposed",
+      "resulting_principal_or_access": "Tomcat manager user",
+      "boundary_crossed": "network → application admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "manager user",
+      "action": "deploy WAR and request JSP",
+      "target_component_or_artifact": "C1/C3",
+      "prerequisite": "deployment permission",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "application admin → OS system",
+      "evidence": "Explicit"
+    }
+  ]
+}

@@ -1,0 +1,236 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Haircut",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/09/10/htb-haircut.html",
+    "title": "HTB Haircut writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Apache curl wrapper and SUID screen 4.5.0"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Haircut host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.139",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used after web shell"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "HTTP front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "Apache/PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "/haircut curl page"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "curl wrapper",
+      "role": "URL fetcher",
+      "binding_or_path": "/haircut/index.php",
+      "software_or_version": "curl",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Parameter injection writes/exposes command output"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Binary",
+      "name": "screen",
+      "role": "SUID terminal multiplexer",
+      "binding_or_path": "/usr/bin/screen",
+      "software_or_version": "4.5.0",
+      "runs_as": "root",
+      "exposure": "Local; setuid root",
+      "evidence": "Explicit",
+      "analysis_note": "ld.so.preload exploit"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "command execution from curl wrapper",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "mike",
+      "principal_type": "local user",
+      "operational_role": "web/flag user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "interactive shell after payload",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "SUID owner",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "screen effective uid 0",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "inject curl parameter",
+      "object": "C3",
+      "condition_or_scope": "HTTP page public",
+      "security_consequence": "www-data command/webshell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "run command as mike",
+      "object": "C1/C3",
+      "condition_or_scope": "local shell/credential",
+      "security_consequence": "mike",
+      "evidence": "service → user"
+    },
+    {
+      "subject": "mike",
+      "permission_or_action": "execute SUID screen exploit",
+      "object": "C4",
+      "condition_or_scope": "screen 4.5.0 setuid",
+      "security_consequence": "root via ld.so.preload",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "curl URL/options",
+      "hosted_on": "C3",
+      "purpose": "untrusted fetch configuration",
+      "owner_or_authority": "remote client",
+      "read_access": "public write",
+      "write_or_execute_access": "PHP passes to curl",
+      "security_significance": "Parameter injection sink",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/etc/ld.so.preload",
+      "hosted_on": "C4",
+      "purpose": "dynamic loader hook",
+      "owner_or_authority": "root",
+      "read_access": "mike can write via screen exploit",
+      "write_or_execute_access": "root loader reads",
+      "security_significance": "Privilege escalation artifact",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/tmp/libhax.so",
+      "hosted_on": "C4",
+      "purpose": "malicious shared library",
+      "owner_or_authority": "mike",
+      "read_access": "screen writes path",
+      "write_or_execute_access": "loader executes as root",
+      "security_significance": "SUID-to-root payload",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "PHP/curl wrapper",
+      "issue": "Parameter injection/command execution",
+      "preconditions": "HTTP public",
+      "vulnerable_behavior": "User-controlled URL/options alter curl behavior and write shell",
+      "resulting_access": "www-data/mike",
+      "reference": "Command/option injection",
+      "failed_control": "No allowlist or safe argument construction",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "screen 4.5.0",
+      "issue": "SUID ld.so.preload exploit",
+      "preconditions": "Local user shell",
+      "vulnerable_behavior": "Screen logging writes /etc/ld.so.preload; next root binary loads library",
+      "resulting_access": "root",
+      "reference": "screen 4.5.0 exploit",
+      "failed_control": "Vulnerable SUID screen binary deployed",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "inject curl wrapper",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "HTTP public",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "network → web service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "www-data",
+      "action": "obtain mike shell",
+      "target_component_or_artifact": "C1/C3",
+      "prerequisite": "command execution/credential",
+      "resulting_principal_or_access": "mike",
+      "boundary_crossed": "service → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "mike",
+      "action": "poison ld.so.preload with screen",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "SUID vulnerable screen",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

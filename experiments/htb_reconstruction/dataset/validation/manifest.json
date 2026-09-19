@@ -1,0 +1,122 @@
+{
+  "schema": "htb.writeup.analysis.manifest.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "generated": "2026-09-04",
+  "count": 22,
+  "files": [
+    {
+      "machine": "Bart",
+      "file": "bart.json",
+      "source": "https://0xdf.gitlab.io/2018/07/15/htb-bart.html"
+    },
+    {
+      "machine": "Access",
+      "file": "access.json",
+      "source": "https://0xdf.gitlab.io/2019/03/02/htb-access.html"
+    },
+    {
+      "machine": "Irked",
+      "file": "irked.json",
+      "source": "https://0xdf.gitlab.io/2019/04/27/htb-irked.html"
+    },
+    {
+      "machine": "Bankrobber",
+      "file": "bankrobber.json",
+      "source": "https://0xdf.gitlab.io/2020/03/07/htb-bankrobber.html"
+    },
+    {
+      "machine": "Networked",
+      "file": "networked.json",
+      "source": "https://0xdf.gitlab.io/2019/11/16/htb-networked.html"
+    },
+    {
+      "machine": "Jarvis",
+      "file": "jarvis.json",
+      "source": "https://0xdf.gitlab.io/2019/11/09/htb-jarvis.html"
+    },
+    {
+      "machine": "Heist",
+      "file": "heist.json",
+      "source": "https://0xdf.gitlab.io/2019/11/30/htb-heist.html"
+    },
+    {
+      "machine": "Help",
+      "file": "help.json",
+      "source": "https://0xdf.gitlab.io/2019/06/08/htb-help.html"
+    },
+    {
+      "machine": "Querier",
+      "file": "querier.json",
+      "source": "https://0xdf.gitlab.io/2019/06/22/htb-querier.html"
+    },
+    {
+      "machine": "Cascade",
+      "file": "cascade.json",
+      "source": "https://0xdf.gitlab.io/2020/07/25/htb-cascade.html"
+    },
+    {
+      "machine": "Blackfield",
+      "file": "blackfield.json",
+      "source": "https://0xdf.gitlab.io/2020/10/03/htb-blackfield.html"
+    },
+    {
+      "machine": "Remote",
+      "file": "remote.json",
+      "source": "https://0xdf.gitlab.io/2020/09/05/htb-remote.html"
+    },
+    {
+      "machine": "Blunder",
+      "file": "blunder.json",
+      "source": "https://0xdf.gitlab.io/2020/10/17/htb-blunder.html"
+    },
+    {
+      "machine": "Admirer",
+      "file": "admirer.json",
+      "source": "https://0xdf.gitlab.io/2020/09/26/htb-admirer.html"
+    },
+    {
+      "machine": "Haircut",
+      "file": "haircut.json",
+      "source": "https://0xdf.gitlab.io/2020/09/10/htb-haircut.html"
+    },
+    {
+      "machine": "Buff",
+      "file": "buff.json",
+      "source": "https://0xdf.gitlab.io/2020/11/21/htb-buff.html"
+    },
+    {
+      "machine": "Traceback",
+      "file": "traceback.json",
+      "source": "https://0xdf.gitlab.io/2020/08/15/htb-traceback.html"
+    },
+    {
+      "machine": "Joker",
+      "file": "joker.json",
+      "source": "https://0xdf.gitlab.io/2020/08/13/htb-joker.html"
+    },
+    {
+      "machine": "Unbalanced",
+      "file": "unbalanced.json",
+      "source": "https://0xdf.gitlab.io/2020/12/05/htb-unbalanced.html"
+    },
+    {
+      "machine": "Love",
+      "file": "love.json",
+      "source": "https://0xdf.gitlab.io/2021/08/07/htb-love.html"
+    },
+    {
+      "machine": "Luanne",
+      "file": "luanne.json",
+      "source": "https://0xdf.gitlab.io/2021/03/27/htb-luanne.html"
+    },
+    {
+      "machine": "Node",
+      "file": "node.json",
+      "source": "https://0xdf.gitlab.io/2021/06/08/htb-node.html"
+    }
+  ]
+}

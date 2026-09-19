@@ -1,0 +1,122 @@
+{
+  "schema": "htb.writeup.analysis.manifest.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "generated": "2026-09-04",
+  "count": 22,
+  "files": [
+    {
+      "machine": "Lame",
+      "file": "lame.json",
+      "source": "https://0xdf.gitlab.io/2020/04/07/htb-lame.html"
+    },
+    {
+      "machine": "Legacy",
+      "file": "legacy.json",
+      "source": "https://0xdf.gitlab.io/2019/02/21/htb-legacy.html"
+    },
+    {
+      "machine": "Blue",
+      "file": "blue.json",
+      "source": "https://0xdf.gitlab.io/2021/05/11/htb-blue.html"
+    },
+    {
+      "machine": "Jerry",
+      "file": "jerry.json",
+      "source": "https://0xdf.gitlab.io/2018/11/17/htb-jerry.html"
+    },
+    {
+      "machine": "Devel",
+      "file": "devel.json",
+      "source": "https://0xdf.gitlab.io/2019/03/05/htb-devel.html"
+    },
+    {
+      "machine": "Optimum",
+      "file": "optimum.json",
+      "source": "https://0xdf.gitlab.io/2021/03/17/htb-optimum.html"
+    },
+    {
+      "machine": "Bastard",
+      "file": "bastard.json",
+      "source": "https://0xdf.gitlab.io/2019/03/12/htb-bastard.html"
+    },
+    {
+      "machine": "Arctic",
+      "file": "arctic.json",
+      "source": "https://0xdf.gitlab.io/2020/05/19/htb-arctic.html"
+    },
+    {
+      "machine": "Shocker",
+      "file": "shocker.json",
+      "source": "https://0xdf.gitlab.io/2021/05/25/htb-shocker.html"
+    },
+    {
+      "machine": "Nibbles",
+      "file": "nibbles.json",
+      "source": "https://0xdf.gitlab.io/2018/06/30/htb-nibbles.html"
+    },
+    {
+      "machine": "Beep",
+      "file": "beep.json",
+      "source": "https://0xdf.gitlab.io/2021/02/23/htb-beep.html"
+    },
+    {
+      "machine": "Sense",
+      "file": "sense.json",
+      "source": "https://0xdf.gitlab.io/2021/03/11/htb-sense.html"
+    },
+    {
+      "machine": "Grandpa",
+      "file": "grandpa.json",
+      "source": "https://0xdf.gitlab.io/2020/05/28/htb-grandpa.html"
+    },
+    {
+      "machine": "Granny",
+      "file": "granny.json",
+      "source": "https://0xdf.gitlab.io/2019/03/06/htb-granny.html"
+    },
+    {
+      "machine": "Poison",
+      "file": "poison.json",
+      "source": "https://0xdf.gitlab.io/2018/09/08/htb-poison.html"
+    },
+    {
+      "machine": "Sunday",
+      "file": "sunday.json",
+      "source": "https://0xdf.gitlab.io/2018/09/29/htb-sunday.html"
+    },
+    {
+      "machine": "Valentine",
+      "file": "valentine.json",
+      "source": "https://0xdf.gitlab.io/2018/07/28/htb-valentine.html"
+    },
+    {
+      "machine": "Bashed",
+      "file": "bashed.json",
+      "source": "https://0xdf.gitlab.io/2018/04/29/htb-bashed.html"
+    },
+    {
+      "machine": "Active",
+      "file": "active.json",
+      "source": "https://0xdf.gitlab.io/2018/12/08/htb-active.html"
+    },
+    {
+      "machine": "Forest",
+      "file": "forest.json",
+      "source": "https://0xdf.gitlab.io/2020/03/21/htb-forest.html"
+    },
+    {
+      "machine": "Sauna",
+      "file": "sauna.json",
+      "source": "https://0xdf.gitlab.io/2020/07/18/htb-sauna.html"
+    },
+    {
+      "machine": "FriendZone",
+      "file": "friendzone.json",
+      "source": "https://0xdf.gitlab.io/2019/07/13/htb-friendzone.html"
+    }
+  ]
+}

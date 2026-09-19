@@ -1,0 +1,187 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Dropzone",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/11/03/htb-dropzone.html",
+    "title": "HTB Dropzone writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows XP SP3 x86",
+    "deployment_role": "TFTP-only file server with WMI/MOF execution"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Dropzone host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.90",
+      "software_or_version": "Windows XP SP3 x86",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "No TCP ports exposed"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "TFTP",
+      "role": "UDP file transfer",
+      "binding_or_path": "0.0.0.0:69/udp",
+      "software_or_version": "Windows TFTP",
+      "runs_as": "SYSTEM",
+      "exposure": "Public write/read",
+      "evidence": "Explicit",
+      "analysis_note": "Uploads land in Windows system paths"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "WMI service",
+      "role": "MOF compiler/executor",
+      "binding_or_path": "local WMI repository",
+      "software_or_version": "Windows XP WMI",
+      "runs_as": "SYSTEM",
+      "exposure": "Triggered by crafted .mof",
+      "evidence": "Explicit",
+      "analysis_note": "Compiles MOF and runs consumer command"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Directory",
+      "name": "NTFS system32",
+      "role": "Executable/system directory",
+      "binding_or_path": "C:\\WINDOWS\\system32",
+      "software_or_version": "Windows XP",
+      "runs_as": "SYSTEM",
+      "exposure": "Writable via TFTP bug",
+      "evidence": "Explicit",
+      "analysis_note": "Uploaded tools run from system context"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "TFTP guest",
+      "operational_role": "unauthenticated file writer",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "put/get files via UDP 69",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "WMI and kernel authority",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "write",
+      "object": "C1/C3 system directory",
+      "condition_or_scope": "TFTP server permits path traversal/write",
+      "security_consequence": "attacker places MOF/tool",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "WMI service",
+      "permission_or_action": "compile/execute",
+      "object": "C2",
+      "condition_or_scope": "MOF file under wbem\\mof",
+      "security_consequence": "SYSTEM command execution",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "uploaded .mof",
+      "hosted_on": "C3/C2",
+      "purpose": "WMI event consumer definition",
+      "owner_or_authority": "anonymous",
+      "read_access": "none before upload",
+      "write_or_execute_access": "anonymous write; WMI executes",
+      "security_significance": "Code crosses file-service to management plane",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "whoami.exe/nc.exe",
+      "hosted_on": "C3",
+      "purpose": "post-exploit tooling",
+      "owner_or_authority": "anonymous",
+      "read_access": "TFTP read/write",
+      "write_or_execute_access": "anonymous write",
+      "security_significance": "Confirms SYSTEM execution",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C3",
+      "affected_version": "Windows XP TFTP",
+      "issue": "Path traversal/arbitrary file write",
+      "preconditions": "UDP 69 reachable",
+      "vulnerable_behavior": "TFTP filename escapes root and writes system files",
+      "resulting_access": "SYSTEM-triggered payload",
+      "reference": "Configuration/path traversal flaw",
+      "failed_control": "TFTP root not confined",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C2",
+      "affected_version": "Windows XP WMI",
+      "issue": "MOF compilation executes attacker consumer",
+      "preconditions": "MOF placed in repository",
+      "vulnerable_behavior": "WMI compiles and invokes command consumer",
+      "resulting_access": "SYSTEM",
+      "reference": "WMI/MOF code execution",
+      "failed_control": "WMI accepts untrusted repository files",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "upload crafted MOF/tool",
+      "target_component_or_artifact": "C1/C3",
+      "prerequisite": "TFTP write and traversal",
+      "resulting_principal_or_access": "system directory payload",
+      "boundary_crossed": "network → privileged filesystem",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "WMI service",
+      "action": "compile MOF and run consumer",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "file in wbem\\mof",
+      "resulting_principal_or_access": "SYSTEM shell",
+      "boundary_crossed": "filesystem → service superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

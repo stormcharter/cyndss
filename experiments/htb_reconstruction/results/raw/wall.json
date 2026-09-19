@@ -1,0 +1,192 @@
+{
+  "machine": "Wall",
+  "split": "train",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 64,
+    "graph_edges": 598,
+    "entry_concepts": [
+      "apache",
+      "centreon",
+      "host",
+      "openssh",
+      "wall"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "wall:host:0",
+        "title": "Wall",
+        "summary": "Ubuntu/CentOS-era Linux Apache plus Centreon monitoring console and local privilege boundary",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:component:H1",
+        "title": "Wall host",
+        "summary": "Host OS/security boundary 10.10.10.157 Linux (CentOS 7.6/PHP 5.4.16 in Centreon path) root VPN reachable Standalone monitoring host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH root daemon Public Used after web foothold Wall host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:component:C2",
+        "title": "Apache",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp Apache www-data Public Hosts hidden /centreon path Wall host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:component:C3",
+        "title": "Centreon",
+        "summary": "Application Infrastructure monitoring UI /centreon 19.04 www-data Public login Authenticated command injection in poller form Apache",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:component:C4",
+        "title": "Centreon Engine",
+        "summary": "Service Poller command runner /usr/sbin/centengine 19.04 root Local Poller executes configured plugin commands Wall host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:permission:0",
+        "title": "remote client Centreon",
+        "summary": "enumerate/login Centreon Centreon path exposed; credentials recovered Centreon admin session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:permission:1",
+        "title": "centreon_admin C3/C4",
+        "summary": "set poller command C3/C4 authenticated form root command through centengine",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:permission:2",
+        "title": "centengine Centreon Engine",
+        "summary": "execute plugin Centreon Engine root service token root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "wall:vulnerability:V1",
+        "title": "Authenticated command injection Centreon",
+        "summary": "Centreon Centreon 19.04 Centreon admin credentials/session Poller form concatenates untrusted command fields root via Centreon Engine No command validation/escaping",
+        "verified_cve_ids": "CVE-2019-13024"
+      },
+      {
+        "mongo_id": "wall:vulnerability:V2",
+        "title": "Poller runs as root Centreon Engine",
+        "summary": "Centreon Engine Centreon Engine 19.04 Any command injection into poller Engine inherits root root Monitoring daemon over-privileged",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "shell",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "centreon"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2019-13024",
+        "engine",
+        "shell"
+      ],
+      [
+        "execute",
+        "shell"
+      ],
+      [
+        "foothold",
+        "shell"
+      ],
+      [
+        "openssh",
+        "shell"
+      ],
+      [
+        "token",
+        "shell"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "shell"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "shell"
+      ],
+      [
+        "apache",
+        "public",
+        "shell"
+      ],
+      [
+        "host",
+        "shell"
+      ],
+      [
+        "wall",
+        "shell"
+      ],
+      [
+        "centreon",
+        "shell"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "shell"
+      ],
+      [
+        "apache",
+        "public",
+        "shell"
+      ],
+      [
+        "host",
+        "shell"
+      ],
+      [
+        "wall",
+        "shell"
+      ],
+      [
+        "centreon",
+        "shell"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 1.0
+  }
+}

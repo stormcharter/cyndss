@@ -1,0 +1,293 @@
+{
+  "machine": "FriendZone",
+  "split": "demo",
+  "input": {
+    "documents": 22,
+    "graph_nodes": 124,
+    "graph_edges": 1224,
+    "entry_concepts": [
+      "administrator1",
+      "apache",
+      "bind",
+      "dashboard",
+      "friendzone",
+      "general-files",
+      "openssh",
+      "samba"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "friendzone:host:0",
+        "title": "FriendZone",
+        "summary": "Ubuntu 18.04.1 Linux DNS, SMB and multi-vhost Apache with root maintenance cron",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:H1",
+        "title": "FriendZone VM",
+        "summary": "Host OS boundary 10.10.10.123 Ubuntu 18.04.1 / kernel 4.15.0-36 root VPN reachable Standalone",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C1",
+        "title": "BIND DNS",
+        "summary": "Service Authoritative DNS 0.0.0.0:53/tcp,udp BIND bind Public; AXFR allowed friendzone.red zone transfer FriendZone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C2",
+        "title": "Samba",
+        "summary": "Service File sharing 0.0.0.0:139,445/tcp Samba root/service Public Anonymous general-files share FriendZone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C3",
+        "title": "general-files",
+        "summary": "Share Public data/config clue share SMB share Samba share share owner Anonymous read Discloses content used by web path Samba",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C4",
+        "title": "Apache HTTP/HTTPS",
+        "summary": "Service Virtual-host web tier 0.0.0.0:80,443/tcp Apache 2.4.29-era + PHP www-data Public Multiple vhosts FriendZone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C5",
+        "title": "administrator1 dashboard",
+        "summary": "Application Authenticated image/include dashboard administrator1.friendzone.red custom PHP www-data Public login Unsafe include parameter after login Apache HTTP/HTTPS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C6",
+        "title": "mysql_data.conf",
+        "summary": "Artifact Application DB configuration /var/www/mysql_data.conf PHP config www-data/app owner Local Secret reused by local friend account FriendZone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C7",
+        "title": "reporter.py",
+        "summary": "Scheduled task Server administration report /opt/server_admin/reporter.py every 2 min Python 2.7 root Local Imports os FriendZone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C8",
+        "title": "Python os.py",
+        "summary": "Library file Standard-library dependency /usr/lib/python2.7/os.py Python 2.7 stdlib root-owned Local; world-writable Mode 777; imported by root task FriendZone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:component:C9",
+        "title": "FTP/OpenSSH",
+        "summary": "Service File transfer and remote shell 21,22/tcp FTP; OpenSSH service/root daemon Public SSH used after credential reuse FriendZone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:permission:0",
+        "title": "anonymous BIND DNS",
+        "summary": "AXFR BIND DNS zone transfer allowed administrator1/hr vhosts disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:permission:1",
+        "title": "anonymous general-files",
+        "summary": "read general-files guest share ACL Web/config clue disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:permission:2",
+        "title": "authenticated web user administrator1 dashboard",
+        "summary": "control include path administrator1 dashboard dashboard access PHP includes attacker-selected/local content as www-data",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:permission:3",
+        "title": "www-data mysql_data.conf",
+        "summary": "read mysql_data.conf filesystem ACL Reusable friend credential disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:permission:4",
+        "title": "friend C8 os.py",
+        "summary": "modify C8 os.py mode 777 Code imported by root task",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:permission:5",
+        "title": "root cron C8 via C7",
+        "summary": "import/execute C8 via C7 two-minute schedule Attacker code as root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:vulnerability:V1",
+        "title": "Unrestricted zone transfer BIND DNS",
+        "summary": "BIND DNS BIND configuration TCP 53 reachable AXFR returns internal vhost names Attack-surface disclosure Zone transfer ACL absent",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:vulnerability:V2",
+        "title": "Anonymous sensitive-data read C2/C3",
+        "summary": "C2/C3 Samba share ACL SMB reachable Guest reads material supporting web login/discovery Credential/context disclosure Share data not access-controlled",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:vulnerability:V3",
+        "title": "Unsafe dynamic include administrator1 dashboard",
+        "summary": "administrator1 dashboard custom PHP dashboard Dashboard authenticated User-controlled parameter selects PHP/local file www-data code execution No include allowlist/path validation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:vulnerability:V4",
+        "title": "Credential reuse between DB config and OS account mysql_data.conf",
+        "summary": "mysql_data.conf application credentials www-data file read Recovered secret authenticates friend over SSH friend account Secrets reused across trust boundaries",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "friendzone:vulnerability:V5",
+        "title": "World-writable standard library imported by root C7+C8",
+        "summary": "C7+C8 Python 2.7 root cron friend shell Modify os.py; reporter imports it on schedule root code execution Privileged dependency is globally writable",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "context",
+        "dashboard",
+        "hidden",
+        "vhosts"
+      ],
+      [
+        "administrator1",
+        "dashboard",
+        "www-data"
+      ],
+      [
+        "friend"
+      ],
+      [
+        "payload",
+        "python",
+        "root-loaded"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "cron",
+        "root"
+      ],
+      [
+        "imported",
+        "root"
+      ],
+      [
+        "python",
+        "root"
+      ],
+      [
+        "task",
+        "root"
+      ],
+      [
+        "allowlist",
+        "code",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "friendzone",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "bind",
+        "transfer",
+        "root"
+      ],
+      [
+        "friendzone",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "dashboard",
+        "code",
+        "root"
+      ],
+      [
+        "administrator1",
+        "code",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "bind",
+        "transfer",
+        "root"
+      ],
+      [
+        "friendzone",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "dashboard",
+        "code",
+        "root"
+      ],
+      [
+        "administrator1",
+        "code",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "samba",
+        "sharing",
+        "root"
+      ],
+      [
+        "openssh",
+        "transfer",
+        "remote",
+        "shell",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.25,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.5
+  }
+}

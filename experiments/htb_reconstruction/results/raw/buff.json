@@ -1,0 +1,37 @@
+{
+  "machine": "Buff",
+  "split": "validation",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 66,
+    "graph_edges": 649,
+    "entry_concepts": [],
+    "corpus": []
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": false,
+    "gold_steps_scored": [],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {},
+  "metrics": {
+    "a_chains": 0,
+    "a_hops": 0,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": false,
+    "b_hops": 0,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 0,
+    "c_hops": 0,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

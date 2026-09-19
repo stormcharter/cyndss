@@ -1,0 +1,252 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Buff",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/11/21/htb-buff.html",
+    "title": "HTB Buff writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows 10 x64 build 17134",
+    "deployment_role": "Gym Management System upload RCE and localhost CloudMe buffer overflow"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Buff host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.198",
+      "software_or_version": "Windows 10 1803 build 17134",
+      "runs_as": "Administrator",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "XAMPP host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "Gym web front end",
+      "binding_or_path": "0.0.0.0:8080/tcp",
+      "software_or_version": "Apache 2.4.43 / PHP 7.4.6 / OpenSSL 1.1.1g",
+      "runs_as": "buff\\shaun",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Gym Management System pages/upload"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Gym Management System",
+      "role": "PHP application",
+      "binding_or_path": "/gym",
+      "software_or_version": "1.0",
+      "runs_as": "shaun",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Unauthenticated file upload/webshell"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "CloudMe",
+      "role": "Local sync service",
+      "binding_or_path": "127.0.0.1:8888/tcp",
+      "software_or_version": "CloudMe 1.11.2",
+      "runs_as": "shaun",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "SEH/stack buffer overflow"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "MySQL",
+      "role": "XAMPP database",
+      "binding_or_path": "127.0.0.1:3306/tcp",
+      "software_or_version": "MySQL",
+      "runs_as": "mysql",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Backend for gym application"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "shaun",
+      "principal_type": "local user",
+      "operational_role": "Gym web/service owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "webshell and user flag",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "mysql",
+      "principal_type": "database service",
+      "operational_role": "XAMPP DB owner",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "local DB only",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "local administrator",
+      "operational_role": "CloudMe/host owner",
+      "groups_or_nesting": "Administrators",
+      "authentication_or_effective_access": "CloudMe overflow yields admin shell",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "service/kernel superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "upload filtered webshell",
+      "object": "C2",
+      "condition_or_scope": "Gym app public",
+      "security_consequence": "shaun command execution",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "shaun",
+      "permission_or_action": "tunnel localhost 8888",
+      "object": "C3",
+      "condition_or_scope": "web shell and chisel",
+      "security_consequence": "CloudMe reachable",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "shaun",
+      "permission_or_action": "send CloudMe overflow",
+      "object": "C3",
+      "condition_or_scope": "CloudMe 1.11.2; shellcode",
+      "security_consequence": "Administrator/SYSTEM shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Administrator",
+      "permission_or_action": "control host",
+      "object": "H1",
+      "condition_or_scope": "local admin token",
+      "security_consequence": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "gym upload file",
+      "hosted_on": "C2",
+      "purpose": "attacker webshell",
+      "owner_or_authority": "shaun",
+      "read_access": "public request",
+      "write_or_execute_access": "attacker upload; Apache execute",
+      "security_significance": "Upload-to-code transition",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "CloudMe_1112.exe",
+      "hosted_on": "C3",
+      "purpose": "vulnerable binary",
+      "owner_or_authority": "shaun",
+      "read_access": "shaun can read/download",
+      "write_or_execute_access": "installer writes",
+      "security_significance": "Local overflow target",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "CloudMe localhost socket",
+      "hosted_on": "C3",
+      "purpose": "sync protocol",
+      "owner_or_authority": "shaun",
+      "read_access": "only localhost",
+      "write_or_execute_access": "CloudMe service listens",
+      "security_significance": "Tunnel crosses network boundary",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "Gym Management System 1.0",
+      "issue": "Unauthenticated RCE through upload filter bypass",
+      "preconditions": "HTTP 8080 public",
+      "vulnerable_behavior": "Upload handler accepts image-prefixed PHP payload and serves it",
+      "resulting_access": "shaun",
+      "reference": "Exploit-DB 48506",
+      "failed_control": "No authentication/extension validation",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "CloudMe 1.11.2",
+      "issue": "SEH/stack buffer overflow",
+      "preconditions": "Local service access; tunnel needed",
+      "vulnerable_behavior": "Malformed sync message overwrites control data and runs shellcode",
+      "resulting_access": "Administrator/SYSTEM",
+      "reference": "CloudMe 1.11.2 buffer overflow",
+      "failed_control": "Outdated binary bound to localhost but exposed after pivot",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "upload Gym webshell",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "public app",
+      "resulting_principal_or_access": "shaun",
+      "boundary_crossed": "network → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "shaun",
+      "action": "tunnel CloudMe and exploit overflow",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "local port and vulnerable binary",
+      "resulting_principal_or_access": "Administrator",
+      "boundary_crossed": "user → local service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "Administrator",
+      "action": "control Windows host",
+      "target_component_or_artifact": "H1",
+      "prerequisite": "admin token",
+      "resulting_principal_or_access": "SYSTEM/host root",
+      "boundary_crossed": "admin → host",
+      "evidence": "Explicit"
+    }
+  ]
+}

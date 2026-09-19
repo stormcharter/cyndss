@@ -1,0 +1,265 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Bashed",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/04/29/htb-bashed.html",
+    "title": "HTB Bashed writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 16.04 Linux",
+    "deployment_role": "Apache development host with root automation"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Bashed VM",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.68",
+      "software_or_version": "Ubuntu 16.04",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Development artifacts remain deployed"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "Web application server",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache 2.4.18 + PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts phpbash"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "phpbash",
+      "role": "Browser-based shell",
+      "binding_or_path": "/dev/phpbash.php",
+      "software_or_version": "phpbash development tool",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Direct command execution UI"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Policy",
+      "name": "sudoers impersonation",
+      "role": "Privilege delegation",
+      "binding_or_path": "local",
+      "software_or_version": "sudo",
+      "runs_as": "scriptmanager target",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "www-data may run commands as scriptmanager"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Directory",
+      "name": "/scripts",
+      "role": "Automation code directory",
+      "binding_or_path": "local filesystem",
+      "software_or_version": "Python scripts",
+      "runs_as": "scriptmanager",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Writable by scriptmanager"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Scheduled task",
+      "name": "root Python runner",
+      "role": "Executes every *.py in /scripts",
+      "binding_or_path": "every minute",
+      "software_or_version": "cron + Python",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Trusts directory contents"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/phpbash execution context",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "sudo as scriptmanager",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "scriptmanager",
+      "principal_type": "local automation user",
+      "operational_role": "owner/writer of /scripts",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "write scheduled Python code",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "arrexel",
+      "principal_type": "local developer",
+      "operational_role": "phpbash creator/contextual user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "web development artifacts",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "cron identity",
+      "operational_role": "scheduled executor",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "executes /scripts/*.py",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "execute commands",
+      "object": "C2 phpbash",
+      "condition_or_scope": "public URL",
+      "security_consequence": "www-data shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "sudo as",
+      "object": "scriptmanager",
+      "condition_or_scope": "sudoers rule",
+      "security_consequence": "scriptmanager shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "scriptmanager",
+      "permission_or_action": "create/modify *.py",
+      "object": "C4",
+      "condition_or_scope": "directory ownership",
+      "security_consequence": "Code selected by root cron",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root cron",
+      "permission_or_action": "execute",
+      "object": "C4 *.py",
+      "condition_or_scope": "every minute",
+      "security_consequence": "Attacker code as root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "/dev/phpbash.php",
+      "hosted_on": "C2",
+      "purpose": "developer shell",
+      "owner_or_authority": "arrexel/web owner",
+      "read_access": "public use",
+      "write_or_execute_access": "server write; Apache execute",
+      "security_significance": "Deliberate admin/debug capability exposed",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/scripts/*.py",
+      "hosted_on": "C4/C5",
+      "purpose": "root automation inputs",
+      "owner_or_authority": "scriptmanager",
+      "read_access": "scriptmanager read",
+      "write_or_execute_access": "scriptmanager write; root execute",
+      "security_significance": "Writable code enters privileged scheduler",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "phpbash",
+      "issue": "Public development web shell",
+      "preconditions": "HTTP access",
+      "vulnerable_behavior": "Intended shell functionality is unauthenticated",
+      "resulting_access": "www-data code execution",
+      "reference": "Configuration weakness",
+      "failed_control": "Administrative development artifact deployed",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3+C4+C5",
+      "affected_version": "sudo/cron/Python",
+      "issue": "Writable scheduled code executed by root",
+      "preconditions": "www-data shell and sudo impersonation",
+      "vulnerable_behavior": "scriptmanager writes Python; cron imports/executes it",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "No ownership boundary on privileged automation inputs",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "open phpbash",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "HTTP",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "network → service identity",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "www-data",
+      "action": "sudo impersonate",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "sudo rule",
+      "resulting_principal_or_access": "scriptmanager",
+      "boundary_crossed": "service → automation user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "scriptmanager",
+      "action": "write payload to /scripts",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "directory write",
+      "resulting_principal_or_access": "scheduled payload",
+      "boundary_crossed": "user → privileged input",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "root cron",
+      "action": "execute payload",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "timer",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "privileged automation execution",
+      "evidence": "Explicit"
+    }
+  ]
+}

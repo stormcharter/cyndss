@@ -1,0 +1,295 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Bankrobber",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/03/07/htb-bankrobber.html",
+    "title": "HTB Bankrobber writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows 7–10-era host",
+    "deployment_role": "Apache E-coin app, localhost admin helper and SYSTEM buffer overflow"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Bankrobber host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.154",
+      "software_or_version": "Windows 7–10 workgroup host",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "SMB signing disabled"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "E-coin web app",
+      "binding_or_path": "0.0.0.0:80,443/tcp",
+      "software_or_version": "Apache 2.4.39 / PHP 7.3.4 / OpenSSL 1.1.1b",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "XSS, admin cookie and SQLi surfaces"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "MariaDB",
+      "role": "Application database",
+      "binding_or_path": "0.0.0.0:3306/tcp",
+      "software_or_version": "MariaDB",
+      "runs_as": "mysql",
+      "exposure": "Network reachable",
+      "evidence": "Explicit",
+      "analysis_note": "E-coin data and admin state"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB",
+      "role": "Windows file service",
+      "binding_or_path": "445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Signing disabled"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Admin bot/browser",
+      "role": "Cookie-bearing admin context",
+      "binding_or_path": "local PhantomJS/browser",
+      "software_or_version": "PhantomJS",
+      "runs_as": "admin",
+      "exposure": "Local/triggered by XSS",
+      "evidence": "Explicit",
+      "analysis_note": "Visits attacker-controlled URL and leaks cookie"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Binary",
+      "name": "Bankrobber helper",
+      "role": "PIN/buffer-overflow service",
+      "binding_or_path": "127.0.0.1:910/tcp",
+      "software_or_version": "custom Windows binary",
+      "runs_as": "SYSTEM",
+      "exposure": "Local only",
+      "evidence": "Explicit",
+      "analysis_note": "Four-digit PIN then path overwrite"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web application execution",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "admin",
+      "principal_type": "application principal",
+      "operational_role": "E-coin administrator/browser",
+      "groups_or_nesting": "admin session",
+      "authentication_or_effective_access": "cookie can be stolen; executes local helper",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "bankrobber user",
+      "principal_type": "local user",
+      "operational_role": "interactive foothold",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "web shell/user flag",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "service/machine principal",
+      "operational_role": "helper and host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "submit stored/reflected XSS",
+      "object": "C1/C4",
+      "condition_or_scope": "web app accepts script",
+      "security_consequence": "admin cookie",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "admin bot",
+      "permission_or_action": "visit attacker URL",
+      "object": "C4",
+      "condition_or_scope": "XSS delivery",
+      "security_consequence": "admin session",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "admin",
+      "permission_or_action": "send localhost request via SQLi/RCE page",
+      "object": "C1/C5",
+      "condition_or_scope": "admin cookie and SQLi",
+      "security_consequence": "user shell from local helper",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "bankrobber user",
+      "permission_or_action": "tunnel localhost:910 and brute PIN",
+      "object": "C5",
+      "condition_or_scope": "local-only service",
+      "security_consequence": "path overwrite primitive",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "SYSTEM helper",
+      "permission_or_action": "execute overwritten path",
+      "object": "C5",
+      "condition_or_scope": "buffer overflow",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "admin session cookie",
+      "hosted_on": "C4",
+      "purpose": "web authorization",
+      "owner_or_authority": "admin",
+      "read_access": "bot/browser holds",
+      "write_or_execute_access": "XSS attacker reads",
+      "security_significance": "Crosses browser trust boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "PHP source/admin endpoint",
+      "hosted_on": "C1",
+      "purpose": "SQLi/code-execution logic",
+      "owner_or_authority": "www-data",
+      "read_access": "admin request reveals",
+      "write_or_execute_access": "developer writes",
+      "security_significance": "Shows localhost restriction",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "127.0.0.1:910 protocol",
+      "hosted_on": "C5",
+      "purpose": "PIN and executable path",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "bankrobber via tunnel",
+      "write_or_execute_access": "SYSTEM helper writes/executes",
+      "security_significance": "Local service boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "SMB signing policy",
+      "hosted_on": "C3",
+      "purpose": "transport integrity",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "remote observable",
+      "write_or_execute_access": "SYSTEM config",
+      "security_significance": "Tampering opportunity; not required",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C4",
+      "affected_version": "Apache/PHP E-coin",
+      "issue": "XSS enables admin cookie theft",
+      "preconditions": "Web input reflected/stored; admin bot visits",
+      "vulnerable_behavior": "Script sends cookie to attacker",
+      "resulting_access": "admin session",
+      "reference": "XSS",
+      "failed_control": "No output encoding and privileged browser bot",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C1",
+      "affected_version": "PHP admin helper",
+      "issue": "SQLi leaks source and reaches code execution but localhost-only",
+      "preconditions": "Admin request context",
+      "vulnerable_behavior": "Injected query exposes RCE endpoint; localhost restriction bypassed by bot",
+      "resulting_access": "web shell",
+      "reference": "SQL injection",
+      "failed_control": "No parameterized queries; weak origin control",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "custom SYSTEM helper",
+      "issue": "PIN brute-force + stack buffer overflow overwrites executable path",
+      "preconditions": "Local TCP access via shell/tunnel",
+      "vulnerable_behavior": "Correct PIN reaches vulnerable parser; path string controls child process",
+      "resulting_access": "SYSTEM",
+      "reference": "Custom buffer overflow",
+      "failed_control": "No rate limit/bounds check and service runs SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "deliver XSS",
+      "target_component_or_artifact": "C1/C4",
+      "prerequisite": "public app and admin bot",
+      "resulting_principal_or_access": "admin cookie",
+      "boundary_crossed": "network → browser",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "use stolen cookie to trigger localhost RCE",
+      "target_component_or_artifact": "C1/C5",
+      "prerequisite": "admin session",
+      "resulting_principal_or_access": "bankrobber user shell",
+      "boundary_crossed": "browser → local helper",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "bankrobber user",
+      "action": "tunnel/brute PIN and overflow path",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "localhost service",
+      "resulting_principal_or_access": "SYSTEM child process",
+      "boundary_crossed": "user → SYSTEM service",
+      "evidence": "Explicit"
+    }
+  ]
+}

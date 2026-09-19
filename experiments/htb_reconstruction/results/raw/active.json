@@ -1,0 +1,223 @@
+{
+  "machine": "Active",
+  "split": "demo",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 94,
+    "graph_edges": 859,
+    "entry_concepts": [
+      "active",
+      "core",
+      "groups",
+      "replication",
+      "server",
+      "services"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "active:host:0",
+        "title": "Active",
+        "summary": "Windows Server 2008 R2 Active Directory DC Single-host active.htb domain controller",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:component:H1",
+        "title": "Active DC",
+        "summary": "Domain controller Domain/OS boundary 10.10.10.100 Windows Server 2008 R2 SYSTEM/Domain Admins VPN reachable active.htb forest/domain",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:component:C1",
+        "title": "AD DS core services",
+        "summary": "Service stack Identity, DNS and directory 53 DNS; 88 Kerberos; 389/636 LDAP; 3268/3269 GC AD DS SYSTEM Public Single DC Active DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:component:C2",
+        "title": "SMB Server",
+        "summary": "Service Policy/file distribution 139,445/tcp Windows SMB SYSTEM Public Anonymous access differs by share Active DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:component:C3",
+        "title": "Replication",
+        "summary": "Share GPO replica \\ACTIVE\\Replication SMB share SYSTEM/GPO editors Anonymous read Contains policy tree SMB Server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:component:C4",
+        "title": "Groups.xml",
+        "summary": "Artifact Group Policy Preferences local-group config ...\\Policies\\{GUID}\\MACHINE\\Preferences\\Groups\\Groups.xml GPP XML Domain/GPO admin Anonymous read Contains SVC_TGS cpassword Replication",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:component:C5",
+        "title": "Kerberos TGS service",
+        "summary": "Protocol Service-ticket issuance 88/tcp Kerberos krbtgt/KDC Authenticated domain users Administrator owns active/CIFS:445 SPN AD DS core services",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:component:C6",
+        "title": "SYSVOL/NETLOGON/Users/admin shares",
+        "summary": "Shares Domain policy/logon/data/admin namespaces SMB Windows shares SYSTEM Mixed ACLs SVC_TGS can read domain shares; admin shares require admin SMB Server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:permission:0",
+        "title": "anonymous C3 Replication",
+        "summary": "read/list C3 Replication share ACL GPO data disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:permission:1",
+        "title": "anonymous C4 Groups.xml",
+        "summary": "read C4 Groups.xml inherited share/file ACL GPP cpassword obtained",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:permission:2",
+        "title": "SVC_TGS C5 Administrator SPN",
+        "summary": "request service ticket C5 Administrator SPN valid domain credential Offline-crackable Administrator service ticket",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:permission:3",
+        "title": "Administrator H1/C6 admin shares/domain",
+        "summary": "full control H1/C6 admin shares/domain credential recovered Domain compromise",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:vulnerability:V1",
+        "title": "Recoverable cpassword exposed on readable policy share Groups.xml",
+        "summary": "Groups.xml Group Policy Preferences Anonymous Replication read Published AES key decrypts cpassword SVC_TGS credential Legacy reversible password storage + excessive share read",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "active:vulnerability:V2",
+        "title": "Privileged Administrator account is Kerberoastable with weak secret Kerberos TGS service",
+        "summary": "Kerberos TGS service Kerberos/SPN configuration Any domain user TGS encrypted with Administrator key is cracked offline Domain Administrator Privileged human account doubles as service principal",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "administrator",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential"
+      ],
+      [
+        "administrator",
+        "kerberos",
+        "service"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "decrypts",
+        "credential",
+        "administrator"
+      ],
+      [
+        "excessive",
+        "credential",
+        "administrator"
+      ],
+      [
+        "exposed",
+        "credential",
+        "administrator"
+      ],
+      [
+        "identity",
+        "kerberos",
+        "administrator"
+      ],
+      [
+        "ldap",
+        "kerberos",
+        "administrator"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "core",
+        "administrator"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "groups",
+        "credential",
+        "administrator"
+      ],
+      [
+        "replication",
+        "credential",
+        "administrator"
+      ],
+      [
+        "server",
+        "domain",
+        "administrator"
+      ],
+      [
+        "core",
+        "administrator"
+      ],
+      [
+        "services",
+        "administrator"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "groups",
+        "credential",
+        "administrator"
+      ],
+      [
+        "replication",
+        "credential",
+        "administrator"
+      ],
+      [
+        "server",
+        "domain",
+        "administrator"
+      ],
+      [
+        "core",
+        "administrator"
+      ],
+      [
+        "services",
+        "administrator"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 1.0,
+    "a_ordered": 1.0,
+    "a_precision": 0.6666666666666666,
+    "a_coverage_topk": 1.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.5,
+    "b_ordered": 0.5,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 2,
+    "c_coverage": 1.0,
+    "c_ordered": 1.0,
+    "c_precision": 0.6666666666666666,
+    "c_coverage_topk": 1.0
+  }
+}

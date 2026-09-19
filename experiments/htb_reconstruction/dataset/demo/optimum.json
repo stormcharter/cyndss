@@ -1,0 +1,208 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Optimum",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/03/17/htb-optimum.html",
+    "title": "HTB Optimum writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2012 R2-era x64",
+    "deployment_role": "Standalone HFS file server"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Optimum server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.8",
+      "software_or_version": "Windows x64",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Only one TCP service exposed"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Rejetto HttpFileServer",
+      "role": "HTTP file sharing/UI",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "HFS 2.3",
+      "runs_as": "OPTIMUM\\kostas",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "32-bit process on 64-bit OS"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application feature",
+      "name": "HFS search macro engine",
+      "role": "Evaluates search templates",
+      "binding_or_path": "HTTP query/macro context",
+      "software_or_version": "HFS 2.3.x",
+      "runs_as": "kostas",
+      "exposure": "Public through C1",
+      "evidence": "Explicit",
+      "analysis_note": "Untrusted query reaches exec macro"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Secondary Logon / Windows token handling",
+      "role": "Local privilege subsystem",
+      "binding_or_path": "local",
+      "software_or_version": "Windows unpatched",
+      "runs_as": "SYSTEM",
+      "exposure": "Local only",
+      "evidence": "Inferred",
+      "analysis_note": "MS16-032 target"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Runtime path",
+      "name": "SysWOW64 vs Sysnative PowerShell",
+      "role": "Architecture boundary",
+      "binding_or_path": "local process",
+      "software_or_version": "32-bit HFS on x64 Windows",
+      "runs_as": "kostas",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Must invoke 64-bit PowerShell for reliable EoP"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "OPTIMUM\\kostas",
+      "principal_type": "local user/service owner",
+      "operational_role": "HFS execution identity",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "user-level shell; can invoke local services",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "local system",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "inject HFS macro command",
+      "object": "C2",
+      "condition_or_scope": "HTTP port reachable",
+      "security_consequence": "Code as kostas",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "kostas",
+      "permission_or_action": "invoke 64-bit PowerShell via Sysnative",
+      "object": "C4",
+      "condition_or_scope": "32-bit HFS process",
+      "security_consequence": "Can run x64 MS16-032 exploit",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "kostas",
+      "permission_or_action": "abuse token/handle flaw",
+      "object": "C3",
+      "condition_or_scope": "unpatched OS and secondary logon conditions",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "HFS search request",
+      "hosted_on": "C2",
+      "purpose": "user-controlled search/macro input",
+      "owner_or_authority": "remote client",
+      "read_access": "C1 parses",
+      "write_or_execute_access": "macro engine executes",
+      "security_significance": "Input crosses into OS command context",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "HFS 2.3",
+      "issue": "Search-macro command injection",
+      "preconditions": "HTTP access; crafted search query",
+      "vulnerable_behavior": "HFS expands exec macro from request",
+      "resulting_access": "OPTIMUM\\kostas code execution",
+      "reference": "CVE-2014-6287",
+      "failed_control": "Untrusted template input reaches command execution",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "Windows Secondary Logon",
+      "issue": "Handle/token privilege escalation",
+      "preconditions": "Local shell; architecture-correct process",
+      "vulnerable_behavior": "Leaked handles/tokens permit privileged process creation",
+      "resulting_access": "SYSTEM",
+      "reference": "MS16-032 / CVE-2016-0099",
+      "failed_control": "Missing update; token isolation failure",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "send crafted HFS request",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "TCP 80 reachable",
+      "resulting_principal_or_access": "kostas",
+      "boundary_crossed": "network → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "kostas",
+      "action": "switch to Sysnative 64-bit PowerShell",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "x64 OS / x86 HFS",
+      "resulting_principal_or_access": "architecture-correct shell",
+      "boundary_crossed": "runtime boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "kostas",
+      "action": "execute MS16-032",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "unpatched host",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "local user → system",
+      "evidence": "Explicit"
+    }
+  ]
+}

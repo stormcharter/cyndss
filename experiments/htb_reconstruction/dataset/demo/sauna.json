@@ -1,0 +1,267 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Sauna",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/07/18/htb-sauna.html",
+    "title": "HTB Sauna writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2019 Active Directory DC",
+    "deployment_role": "EGOTISTICAL-BANK.LOCAL DC plus corporate web app"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Domain controller",
+      "name": "Sauna DC",
+      "role": "Domain/OS boundary",
+      "binding_or_path": "10.10.10.175",
+      "software_or_version": "Windows Server 2019",
+      "runs_as": "SYSTEM/Domain Admins",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "EGOTISTICAL-BANK.LOCAL"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service stack",
+      "name": "AD DS core",
+      "role": "DNS/Kerberos/LDAP/GC",
+      "binding_or_path": "53,88,389/636,3268/3269",
+      "software_or_version": "AD DS",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SMB/RPC exposed"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft IIS",
+      "role": "Corporate website",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 10.0",
+      "runs_as": "web app pool",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Employee names published"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "WinRM",
+      "role": "Remote PowerShell",
+      "binding_or_path": "5985/tcp",
+      "software_or_version": "WinRM",
+      "runs_as": "authenticated users",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "FSmith can connect"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Registry artifact",
+      "name": "Winlogon AutoLogon values",
+      "role": "Automatic interactive logon",
+      "binding_or_path": "HKLM\\...\\Winlogon",
+      "software_or_version": "Windows registry",
+      "runs_as": "SYSTEM",
+      "exposure": "Local/authenticated read",
+      "evidence": "Explicit",
+      "analysis_note": "Stores svc_loanmanager plaintext credential; account used as svc_loanmgr"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C1",
+      "layer_or_type": "Directory ACL",
+      "name": "Domain replication rights",
+      "role": "DCSync control plane",
+      "binding_or_path": "domain root",
+      "software_or_version": "AD DS",
+      "runs_as": "svc_loanmgr",
+      "exposure": "Directory",
+      "evidence": "Explicit",
+      "analysis_note": "GetChanges + GetChangesAll"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "EGOTISTICAL-BANK\\FSmith",
+      "principal_type": "domain user",
+      "operational_role": "employee/WinRM foothold",
+      "groups_or_nesting": "Domain Users; Remote Management Users",
+      "authentication_or_effective_access": "DONT_REQ_PREAUTH; WinRM",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "EGOTISTICAL-BANK\\svc_loanmgr",
+      "principal_type": "domain service user",
+      "operational_role": "loan service account",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "GetChanges + GetChangesAll on domain",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "EGOTISTICAL-BANK\\HSmith",
+      "principal_type": "domain user",
+      "operational_role": "employee account",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "enumerated from website/name model",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "domain administrator",
+      "operational_role": "final privileged principal",
+      "groups_or_nesting": "Domain Admins",
+      "authentication_or_effective_access": "full domain/DC control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read employee names",
+      "object": "C2",
+      "condition_or_scope": "public website",
+      "security_consequence": "Candidate account names generated",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "unauthenticated Kerberos client",
+      "permission_or_action": "request AS-REP",
+      "object": "FSmith",
+      "condition_or_scope": "DONT_REQ_PREAUTH",
+      "security_consequence": "Offline crack material",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "FSmith",
+      "permission_or_action": "read",
+      "object": "C4 AutoLogon values",
+      "condition_or_scope": "local WinRM session/registry access",
+      "security_consequence": "svc_loanmgr plaintext credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "svc_loanmgr",
+      "permission_or_action": "DCSync",
+      "object": "C5/domain root",
+      "condition_or_scope": "replication ACLs",
+      "security_consequence": "Administrator secret",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "employee directory content",
+      "hosted_on": "C2",
+      "purpose": "name source",
+      "owner_or_authority": "web publisher",
+      "read_access": "public read",
+      "write_or_execute_access": "web admins write",
+      "security_significance": "Enables username construction",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "DefaultUserName/DefaultPassword",
+      "hosted_on": "C4",
+      "purpose": "AutoLogon credential",
+      "owner_or_authority": "SYSTEM/admin",
+      "read_access": "readable during enumeration",
+      "write_or_execute_access": "SYSTEM write",
+      "security_significance": "Plaintext reusable service secret",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "Kerberos account FSmith",
+      "issue": "Preauthentication disabled plus weak password",
+      "preconditions": "Username inferred from public names",
+      "vulnerable_behavior": "AS-REP can be cracked offline",
+      "resulting_access": "FSmith credential",
+      "reference": "Configuration weakness",
+      "failed_control": "DONT_REQ_PREAUTH and weak secret",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Windows AutoLogon",
+      "issue": "Plaintext service credential in registry",
+      "preconditions": "FSmith local session",
+      "vulnerable_behavior": "Registry exposes reusable svc_loanmgr secret",
+      "resulting_access": "Lateral service account",
+      "reference": "Configuration weakness",
+      "failed_control": "Credential stored in reversible/plain form",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "AD domain ACL",
+      "issue": "Service account has replication rights",
+      "preconditions": "svc_loanmgr authentication",
+      "vulnerable_behavior": "Directory replication returns privileged hashes",
+      "resulting_access": "Administrator/domain compromise",
+      "reference": "Configuration weakness",
+      "failed_control": "GetChanges + GetChangesAll delegated excessively",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "derive username and AS-REP roast",
+      "target_component_or_artifact": "C2/C1",
+      "prerequisite": "public names + DONT_REQ_PREAUTH",
+      "resulting_principal_or_access": "FSmith",
+      "boundary_crossed": "network → domain user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "FSmith",
+      "action": "WinRM and read AutoLogon secret",
+      "target_component_or_artifact": "C3/C4",
+      "prerequisite": "valid credential",
+      "resulting_principal_or_access": "svc_loanmgr credential",
+      "boundary_crossed": "user → service account",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "svc_loanmgr",
+      "action": "DCSync",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "replication ACL",
+      "resulting_principal_or_access": "Administrator secret",
+      "boundary_crossed": "service account → domain admin material",
+      "evidence": "Explicit"
+    }
+  ]
+}

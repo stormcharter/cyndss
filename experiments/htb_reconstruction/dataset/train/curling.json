@@ -1,0 +1,254 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Curling",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/03/30/htb-curling.html",
+    "title": "HTB Curling writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Joomla web host with root curl job"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Curling host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.150",
+      "software_or_version": "Ubuntu 18.04-era Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "floris login after password reuse"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache 2.4.29 + PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Joomla site and upload"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Joomla",
+      "role": "CMS",
+      "binding_or_path": "/",
+      "software_or_version": "Joomla",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Password clue in page and admin shell route"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Scheduled task",
+      "name": "admin-area curl job",
+      "role": "Root scheduled fetch",
+      "binding_or_path": "/home/floris/admin-area/input",
+      "software_or_version": "curl 7.58.0",
+      "runs_as": "root",
+      "exposure": "Local every minute",
+      "evidence": "Explicit",
+      "analysis_note": "Reads attacker-influenced -K config"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/Joomla worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web shell",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "floris",
+      "principal_type": "local user",
+      "operational_role": "CMS/admin-area owner",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "SSH/user flag; writes admin-area input",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "scheduled-task identity",
+      "operational_role": "curl executor",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "reads root-owned URL/config and writes report",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "abuse Joomla/admin upload",
+      "object": "C2/C3",
+      "condition_or_scope": "credential clue/admin session",
+      "security_consequence": "www-data",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "reuse page password",
+      "object": "C1",
+      "condition_or_scope": "credential shared with floris",
+      "security_consequence": "floris shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "floris",
+      "permission_or_action": "write curl config",
+      "object": "C4",
+      "condition_or_scope": "admin-area directory writable",
+      "security_consequence": "curl reads local file or posts root data",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root cron",
+      "permission_or_action": "execute curl -K",
+      "object": "C4",
+      "condition_or_scope": "one-minute job",
+      "security_consequence": "root data disclosure/root shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Joomla page/password clue",
+      "hosted_on": "C3",
+      "purpose": "credential material",
+      "owner_or_authority": "application owner",
+      "read_access": "public read",
+      "write_or_execute_access": "admin writes",
+      "security_significance": "Web-to-OS credential reuse",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "admin-area/input",
+      "hosted_on": "C4",
+      "purpose": "curl configuration",
+      "owner_or_authority": "floris",
+      "read_access": "floris write",
+      "write_or_execute_access": "root reads",
+      "security_significance": "Command/config injection point",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "admin-area/report",
+      "hosted_on": "C4",
+      "purpose": "job output",
+      "owner_or_authority": "root",
+      "read_access": "floris read",
+      "write_or_execute_access": "root writes",
+      "security_significance": "Carries root file contents",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Joomla/PHP",
+      "issue": "Web credential disclosure and upload path",
+      "preconditions": "Public site/admin clue",
+      "vulnerable_behavior": "Recovered secret authenticates OS user and enables web command",
+      "resulting_access": "www-data/floris",
+      "reference": "Configuration/application weakness",
+      "failed_control": "Secret reused across layers",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "curl 7.58.0",
+      "issue": "Untrusted -K config allows file URL/options",
+      "preconditions": "floris can edit input",
+      "vulnerable_behavior": "Root curl treats local file/config as command-line options",
+      "resulting_access": "root data or shell",
+      "reference": "Configuration weakness",
+      "failed_control": "Root job reads user-controlled file",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "gain web shell/admin context",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "Joomla path and clue",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "network → service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "www-data",
+      "action": "reuse credential over SSH",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "password disclosed",
+      "resulting_principal_or_access": "floris",
+      "boundary_crossed": "service → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "floris",
+      "action": "edit admin-area/input",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "directory writable",
+      "resulting_principal_or_access": "root curl consumes options",
+      "boundary_crossed": "user → scheduled job",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "root",
+      "action": "run curl job",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "minute schedule",
+      "resulting_principal_or_access": "root data/control",
+      "boundary_crossed": "cron → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

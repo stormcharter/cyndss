@@ -1,0 +1,1272 @@
+{
+  "scenarios": [
+    {
+      "path": [
+        "state-vulnerable",
+        "ctrl-fw",
+        "state-perimeter",
+        "ctrl-seg",
+        "state-segmented",
+        "ctrl-patch",
+        "state-patched",
+        "ctrl-encrypt",
+        "state-encrypted",
+        "ctrl-auth",
+        "state-hardened",
+        "ctrl-ids",
+        "state-secured"
+      ],
+      "edge_path": [
+        24,
+        25,
+        26,
+        27,
+        42,
+        31,
+        32,
+        33,
+        44,
+        37,
+        38,
+        39
+      ],
+      "scenario_text": "States traversed: S0: Vulnerable -> Perimeter Hardened -> Network Segmented -> Systems Patched -> Data Encrypted -> Auth Hardened -> ST: Secured\nMeasures in order: 1. Firewall Rules (cost=2000, personnel=1); 2. Network Segmentation (cost=6000, personnel=1); 3. Patch Management (cost=1500, personnel=1); 4. Encryption at Rest (cost=3500, personnel=1); 5. Auth Hardening (cost=2500, personnel=1); 6. IDS Signatures (cost=5000, personnel=1)",
+      "criteria": {
+        "technical_feasibility": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The combination of measures used in the scenario are commonly implemented controls with established technical feasibility.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of measures used in the scenario are commonly implemented controls with established technical feasibility.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The combination of measures used in the scenario are commonly implemented controls with established technical feasibility.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of measures used in the scenario are commonly implemented controls with established technical feasibility.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "risk": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The combination of perimeter hardening, network segmentation, patching, encryption, and authentication hardening significantly reduces risk.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of perimeter hardening, network segmentation, patching, encryption, and authentication hardening significantly reduces risk.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The combination of perimeter hardening, network segmentation, patching, encryption, and authentication hardening significantly reduces risk.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of perimeter hardening, network segmentation, patching, encryption, and authentication hardening significantly reduces risk.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "time": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The states and measures provide a comprehensive plan for securing systems over several months.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The states and measures provide a comprehensive plan for securing systems over several months.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The states and measures provide a comprehensive plan for securing systems over several months.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The states and measures provide a comprehensive plan for securing systems over several months.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "resources": {
+          "raw_votes": [
+            {
+              "score": 0.85,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes a diverse set of security measures with varying personnel and budget requirements.",
+              "raw_responses": [
+                "{\"score\": 0.85, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes a diverse set of security measures with varying personnel and budget requirements.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.85,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes a diverse set of security measures with varying personnel and budget requirements.",
+            "raw_responses": [
+              "{\"score\": 0.85, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes a diverse set of security measures with varying personnel and budget requirements.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.85,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "legal": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes key measures like network segmentation and encryption, but some important steps like privacy training and incident response planning are missing.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes key measures like network segmentation and encryption, but some important steps like privacy training and incident response planning are missing.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes key measures like network segmentation and encryption, but some important steps like privacy training and incident response planning are missing.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes key measures like network segmentation and encryption, but some important steps like privacy training and incident response planning are missing.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "consequences": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The defense measures taken significantly reduce risk and minimize impact to operations.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The defense measures taken significantly reduce risk and minimize impact to operations.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The defense measures taken significantly reduce risk and minimize impact to operations.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The defense measures taken significantly reduce risk and minimize impact to operations.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "content_fit": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario follows a logical progression of security measures based on common cybersecurity practices.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of security measures based on common cybersecurity practices.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario follows a logical progression of security measures based on common cybersecurity practices.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of security measures based on common cybersecurity practices.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        }
+      },
+      "unresolved_criteria": [],
+      "J": 0.8075,
+      "disagreement": 0.0175
+    },
+    {
+      "path": [
+        "state-vulnerable",
+        "ctrl-fw",
+        "state-perimeter",
+        "ctrl-seg",
+        "state-segmented",
+        "ctrl-siem",
+        "state-monitored",
+        "ctrl-encrypt",
+        "state-encrypted",
+        "ctrl-auth",
+        "state-hardened",
+        "ctrl-ids",
+        "state-secured"
+      ],
+      "edge_path": [
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        43,
+        33,
+        44,
+        37,
+        38,
+        39
+      ],
+      "scenario_text": "States traversed: S0: Vulnerable -> Perimeter Hardened -> Network Segmented -> Monitoring Active -> Data Encrypted -> Auth Hardened -> ST: Secured\nMeasures in order: 1. Firewall Rules (cost=2000, personnel=1); 2. Network Segmentation (cost=6000, personnel=1); 3. SIEM Rules (cost=3000, personnel=1); 4. Encryption at Rest (cost=3500, personnel=1); 5. Auth Hardening (cost=2500, personnel=1); 6. IDS Signatures (cost=5000, personnel=1)",
+      "criteria": {
+        "technical_feasibility": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.85,
+              "evidence_state": "sufficient",
+              "rationale": "The combination of measures used in this scenario are largely available and can be implemented without significant technical challenges.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of measures used in this scenario are largely available and can be implemented without significant technical challenges.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.85,
+            "evidence_state": "sufficient",
+            "rationale": "The combination of measures used in this scenario are largely available and can be implemented without significant technical challenges.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of measures used in this scenario are largely available and can be implemented without significant technical challenges.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.85,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "risk": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.7,
+              "evidence_state": "sufficient",
+              "rationale": "Multiple layers of defense are in place, but no system is perfect and some vulnerabilities may still exist.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.7, \"evidence_state\": \"sufficient\", \"rationale\": \"Multiple layers of defense are in place, but no system is perfect and some vulnerabilities may still exist.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.7,
+            "evidence_state": "sufficient",
+            "rationale": "Multiple layers of defense are in place, but no system is perfect and some vulnerabilities may still exist.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.7, \"evidence_state\": \"sufficient\", \"rationale\": \"Multiple layers of defense are in place, but no system is perfect and some vulnerabilities may still exist.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.7,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "time": {
+          "raw_votes": [
+            {
+              "score": 0.75,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "The defense scenario involves a multi-step process that spread over several months to complete.",
+              "raw_responses": [
+                "{\"score\": 0.75, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The defense scenario involves a multi-step process that spread over several months to complete.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.75,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "The defense scenario involves a multi-step process that spread over several months to complete.",
+            "raw_responses": [
+              "{\"score\": 0.75, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The defense scenario involves a multi-step process that spread over several months to complete.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.75,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "resources": {
+          "raw_votes": [
+            {
+              "score": 0.9,
+              "confidence": 0.95,
+              "evidence_state": "sufficient",
+              "rationale": "The defense scenario includes a mix of personnel and budget requirements across various measures, indicating consideration for resources.",
+              "raw_responses": [
+                "{\"score\": 0.9, \"confidence\": 0.95, \"evidence_state\": \"sufficient\", \"rationale\": \"The defense scenario includes a mix of personnel and budget requirements across various measures, indicating consideration for resources.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.9,
+            "confidence": 0.95,
+            "evidence_state": "sufficient",
+            "rationale": "The defense scenario includes a mix of personnel and budget requirements across various measures, indicating consideration for resources.",
+            "raw_responses": [
+              "{\"score\": 0.9, \"confidence\": 0.95, \"evidence_state\": \"sufficient\", \"rationale\": \"The defense scenario includes a mix of personnel and budget requirements across various measures, indicating consideration for resources.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.9,
+                "confidence": 0.95,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "legal": {
+          "raw_votes": [
+            {
+              "score": 0.7,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes some key measures like network segmentation and encryption at rest that align with regulatory compliance requirements, but lacks more specific details on legal and regulatory considerations.",
+              "raw_responses": [
+                "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes some key measures like network segmentation and encryption at rest that align with regulatory compliance requirements, but lacks more specific details on legal and regulatory considerations.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.7,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes some key measures like network segmentation and encryption at rest that align with regulatory compliance requirements, but lacks more specific details on legal and regulatory considerations.",
+            "raw_responses": [
+              "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes some key measures like network segmentation and encryption at rest that align with regulatory compliance requirements, but lacks more specific details on legal and regulatory considerations.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.7,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "consequences": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.85,
+              "evidence_state": "sufficient",
+              "rationale": "The measures implemented provide a robust defense, but real-world testing is needed to fully assess impact on operations and business continuity.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures implemented provide a robust defense, but real-world testing is needed to fully assess impact on operations and business continuity.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.85,
+            "evidence_state": "sufficient",
+            "rationale": "The measures implemented provide a robust defense, but real-world testing is needed to fully assess impact on operations and business continuity.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures implemented provide a robust defense, but real-world testing is needed to fully assess impact on operations and business continuity.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.85,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "content_fit": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.85,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario follows a logical progression of cybersecurity measures that align well with common practices in the corpus evidence for securing an organization's network and data.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of cybersecurity measures that align well with common practices in the corpus evidence for securing an organization's network and data.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.85,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario follows a logical progression of cybersecurity measures that align well with common practices in the corpus evidence for securing an organization's network and data.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of cybersecurity measures that align well with common practices in the corpus evidence for securing an organization's network and data.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.85,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        }
+      },
+      "unresolved_criteria": [],
+      "J": 0.7975,
+      "disagreement": 0.0562
+    },
+    {
+      "path": [
+        "state-vulnerable",
+        "ctrl-fw",
+        "state-perimeter",
+        "ctrl-seg",
+        "state-segmented",
+        "ctrl-siem",
+        "state-monitored",
+        "ctrl-encrypt",
+        "state-encrypted",
+        "ctrl-backup",
+        "state-resilient",
+        "ctrl-ids",
+        "state-secured"
+      ],
+      "edge_path": [
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        43,
+        33,
+        34,
+        35,
+        45,
+        39
+      ],
+      "scenario_text": "States traversed: S0: Vulnerable -> Perimeter Hardened -> Network Segmented -> Monitoring Active -> Data Encrypted -> Backup Resilient -> ST: Secured\nMeasures in order: 1. Firewall Rules (cost=2000, personnel=1); 2. Network Segmentation (cost=6000, personnel=1); 3. SIEM Rules (cost=3000, personnel=1); 4. Encryption at Rest (cost=3500, personnel=1); 5. Backup Policy (cost=4000, personnel=1); 6. IDS Signatures (cost=5000, personnel=1)",
+      "criteria": {
+        "technical_feasibility": {
+          "raw_votes": [
+            {
+              "score": 0.9,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "The measures are well-defined and commonly implemented in modern security architectures.",
+              "raw_responses": [
+                "{\"score\": 0.9, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures are well-defined and commonly implemented in modern security architectures.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.9,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "The measures are well-defined and commonly implemented in modern security architectures.",
+            "raw_responses": [
+              "{\"score\": 0.9, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures are well-defined and commonly implemented in modern security architectures.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.9,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "risk": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.85,
+              "evidence_state": "sufficient",
+              "rationale": "The combination of perimeter hardening, network segmentation, monitoring, data encryption, backup resilience and other measures significantly reduces risk.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of perimeter hardening, network segmentation, monitoring, data encryption, backup resilience and other measures significantly reduces risk.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.85,
+            "evidence_state": "sufficient",
+            "rationale": "The combination of perimeter hardening, network segmentation, monitoring, data encryption, backup resilience and other measures significantly reduces risk.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of perimeter hardening, network segmentation, monitoring, data encryption, backup resilience and other measures significantly reduces risk.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.85,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "time": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The phased approach allows for incremental improvement and reduces time to security.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The phased approach allows for incremental improvement and reduces time to security.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The phased approach allows for incremental improvement and reduces time to security.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The phased approach allows for incremental improvement and reduces time to security.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "resources": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario provides a mix of personnel and budget requirements for each measure, indicating consideration for resources.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario provides a mix of personnel and budget requirements for each measure, indicating consideration for resources.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario provides a mix of personnel and budget requirements for each measure, indicating consideration for resources.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario provides a mix of personnel and budget requirements for each measure, indicating consideration for resources.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "legal": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.85,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes multiple measures that address regulatory compliance requirements, such as network segmentation and encryption at rest.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes multiple measures that address regulatory compliance requirements, such as network segmentation and encryption at rest.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.85,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes multiple measures that address regulatory compliance requirements, such as network segmentation and encryption at rest.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes multiple measures that address regulatory compliance requirements, such as network segmentation and encryption at rest.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.85,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "consequences": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.85,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario covers a comprehensive set of defenses that would significantly mitigate operational and business continuity impacts from cyber attacks.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario covers a comprehensive set of defenses that would significantly mitigate operational and business continuity impacts from cyber attacks.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.85,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario covers a comprehensive set of defenses that would significantly mitigate operational and business continuity impacts from cyber attacks.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario covers a comprehensive set of defenses that would significantly mitigate operational and business continuity impacts from cyber attacks.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.85,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "content_fit": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario follows a logical order of security measures, aligning well with the general content of the evidence corpus.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical order of security measures, aligning well with the general content of the evidence corpus.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario follows a logical order of security measures, aligning well with the general content of the evidence corpus.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical order of security measures, aligning well with the general content of the evidence corpus.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        }
+      },
+      "unresolved_criteria": [],
+      "J": 0.82,
+      "disagreement": 0.035
+    },
+    {
+      "path": [
+        "state-vulnerable",
+        "ctrl-seg",
+        "state-segmented",
+        "ctrl-patch",
+        "state-patched",
+        "ctrl-encrypt",
+        "state-encrypted",
+        "ctrl-auth",
+        "state-hardened",
+        "ctrl-ids",
+        "state-secured"
+      ],
+      "edge_path": [
+        40,
+        27,
+        42,
+        31,
+        32,
+        33,
+        44,
+        37,
+        38,
+        39
+      ],
+      "scenario_text": "States traversed: S0: Vulnerable -> Network Segmented -> Systems Patched -> Data Encrypted -> Auth Hardened -> ST: Secured\nMeasures in order: 1. Network Segmentation (cost=6000, personnel=1); 2. Patch Management (cost=1500, personnel=1); 3. Encryption at Rest (cost=3500, personnel=1); 4. Auth Hardening (cost=2500, personnel=1); 5. IDS Signatures (cost=5000, personnel=1)",
+      "criteria": {
+        "technical_feasibility": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The combination of measures used in this scenario is well-documented and has been successfully implemented by many organizations.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of measures used in this scenario is well-documented and has been successfully implemented by many organizations.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The combination of measures used in this scenario is well-documented and has been successfully implemented by many organizations.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of measures used in this scenario is well-documented and has been successfully implemented by many organizations.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "risk": {
+          "raw_votes": [
+            {
+              "score": 0.7,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "While some critical controls are implemented, additional layers of security may be needed to fully mitigate residual risk.",
+              "raw_responses": [
+                "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"While some critical controls are implemented, additional layers of security may be needed to fully mitigate residual risk.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.7,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "While some critical controls are implemented, additional layers of security may be needed to fully mitigate residual risk.",
+            "raw_responses": [
+              "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"While some critical controls are implemented, additional layers of security may be needed to fully mitigate residual risk.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.7,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "time": {
+          "raw_votes": [
+            {
+              "score": 0.7,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario outlines a clear timeline of states to be achieved and measures to implement in sequence.",
+              "raw_responses": [
+                "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario outlines a clear timeline of states to be achieved and measures to implement in sequence.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.7,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario outlines a clear timeline of states to be achieved and measures to implement in sequence.",
+            "raw_responses": [
+              "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario outlines a clear timeline of states to be achieved and measures to implement in sequence.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.7,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "resources": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes multiple measures with dedicated personnel and budget allocations.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes multiple measures with dedicated personnel and budget allocations.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes multiple measures with dedicated personnel and budget allocations.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes multiple measures with dedicated personnel and budget allocations.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "legal": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The measures taken address many regulatory requirements for security but some specific compliance may be lacking.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures taken address many regulatory requirements for security but some specific compliance may be lacking.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The measures taken address many regulatory requirements for security but some specific compliance may be lacking.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures taken address many regulatory requirements for security but some specific compliance may be lacking.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "consequences": {
+          "raw_votes": [
+            {
+              "score": 0.7,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "The measures taken provide a good balance of security and business continuity.",
+              "raw_responses": [
+                "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures taken provide a good balance of security and business continuity.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.7,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "The measures taken provide a good balance of security and business continuity.",
+            "raw_responses": [
+              "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The measures taken provide a good balance of security and business continuity.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.7,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "content_fit": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario follows a logical progression of security measures that fit well with the provided content.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of security measures that fit well with the provided content.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario follows a logical progression of security measures that fit well with the provided content.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of security measures that fit well with the provided content.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        }
+      },
+      "unresolved_criteria": [],
+      "J": 0.75,
+      "disagreement": 0.0495
+    },
+    {
+      "path": [
+        "state-vulnerable",
+        "ctrl-seg",
+        "state-segmented",
+        "ctrl-patch",
+        "state-patched",
+        "ctrl-encrypt",
+        "state-encrypted",
+        "ctrl-backup",
+        "state-resilient",
+        "ctrl-auth",
+        "state-hardened",
+        "ctrl-ids",
+        "state-secured"
+      ],
+      "edge_path": [
+        40,
+        27,
+        42,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "scenario_text": "States traversed: S0: Vulnerable -> Network Segmented -> Systems Patched -> Data Encrypted -> Backup Resilient -> Auth Hardened -> ST: Secured\nMeasures in order: 1. Network Segmentation (cost=6000, personnel=1); 2. Patch Management (cost=1500, personnel=1); 3. Encryption at Rest (cost=3500, personnel=1); 4. Backup Policy (cost=4000, personnel=1); 5. Auth Hardening (cost=2500, personnel=1); 6. IDS Signatures (cost=5000, personnel=1)",
+      "criteria": {
+        "technical_feasibility": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The combination of network segmentation, patch management, encryption, backup policies, authentication hardening and IDS signatures are all well-established security practices with existing technical solutions.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of network segmentation, patch management, encryption, backup policies, authentication hardening and IDS signatures are all well-established security practices with existing technical solutions.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The combination of network segmentation, patch management, encryption, backup policies, authentication hardening and IDS signatures are all well-established security practices with existing technical solutions.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The combination of network segmentation, patch management, encryption, backup policies, authentication hardening and IDS signatures are all well-established security practices with existing technical solutions.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "risk": {
+          "raw_votes": [
+            {
+              "score": 0.7,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "Most critical assets are segmented, patched, encrypted, backed up and authenticated.",
+              "raw_responses": [
+                "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"Most critical assets are segmented, patched, encrypted, backed up and authenticated.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.7,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "Most critical assets are segmented, patched, encrypted, backed up and authenticated.",
+            "raw_responses": [
+              "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"Most critical assets are segmented, patched, encrypted, backed up and authenticated.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.7,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "time": {
+          "raw_votes": [
+            {
+              "score": 0.7,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes key steps like network segmentation and patch management early in the process.",
+              "raw_responses": [
+                "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes key steps like network segmentation and patch management early in the process.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.7,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes key steps like network segmentation and patch management early in the process.",
+            "raw_responses": [
+              "{\"score\": 0.7, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes key steps like network segmentation and patch management early in the process.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.7,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "resources": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes a mix of personnel and budget requirements for various security measures.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes a mix of personnel and budget requirements for various security measures.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes a mix of personnel and budget requirements for various security measures.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes a mix of personnel and budget requirements for various security measures.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "legal": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.9,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario addresses key regulatory requirements through network segmentation, patch management, encryption, backup policy, and authentication hardening.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario addresses key regulatory requirements through network segmentation, patch management, encryption, backup policy, and authentication hardening.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.9,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario addresses key regulatory requirements through network segmentation, patch management, encryption, backup policy, and authentication hardening.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.9, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario addresses key regulatory requirements through network segmentation, patch management, encryption, backup policy, and authentication hardening.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.9,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "consequences": {
+          "raw_votes": [
+            {
+              "score": 0.75,
+              "confidence": 0.8,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario includes key measures like network segmentation and backup resilience that help maintain business continuity in case of incidents.",
+              "raw_responses": [
+                "{\"score\": 0.75, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes key measures like network segmentation and backup resilience that help maintain business continuity in case of incidents.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.75,
+            "confidence": 0.8,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario includes key measures like network segmentation and backup resilience that help maintain business continuity in case of incidents.",
+            "raw_responses": [
+              "{\"score\": 0.75, \"confidence\": 0.8, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario includes key measures like network segmentation and backup resilience that help maintain business continuity in case of incidents.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.75,
+                "confidence": 0.8,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        },
+        "content_fit": {
+          "raw_votes": [
+            {
+              "score": 0.8,
+              "confidence": 0.85,
+              "evidence_state": "sufficient",
+              "rationale": "The scenario follows a logical progression of security measures that fit well with the general content of state-of-the-art cybersecurity practices.",
+              "raw_responses": [
+                "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of security measures that fit well with the general content of state-of-the-art cybersecurity practices.\"}"
+              ]
+            }
+          ],
+          "merged": {
+            "score": 0.8,
+            "confidence": 0.85,
+            "evidence_state": "sufficient",
+            "rationale": "The scenario follows a logical progression of security measures that fit well with the general content of state-of-the-art cybersecurity practices.",
+            "raw_responses": [
+              "{\"score\": 0.8, \"confidence\": 0.85, \"evidence_state\": \"sufficient\", \"rationale\": \"The scenario follows a logical progression of security measures that fit well with the general content of state-of-the-art cybersecurity practices.\"}"
+            ],
+            "panel": [
+              {
+                "evaluator": "",
+                "score": 0.8,
+                "confidence": 0.85,
+                "evidence_state": "sufficient"
+              }
+            ],
+            "panel_disagreement": 0.0
+          }
+        }
+      },
+      "unresolved_criteria": [],
+      "J": 0.7575,
+      "disagreement": 0.044
+    }
+  ],
+  "repeats": 1,
+  "temperature": 0.7
+}

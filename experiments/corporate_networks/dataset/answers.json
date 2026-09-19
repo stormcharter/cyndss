@@ -1,0 +1,2705 @@
+{
+  "scoring": "product of per-step CVSS exploitability",
+  "networks": [
+    {
+      "network": "net-001",
+      "difficulty": "easy",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.6461,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a2": 0.379456,
+        "a4": 0.134288,
+        "a1": 0.131602,
+        "a5": 0.082721,
+        "a3": 0.029275
+      },
+      "lengths": {
+        "a2": 3,
+        "a4": 2,
+        "a1": 3,
+        "a5": 3,
+        "a3": 3
+      }
+    },
+    {
+      "network": "net-002",
+      "difficulty": "moderate",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a5",
+      "margin": 0.1203,
+      "candidates_considered": 88,
+      "effectiveness": {
+        "a5": 0.579774,
+        "a2": 0.51,
+        "a1": 0.4998,
+        "a3": 0.489804,
+        "a4": 0.31416
+      },
+      "lengths": {
+        "a5": 4,
+        "a2": 1,
+        "a1": 2,
+        "a3": 3,
+        "a4": 2
+      }
+    },
+    {
+      "network": "net-003",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.0917,
+      "candidates_considered": 220,
+      "effectiveness": {
+        "a2": 0.023473,
+        "a4": 0.02132,
+        "a1": 0.020893,
+        "a5": 0.019401,
+        "a3": 0.016213
+      },
+      "lengths": {
+        "a2": 5,
+        "a4": 4,
+        "a1": 5,
+        "a5": 5,
+        "a3": 4
+      }
+    },
+    {
+      "network": "net-004",
+      "difficulty": "moderate",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a4",
+      "margin": 0.0945,
+      "candidates_considered": 762,
+      "effectiveness": {
+        "a4": 0.579774,
+        "a1": 0.525,
+        "a5": 0.5145,
+        "a2": 0.50421,
+        "a3": 0.494126
+      },
+      "lengths": {
+        "a4": 4,
+        "a1": 1,
+        "a5": 2,
+        "a2": 3,
+        "a3": 4
+      }
+    },
+    {
+      "network": "net-005",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.3714,
+      "candidates_considered": 18,
+      "effectiveness": {
+        "a1": 0.9604,
+        "a2": 0.60368,
+        "a3": 0.591606,
+        "a5": 0.5145,
+        "a4": 0.50421
+      },
+      "lengths": {
+        "a1": 3,
+        "a2": 2,
+        "a3": 3,
+        "a5": 3,
+        "a4": 4
+      }
+    },
+    {
+      "network": "net-006",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.1735,
+      "candidates_considered": 24,
+      "effectiveness": {
+        "a1": 0.21364,
+        "a2": 0.17658,
+        "a4": 0.173048,
+        "a5": 0.134288,
+        "a3": 0.131602
+      },
+      "lengths": {
+        "a1": 2,
+        "a2": 3,
+        "a4": 4,
+        "a5": 2,
+        "a3": 3
+      }
+    },
+    {
+      "network": "net-007",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.3586,
+      "candidates_considered": 33,
+      "effectiveness": {
+        "a2": 0.777924,
+        "a5": 0.49896,
+        "a3": 0.488981,
+        "a1": 0.479201,
+        "a4": 0.196
+      },
+      "lengths": {
+        "a2": 3,
+        "a5": 2,
+        "a3": 3,
+        "a1": 4,
+        "a4": 1
+      }
+    },
+    {
+      "network": "net-008",
+      "difficulty": "moderate",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a5",
+      "margin": 0.1735,
+      "candidates_considered": 24,
+      "effectiveness": {
+        "a5": 0.98,
+        "a3": 0.81,
+        "a4": 0.7938,
+        "a1": 0.218,
+        "a2": 0.21364
+      },
+      "lengths": {
+        "a5": 2,
+        "a3": 1,
+        "a4": 2,
+        "a1": 2,
+        "a2": 3
+      }
+    },
+    {
+      "network": "net-009",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "nas-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.7042,
+      "candidates_considered": 232,
+      "effectiveness": {
+        "a4": 0.141582,
+        "a2": 0.041873,
+        "a3": 0.041036,
+        "a5": 0.040215,
+        "a1": 0.038882
+      },
+      "lengths": {
+        "a4": 4,
+        "a2": 3,
+        "a3": 4,
+        "a5": 5,
+        "a1": 3
+      }
+    },
+    {
+      "network": "net-010",
+      "difficulty": "moderate",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a3",
+      "margin": 0.1735,
+      "candidates_considered": 28,
+      "effectiveness": {
+        "a3": 0.98,
+        "a5": 0.81,
+        "a4": 0.7938,
+        "a2": 0.51,
+        "a1": 0.4998
+      },
+      "lengths": {
+        "a3": 2,
+        "a5": 2,
+        "a4": 2,
+        "a2": 1,
+        "a1": 2
+      }
+    },
+    {
+      "network": "net-011",
+      "difficulty": "easy",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a2",
+      "margin": 0.3586,
+      "candidates_considered": 28,
+      "effectiveness": {
+        "a2": 0.941192,
+        "a5": 0.60368,
+        "a4": 0.591606,
+        "a1": 0.579774,
+        "a3": 0.196
+      },
+      "lengths": {
+        "a2": 3,
+        "a5": 2,
+        "a4": 3,
+        "a1": 4,
+        "a3": 1
+      }
+    },
+    {
+      "network": "net-012",
+      "difficulty": "moderate",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a4",
+      "margin": 0.0945,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.108418,
+        "a3": 0.098175,
+        "a2": 0.096212,
+        "a1": 0.094287,
+        "a5": 0.092402
+      },
+      "lengths": {
+        "a4": 5,
+        "a3": 2,
+        "a2": 3,
+        "a1": 4,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-013",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.5716,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.061437,
+        "a3": 0.02632,
+        "a4": 0.023952,
+        "a5": 0.022432,
+        "a2": 0.02132
+      },
+      "lengths": {
+        "a1": 5,
+        "a3": 3,
+        "a4": 4,
+        "a5": 3,
+        "a2": 4
+      }
+    },
+    {
+      "network": "net-014",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.0732,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.538362,
+        "a3": 0.49896,
+        "a2": 0.488981,
+        "a5": 0.479201,
+        "a4": 0.454054
+      },
+      "lengths": {
+        "a1": 5,
+        "a3": 3,
+        "a2": 4,
+        "a5": 5,
+        "a4": 4
+      }
+    },
+    {
+      "network": "net-015",
+      "difficulty": "easy",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.224,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.169587,
+        "a4": 0.131602,
+        "a2": 0.12897,
+        "a3": 0.126391,
+        "a5": 0.112161
+      },
+      "lengths": {
+        "a1": 5,
+        "a4": 3,
+        "a2": 4,
+        "a3": 5,
+        "a5": 3
+      }
+    },
+    {
+      "network": "net-016",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.0714,
+      "candidates_considered": 32,
+      "effectiveness": {
+        "a2": 0.60368,
+        "a4": 0.56056,
+        "a3": 0.549349,
+        "a5": 0.120736,
+        "a1": 0.118321
+      },
+      "lengths": {
+        "a2": 2,
+        "a4": 2,
+        "a3": 3,
+        "a5": 2,
+        "a1": 3
+      }
+    },
+    {
+      "network": "net-017",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.3259,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.051818,
+        "a4": 0.03493,
+        "a3": 0.028689,
+        "a2": 0.028293,
+        "a5": 0.023238
+      },
+      "lengths": {
+        "a1": 5,
+        "a4": 5,
+        "a3": 5,
+        "a2": 5,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-018",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.1619,
+      "candidates_considered": 30,
+      "effectiveness": {
+        "a2": 0.16023,
+        "a1": 0.134288,
+        "a4": 0.131602,
+        "a3": 0.098702,
+        "a5": 0.082721
+      },
+      "lengths": {
+        "a2": 3,
+        "a1": 2,
+        "a4": 3,
+        "a3": 4,
+        "a5": 3
+      }
+    },
+    {
+      "network": "net-019",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.3714,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a1": 0.023752,
+        "a4": 0.01493,
+        "a5": 0.012797,
+        "a2": 0.01036,
+        "a3": 0.010153
+      },
+      "lengths": {
+        "a1": 5,
+        "a4": 5,
+        "a5": 5,
+        "a2": 4,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-020",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "nas-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.1012,
+      "candidates_considered": 292,
+      "effectiveness": {
+        "a3": 0.051818,
+        "a4": 0.046574,
+        "a2": 0.045642,
+        "a5": 0.03493,
+        "a1": 0.034232
+      },
+      "lengths": {
+        "a3": 5,
+        "a4": 3,
+        "a2": 4,
+        "a5": 4,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-021",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.7442,
+      "candidates_considered": 26,
+      "effectiveness": {
+        "a2": 0.525,
+        "a4": 0.134288,
+        "a3": 0.11445,
+        "a5": 0.029275,
+        "a1": 0.02495
+      },
+      "lengths": {
+        "a2": 2,
+        "a4": 2,
+        "a3": 2,
+        "a5": 3,
+        "a1": 3
+      }
+    },
+    {
+      "network": "net-022",
+      "difficulty": "easy",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a2",
+      "margin": 0.714,
+      "candidates_considered": 58,
+      "effectiveness": {
+        "a2": 0.762366,
+        "a4": 0.218,
+        "a5": 0.21364,
+        "a3": 0.209367,
+        "a1": 0.20518
+      },
+      "lengths": {
+        "a2": 4,
+        "a4": 1,
+        "a5": 2,
+        "a3": 3,
+        "a1": 4
+      }
+    },
+    {
+      "network": "net-023",
+      "difficulty": "hard",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.02,
+      "candidates_considered": 32,
+      "effectiveness": {
+        "a4": 0.98,
+        "a3": 0.9604,
+        "a1": 0.196,
+        "a2": 0.19208,
+        "a5": 0.188238
+      },
+      "lengths": {
+        "a4": 2,
+        "a3": 3,
+        "a1": 2,
+        "a2": 3,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-024",
+      "difficulty": "easy",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": true,
+      "moved_entry": true,
+      "best_attack": "a2",
+      "margin": 0.7776,
+      "candidates_considered": 416,
+      "effectiveness": {
+        "a2": 0.21364,
+        "a3": 0.047524,
+        "a4": 0.040766,
+        "a1": 0.039951,
+        "a5": 0.008887
+      },
+      "lengths": {
+        "a2": 2,
+        "a3": 2,
+        "a4": 2,
+        "a1": 3,
+        "a5": 3
+      }
+    },
+    {
+      "network": "net-025",
+      "difficulty": "hard",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a5",
+      "margin": 0.02,
+      "candidates_considered": 13,
+      "effectiveness": {
+        "a5": 0.616,
+        "a4": 0.60368,
+        "a3": 0.462,
+        "a1": 0.45276,
+        "a2": 0.115192
+      },
+      "lengths": {
+        "a5": 1,
+        "a4": 3,
+        "a3": 2,
+        "a1": 3,
+        "a2": 2
+      }
+    },
+    {
+      "network": "net-026",
+      "difficulty": "easy",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.4457,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.242263,
+        "a1": 0.134288,
+        "a3": 0.131602,
+        "a4": 0.12897,
+        "a2": 0.126391
+      },
+      "lengths": {
+        "a5": 5,
+        "a1": 2,
+        "a3": 3,
+        "a4": 4,
+        "a2": 5
+      }
+    },
+    {
+      "network": "net-027",
+      "difficulty": "easy",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a4",
+      "margin": 0.6619,
+      "candidates_considered": 548,
+      "effectiveness": {
+        "a4": 0.579774,
+        "a3": 0.196,
+        "a2": 0.19208,
+        "a1": 0.188238,
+        "a5": 0.187
+      },
+      "lengths": {
+        "a4": 5,
+        "a3": 2,
+        "a2": 3,
+        "a1": 4,
+        "a5": 2
+      }
+    },
+    {
+      "network": "net-028",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.2474,
+      "candidates_considered": 69,
+      "effectiveness": {
+        "a1": 0.50421,
+        "a4": 0.379456,
+        "a5": 0.371867,
+        "a3": 0.3234,
+        "a2": 0.316932
+      },
+      "lengths": {
+        "a1": 4,
+        "a4": 2,
+        "a5": 3,
+        "a3": 2,
+        "a2": 3
+      }
+    },
+    {
+      "network": "net-029",
+      "difficulty": "moderate",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a2",
+      "margin": 0.1258,
+      "candidates_considered": 571,
+      "effectiveness": {
+        "a2": 0.24938,
+        "a3": 0.218,
+        "a5": 0.21364,
+        "a1": 0.209367,
+        "a4": 0.187
+      },
+      "lengths": {
+        "a2": 5,
+        "a3": 2,
+        "a5": 3,
+        "a1": 4,
+        "a4": 2
+      }
+    },
+    {
+      "network": "net-030",
+      "difficulty": "hard",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.02,
+      "candidates_considered": 10,
+      "effectiveness": {
+        "a2": 0.616,
+        "a4": 0.60368,
+        "a1": 0.134288,
+        "a3": 0.131602,
+        "a5": 0.029275
+      },
+      "lengths": {
+        "a2": 2,
+        "a4": 3,
+        "a1": 2,
+        "a3": 4,
+        "a5": 3
+      }
+    },
+    {
+      "network": "net-031",
+      "difficulty": "hard",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.02,
+      "candidates_considered": 16,
+      "effectiveness": {
+        "a4": 1.0,
+        "a5": 0.98,
+        "a3": 0.9604,
+        "a2": 0.51,
+        "a1": 0.4998
+      },
+      "lengths": {
+        "a4": 1,
+        "a5": 2,
+        "a3": 3,
+        "a2": 2,
+        "a1": 3
+      }
+    },
+    {
+      "network": "net-032",
+      "difficulty": "easy",
+      "start": "ws-01",
+      "start_condition": "phishing-landing",
+      "goal": "sw-01",
+      "goal_condition": "service-disruption",
+      "retargeted_goal": true,
+      "moved_entry": true,
+      "best_attack": "a4",
+      "margin": 0.7959,
+      "candidates_considered": 24,
+      "effectiveness": {
+        "a4": 0.941192,
+        "a2": 0.19208,
+        "a3": 0.188238,
+        "a1": 0.18326,
+        "a5": 0.179595
+      },
+      "lengths": {
+        "a4": 3,
+        "a2": 2,
+        "a3": 3,
+        "a1": 2,
+        "a5": 3
+      }
+    },
+    {
+      "network": "net-033",
+      "difficulty": "easy",
+      "start": "adm-01",
+      "start_condition": "phishing-landing",
+      "goal": "nas-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": true,
+      "best_attack": "a1",
+      "margin": 0.4018,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a1": 0.331631,
+        "a5": 0.19838,
+        "a4": 0.194412,
+        "a3": 0.190524,
+        "a2": 0.122202
+      },
+      "lengths": {
+        "a1": 5,
+        "a5": 2,
+        "a4": 3,
+        "a3": 5,
+        "a2": 3
+      }
+    },
+    {
+      "network": "net-034",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.5848,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a2": 0.3234,
+        "a5": 0.134288,
+        "a1": 0.120736,
+        "a3": 0.11445,
+        "a4": 0.1029
+      },
+      "lengths": {
+        "a2": 2,
+        "a5": 2,
+        "a1": 2,
+        "a3": 3,
+        "a4": 2
+      }
+    },
+    {
+      "network": "net-035",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.0714,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a2": 0.171297,
+        "a4": 0.159061,
+        "a5": 0.131602,
+        "a1": 0.12897,
+        "a3": 0.126391
+      },
+      "lengths": {
+        "a2": 4,
+        "a4": 4,
+        "a5": 4,
+        "a1": 4,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-036",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.4399,
+      "candidates_considered": 576,
+      "effectiveness": {
+        "a2": 0.084843,
+        "a1": 0.047524,
+        "a3": 0.046574,
+        "a4": 0.045642,
+        "a5": 0.043247
+      },
+      "lengths": {
+        "a2": 5,
+        "a1": 3,
+        "a3": 4,
+        "a4": 5,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-037",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.1303,
+      "candidates_considered": 331,
+      "effectiveness": {
+        "a2": 0.088669,
+        "a3": 0.077112,
+        "a4": 0.07557,
+        "a5": 0.074373,
+        "a1": 0.063386
+      },
+      "lengths": {
+        "a2": 4,
+        "a3": 3,
+        "a4": 4,
+        "a5": 3,
+        "a1": 3
+      }
+    },
+    {
+      "network": "net-038",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.1477,
+      "candidates_considered": 18,
+      "effectiveness": {
+        "a1": 0.134288,
+        "a2": 0.11445,
+        "a5": 0.068487,
+        "a4": 0.05837,
+        "a3": 0.029275
+      },
+      "lengths": {
+        "a1": 2,
+        "a2": 2,
+        "a5": 3,
+        "a4": 3,
+        "a3": 3
+      }
+    },
+    {
+      "network": "net-039",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.5287,
+      "candidates_considered": 158,
+      "effectiveness": {
+        "a2": 0.098825,
+        "a5": 0.046574,
+        "a1": 0.045642,
+        "a4": 0.044729,
+        "a3": 0.042728
+      },
+      "lengths": {
+        "a2": 5,
+        "a5": 3,
+        "a1": 4,
+        "a4": 5,
+        "a3": 2
+      }
+    },
+    {
+      "network": "net-040",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.1735,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.642978,
+        "a5": 0.531441,
+        "a3": 0.520812,
+        "a1": 0.492075,
+        "a2": 0.482234
+      },
+      "lengths": {
+        "a4": 3,
+        "a5": 3,
+        "a3": 4,
+        "a1": 3,
+        "a2": 4
+      }
+    },
+    {
+      "network": "net-041",
+      "difficulty": "easy",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.2907,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.301212,
+        "a1": 0.21364,
+        "a3": 0.209367,
+        "a2": 0.20518,
+        "a5": 0.194412
+      },
+      "lengths": {
+        "a4": 5,
+        "a1": 3,
+        "a3": 4,
+        "a2": 5,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-042",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.1787,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.092563,
+        "a2": 0.076025,
+        "a3": 0.070904,
+        "a4": 0.069486,
+        "a1": 0.064523
+      },
+      "lengths": {
+        "a5": 5,
+        "a2": 5,
+        "a3": 4,
+        "a4": 5,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-043",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.1007,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.003931,
+        "a3": 0.003535,
+        "a2": 0.002926,
+        "a4": 0.00199,
+        "a5": 0.001251
+      },
+      "lengths": {
+        "a1": 5,
+        "a3": 5,
+        "a2": 5,
+        "a4": 5,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-044",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "fs-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.4138,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a2": 0.36443,
+        "a5": 0.21364,
+        "a4": 0.209367,
+        "a3": 0.20518,
+        "a1": 0.201076
+      },
+      "lengths": {
+        "a2": 5,
+        "a5": 3,
+        "a4": 3,
+        "a3": 4,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-045",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.1099,
+      "candidates_considered": 520,
+      "effectiveness": {
+        "a5": 0.01641,
+        "a3": 0.014607,
+        "a1": 0.013525,
+        "a2": 0.011108,
+        "a4": 0.008392
+      },
+      "lengths": {
+        "a5": 5,
+        "a3": 5,
+        "a1": 5,
+        "a2": 5,
+        "a4": 4
+      }
+    },
+    {
+      "network": "net-046",
+      "difficulty": "easy",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.3708,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a2": 0.112698,
+        "a5": 0.070904,
+        "a4": 0.069486,
+        "a3": 0.068096,
+        "a1": 0.064523
+      },
+      "lengths": {
+        "a2": 5,
+        "a5": 3,
+        "a4": 4,
+        "a3": 5,
+        "a1": 4
+      }
+    },
+    {
+      "network": "net-047",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.1009,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.021956,
+        "a3": 0.01974,
+        "a5": 0.018033,
+        "a1": 0.016213,
+        "a2": 0.006382
+      },
+      "lengths": {
+        "a4": 5,
+        "a3": 5,
+        "a5": 5,
+        "a1": 5,
+        "a2": 5
+      }
+    },
+    {
+      "network": "net-048",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.2395,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a3": 0.037725,
+        "a2": 0.028689,
+        "a1": 0.028116,
+        "a5": 0.023238,
+        "a4": 0.017673
+      },
+      "lengths": {
+        "a3": 5,
+        "a2": 5,
+        "a1": 5,
+        "a5": 5,
+        "a4": 5
+      }
+    },
+    {
+      "network": "net-049",
+      "difficulty": "moderate",
+      "start": "mx-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.0714,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.030752,
+        "a4": 0.028555,
+        "a3": 0.021791,
+        "a2": 0.021355,
+        "a1": 0.020928
+      },
+      "lengths": {
+        "a5": 5,
+        "a4": 5,
+        "a3": 4,
+        "a2": 4,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-050",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.3394,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.009467,
+        "a1": 0.006254,
+        "a3": 0.00533,
+        "a5": 0.003931,
+        "a2": 0.00335
+      },
+      "lengths": {
+        "a4": 5,
+        "a1": 5,
+        "a3": 5,
+        "a5": 5,
+        "a2": 5
+      }
+    },
+    {
+      "network": "net-051",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.1254,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a1": 0.079446,
+        "a5": 0.069486,
+        "a2": 0.068096,
+        "a4": 0.065664,
+        "a3": 0.0608
+      },
+      "lengths": {
+        "a1": 5,
+        "a5": 4,
+        "a2": 5,
+        "a4": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-052",
+      "difficulty": "hard",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.02,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a3": 0.137838,
+        "a2": 0.135081,
+        "a1": 0.120237,
+        "a4": 0.115192,
+        "a5": 0.112888
+      },
+      "lengths": {
+        "a3": 4,
+        "a2": 5,
+        "a1": 5,
+        "a4": 4,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-053",
+      "difficulty": "easy",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.3776,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a2": 0.012484,
+        "a1": 0.00777,
+        "a5": 0.006665,
+        "a3": 0.005717,
+        "a4": 0.004904
+      },
+      "lengths": {
+        "a2": 5,
+        "a1": 5,
+        "a5": 5,
+        "a3": 5,
+        "a4": 5
+      }
+    },
+    {
+      "network": "net-054",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.1303,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.041344,
+        "a3": 0.035956,
+        "a2": 0.035236,
+        "a1": 0.024237,
+        "a4": 0.023752
+      },
+      "lengths": {
+        "a5": 5,
+        "a3": 4,
+        "a2": 5,
+        "a1": 4,
+        "a4": 5
+      }
+    },
+    {
+      "network": "net-055",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.0503,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.145142,
+        "a3": 0.137838,
+        "a4": 0.135081,
+        "a2": 0.134288,
+        "a1": 0.132435
+      },
+      "lengths": {
+        "a5": 5,
+        "a3": 5,
+        "a4": 5,
+        "a2": 3,
+        "a1": 4
+      }
+    },
+    {
+      "network": "net-056",
+      "difficulty": "hard",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.02,
+      "candidates_considered": 720,
+      "effectiveness": {
+        "a2": 0.028689,
+        "a5": 0.028116,
+        "a4": 0.02664,
+        "a1": 0.026107,
+        "a3": 0.02495
+      },
+      "lengths": {
+        "a2": 4,
+        "a5": 5,
+        "a4": 4,
+        "a1": 5,
+        "a3": 3
+      }
+    },
+    {
+      "network": "net-057",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "fs-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.2191,
+      "candidates_considered": 804,
+      "effectiveness": {
+        "a5": 0.922368,
+        "a4": 0.7203,
+        "a1": 0.705894,
+        "a3": 0.616,
+        "a2": 0.60368
+      },
+      "lengths": {
+        "a5": 5,
+        "a4": 5,
+        "a1": 5,
+        "a3": 1,
+        "a2": 2
+      }
+    },
+    {
+      "network": "net-058",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.0826,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.020893,
+        "a4": 0.019168,
+        "a3": 0.018785,
+        "a1": 0.016213,
+        "a2": 0.015889
+      },
+      "lengths": {
+        "a5": 5,
+        "a4": 4,
+        "a3": 5,
+        "a1": 4,
+        "a2": 5
+      }
+    },
+    {
+      "network": "net-059",
+      "difficulty": "hard",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "nas-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.0063,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a1": 0.073347,
+        "a4": 0.072886,
+        "a5": 0.07188,
+        "a2": 0.071428,
+        "a3": 0.070958
+      },
+      "lengths": {
+        "a1": 4,
+        "a4": 4,
+        "a5": 5,
+        "a2": 5,
+        "a3": 3
+      }
+    },
+    {
+      "network": "net-060",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": true,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.3714,
+      "candidates_considered": 395,
+      "effectiveness": {
+        "a3": 0.041873,
+        "a5": 0.02632,
+        "a4": 0.025794,
+        "a2": 0.025278,
+        "a1": 0.02256
+      },
+      "lengths": {
+        "a3": 3,
+        "a5": 3,
+        "a4": 4,
+        "a2": 5,
+        "a1": 3
+      }
+    },
+    {
+      "network": "net-061",
+      "difficulty": "moderate",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.1541,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a4": 0.020893,
+        "a2": 0.017673,
+        "a5": 0.015889,
+        "a3": 0.006254,
+        "a1": 0.005623
+      },
+      "lengths": {
+        "a4": 5,
+        "a2": 5,
+        "a5": 5,
+        "a3": 5,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-062",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "nas-03",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.0741,
+      "candidates_considered": 803,
+      "effectiveness": {
+        "a2": 0.15336,
+        "a4": 0.142,
+        "a1": 0.140169,
+        "a3": 0.137366,
+        "a5": 0.130157
+      },
+      "lengths": {
+        "a2": 5,
+        "a4": 5,
+        "a1": 4,
+        "a3": 5,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-063",
+      "difficulty": "hard",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "fs-02",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.02,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a3": 0.008207,
+        "a4": 0.008043,
+        "a2": 0.007714,
+        "a1": 0.007469,
+        "a5": 0.005738
+      },
+      "lengths": {
+        "a3": 4,
+        "a4": 5,
+        "a2": 5,
+        "a1": 5,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-064",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.2081,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.777924,
+        "a4": 0.616,
+        "a3": 0.60368,
+        "a2": 0.591606,
+        "a1": 0.525
+      },
+      "lengths": {
+        "a5": 5,
+        "a4": 3,
+        "a3": 4,
+        "a2": 5,
+        "a1": 3
+      }
+    },
+    {
+      "network": "net-065",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.0714,
+      "candidates_considered": 276,
+      "effectiveness": {
+        "a5": 0.12897,
+        "a4": 0.119758,
+        "a2": 0.108773,
+        "a1": 0.106598,
+        "a3": 0.098984
+      },
+      "lengths": {
+        "a5": 5,
+        "a4": 5,
+        "a2": 4,
+        "a1": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-066",
+      "difficulty": "hard",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "nas-03",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.02,
+      "candidates_considered": 803,
+      "effectiveness": {
+        "a3": 0.057432,
+        "a2": 0.056284,
+        "a1": 0.053178,
+        "a5": 0.052114,
+        "a4": 0.049228
+      },
+      "lengths": {
+        "a3": 4,
+        "a2": 5,
+        "a1": 4,
+        "a5": 5,
+        "a4": 5
+      }
+    },
+    {
+      "network": "net-067",
+      "difficulty": "easy",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": true,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.384,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a3": 1.0,
+        "a5": 0.616,
+        "a1": 0.60368,
+        "a2": 0.591606,
+        "a4": 0.49896
+      },
+      "lengths": {
+        "a3": 1,
+        "a5": 2,
+        "a1": 4,
+        "a2": 5,
+        "a4": 3
+      }
+    },
+    {
+      "network": "net-068",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.1126,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.192419,
+        "a2": 0.170755,
+        "a1": 0.16734,
+        "a4": 0.163993,
+        "a3": 0.162286
+      },
+      "lengths": {
+        "a5": 5,
+        "a2": 3,
+        "a1": 4,
+        "a4": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-069",
+      "difficulty": "hard",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.02,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a3": 0.046574,
+        "a4": 0.045642,
+        "a2": 0.041873,
+        "a1": 0.041036,
+        "a5": 0.029275
+      },
+      "lengths": {
+        "a3": 4,
+        "a4": 5,
+        "a2": 4,
+        "a1": 5,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-070",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.2625,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.310593,
+        "a3": 0.22907,
+        "a2": 0.224489,
+        "a5": 0.21364,
+        "a4": 0.209367
+      },
+      "lengths": {
+        "a1": 4,
+        "a3": 4,
+        "a2": 5,
+        "a5": 3,
+        "a4": 4
+      }
+    },
+    {
+      "network": "net-071",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.1193,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.033239,
+        "a5": 0.029275,
+        "a1": 0.028871,
+        "a2": 0.028293,
+        "a3": 0.025957
+      },
+      "lengths": {
+        "a4": 5,
+        "a5": 3,
+        "a1": 4,
+        "a2": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-072",
+      "difficulty": "hard",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.02,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a3": 0.047524,
+        "a2": 0.046574,
+        "a5": 0.045642,
+        "a1": 0.042728,
+        "a4": 0.041873
+      },
+      "lengths": {
+        "a3": 3,
+        "a2": 4,
+        "a5": 5,
+        "a1": 3,
+        "a4": 4
+      }
+    },
+    {
+      "network": "net-073",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.0669,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.141107,
+        "a2": 0.131673,
+        "a3": 0.131602,
+        "a1": 0.12897,
+        "a5": 0.126391
+      },
+      "lengths": {
+        "a4": 5,
+        "a2": 5,
+        "a3": 3,
+        "a1": 4,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-074",
+      "difficulty": "easy",
+      "start": "mx-01",
+      "start_condition": "compromised",
+      "goal": "nas-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.3297,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a2": 0.035378,
+        "a5": 0.023713,
+        "a4": 0.023238,
+        "a1": 0.017784,
+        "a3": 0.014607
+      },
+      "lengths": {
+        "a2": 5,
+        "a5": 5,
+        "a4": 5,
+        "a1": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-075",
+      "difficulty": "moderate",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.1735,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.479201,
+        "a2": 0.396074,
+        "a1": 0.388153,
+        "a5": 0.218,
+        "a3": 0.21364
+      },
+      "lengths": {
+        "a4": 4,
+        "a2": 4,
+        "a1": 5,
+        "a5": 2,
+        "a3": 3
+      }
+    },
+    {
+      "network": "net-076",
+      "difficulty": "hard",
+      "start": "mx-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.02,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.046574,
+        "a4": 0.045642,
+        "a3": 0.037725,
+        "a2": 0.03493,
+        "a5": 0.028689
+      },
+      "lengths": {
+        "a1": 4,
+        "a4": 5,
+        "a3": 5,
+        "a2": 5,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-077",
+      "difficulty": "easy",
+      "start": "vpn-02",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.224,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a1": 0.09137,
+        "a4": 0.070904,
+        "a2": 0.069486,
+        "a3": 0.068096,
+        "a5": 0.060775
+      },
+      "lengths": {
+        "a1": 5,
+        "a4": 3,
+        "a2": 4,
+        "a3": 5,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-078",
+      "difficulty": "moderate",
+      "start": "mx-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": true,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.1304,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a5": 0.028116,
+        "a3": 0.024451,
+        "a2": 0.023962,
+        "a1": 0.023238,
+        "a4": 0.019805
+      },
+      "lengths": {
+        "a5": 5,
+        "a3": 4,
+        "a2": 5,
+        "a1": 5,
+        "a4": 5
+      }
+    },
+    {
+      "network": "net-079",
+      "difficulty": "hard",
+      "start": "vpn-03",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.02,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.642978,
+        "a3": 0.630118,
+        "a2": 0.59535,
+        "a4": 0.583443,
+        "a1": 0.520812
+      },
+      "lengths": {
+        "a5": 4,
+        "a3": 5,
+        "a2": 4,
+        "a4": 5,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-080",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.782,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a5": 0.98,
+        "a2": 0.21364,
+        "a3": 0.209367,
+        "a4": 0.20518,
+        "a1": 0.194412
+      },
+      "lengths": {
+        "a5": 2,
+        "a2": 3,
+        "a3": 4,
+        "a4": 5,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-081",
+      "difficulty": "moderate",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "nas-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.1787,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a3": 0.309009,
+        "a5": 0.253799,
+        "a2": 0.208454,
+        "a1": 0.194412,
+        "a4": 0.190524
+      },
+      "lengths": {
+        "a3": 5,
+        "a5": 5,
+        "a2": 5,
+        "a1": 3,
+        "a4": 4
+      }
+    },
+    {
+      "network": "net-082",
+      "difficulty": "hard",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "nas-02",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.02,
+      "candidates_considered": 803,
+      "effectiveness": {
+        "a5": 0.131602,
+        "a2": 0.12897,
+        "a1": 0.126391,
+        "a4": 0.119758,
+        "a3": 0.117363
+      },
+      "lengths": {
+        "a5": 3,
+        "a2": 4,
+        "a1": 5,
+        "a4": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-083",
+      "difficulty": "easy",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "nas-02",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.3431,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a1": 0.069486,
+        "a5": 0.045642,
+        "a4": 0.042382,
+        "a2": 0.041036,
+        "a3": 0.038105
+      },
+      "lengths": {
+        "a1": 5,
+        "a5": 5,
+        "a4": 5,
+        "a2": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-084",
+      "difficulty": "moderate",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "fs-02",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.0714,
+      "candidates_considered": 803,
+      "effectiveness": {
+        "a4": 0.041873,
+        "a3": 0.038882,
+        "a1": 0.03461,
+        "a2": 0.02632,
+        "a5": 0.023752
+      },
+      "lengths": {
+        "a4": 5,
+        "a3": 5,
+        "a1": 5,
+        "a2": 5,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-085",
+      "difficulty": "hard",
+      "start": "ws-13",
+      "start_condition": "phishing-landing",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.02,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a3": 0.075276,
+        "a5": 0.073771,
+        "a2": 0.070904,
+        "a1": 0.069486,
+        "a4": 0.068096
+      },
+      "lengths": {
+        "a3": 4,
+        "a5": 5,
+        "a2": 3,
+        "a1": 4,
+        "a4": 5
+      }
+    },
+    {
+      "network": "net-086",
+      "difficulty": "easy",
+      "start": "mx-02",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.2503,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a2": 0.013542,
+        "a4": 0.010153,
+        "a5": 0.009128,
+        "a3": 0.008207,
+        "a1": 0.006254
+      },
+      "lengths": {
+        "a2": 5,
+        "a4": 5,
+        "a5": 5,
+        "a3": 5,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-087",
+      "difficulty": "moderate",
+      "start": "mx-01",
+      "start_condition": "compromised",
+      "goal": "nas-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.0552,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a4": 0.023238,
+        "a1": 0.021956,
+        "a3": 0.021517,
+        "a5": 0.019207,
+        "a2": 0.018033
+      },
+      "lengths": {
+        "a4": 5,
+        "a1": 4,
+        "a3": 5,
+        "a5": 5,
+        "a2": 4
+      }
+    },
+    {
+      "network": "net-088",
+      "difficulty": "hard",
+      "start": "mx-02",
+      "start_condition": "compromised",
+      "goal": "nas-02",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.02,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a4": 0.60368,
+        "a3": 0.591606,
+        "a2": 0.579774,
+        "a1": 0.549349,
+        "a5": 0.538362
+      },
+      "lengths": {
+        "a4": 3,
+        "a3": 4,
+        "a2": 5,
+        "a1": 4,
+        "a5": 5
+      }
+    },
+    {
+      "network": "net-089",
+      "difficulty": "easy",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "nas-04",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.3738,
+      "candidates_considered": 802,
+      "effectiveness": {
+        "a2": 0.059038,
+        "a5": 0.03697,
+        "a3": 0.034329,
+        "a4": 0.033239,
+        "a1": 0.030865
+      },
+      "lengths": {
+        "a2": 5,
+        "a5": 5,
+        "a3": 5,
+        "a4": 5,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-090",
+      "difficulty": "moderate",
+      "start": "mx-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.0714,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a4": 0.030557,
+        "a1": 0.028374,
+        "a3": 0.028034,
+        "a2": 0.027473,
+        "a5": 0.023713
+      },
+      "lengths": {
+        "a4": 5,
+        "a1": 5,
+        "a3": 5,
+        "a2": 5,
+        "a5": 4
+      }
+    },
+    {
+      "network": "net-091",
+      "difficulty": "hard",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.0138,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a4": 0.016213,
+        "a3": 0.01599,
+        "a5": 0.01587,
+        "a1": 0.015552,
+        "a2": 0.015526
+      },
+      "lengths": {
+        "a4": 5,
+        "a3": 5,
+        "a5": 4,
+        "a1": 5,
+        "a2": 5
+      }
+    },
+    {
+      "network": "net-092",
+      "difficulty": "easy",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.4874,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.057106,
+        "a1": 0.029275,
+        "a5": 0.02664,
+        "a2": 0.02495,
+        "a3": 0.023713
+      },
+      "lengths": {
+        "a4": 5,
+        "a1": 5,
+        "a5": 5,
+        "a2": 5,
+        "a3": 5
+      }
+    },
+    {
+      "network": "net-093",
+      "difficulty": "moderate",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a3",
+      "margin": 0.1099,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a3": 0.060974,
+        "a4": 0.054274,
+        "a2": 0.041275,
+        "a5": 0.03118,
+        "a1": 0.030557
+      },
+      "lengths": {
+        "a3": 5,
+        "a4": 5,
+        "a2": 5,
+        "a5": 4,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-094",
+      "difficulty": "hard",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "db-01",
+      "goal_condition": "data-exfiltration",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.02,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.777924,
+        "a3": 0.762366,
+        "a1": 0.722358,
+        "a5": 0.707911,
+        "a2": 0.657346
+      },
+      "lengths": {
+        "a4": 4,
+        "a3": 5,
+        "a1": 4,
+        "a5": 5,
+        "a2": 5
+      }
+    },
+    {
+      "network": "net-095",
+      "difficulty": "easy",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.3061,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a2": 0.116826,
+        "a5": 0.081067,
+        "a4": 0.079446,
+        "a3": 0.073771,
+        "a1": 0.072886
+      },
+      "lengths": {
+        "a2": 5,
+        "a5": 4,
+        "a4": 5,
+        "a3": 5,
+        "a1": 4
+      }
+    },
+    {
+      "network": "net-096",
+      "difficulty": "moderate",
+      "start": "mx-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a1",
+      "margin": 0.0837,
+      "candidates_considered": 279,
+      "effectiveness": {
+        "a1": 0.310593,
+        "a4": 0.284592,
+        "a5": 0.2789,
+        "a3": 0.24255,
+        "a2": 0.237699
+      },
+      "lengths": {
+        "a1": 4,
+        "a4": 3,
+        "a5": 4,
+        "a3": 3,
+        "a2": 4
+      }
+    },
+    {
+      "network": "net-097",
+      "difficulty": "hard",
+      "start": "sw-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.0057,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a5": 0.038484,
+        "a2": 0.038265,
+        "a4": 0.033917,
+        "a3": 0.033239,
+        "a1": 0.032799
+      },
+      "lengths": {
+        "a5": 5,
+        "a2": 5,
+        "a4": 4,
+        "a3": 5,
+        "a1": 5
+      }
+    },
+    {
+      "network": "net-098",
+      "difficulty": "easy",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a5",
+      "margin": 0.218,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a5": 0.023061,
+        "a2": 0.018033,
+        "a4": 0.017673,
+        "a1": 0.01641,
+        "a3": 0.016213
+      },
+      "lengths": {
+        "a5": 5,
+        "a2": 4,
+        "a4": 5,
+        "a1": 5,
+        "a3": 4
+      }
+    },
+    {
+      "network": "net-099",
+      "difficulty": "moderate",
+      "start": "vpn-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a2",
+      "margin": 0.1236,
+      "candidates_considered": 801,
+      "effectiveness": {
+        "a2": 0.048841,
+        "a1": 0.042803,
+        "a3": 0.040369,
+        "a5": 0.037901,
+        "a4": 0.037725
+      },
+      "lengths": {
+        "a2": 5,
+        "a1": 5,
+        "a3": 5,
+        "a5": 4,
+        "a4": 4
+      }
+    },
+    {
+      "network": "net-100",
+      "difficulty": "hard",
+      "start": "web-01",
+      "start_condition": "compromised",
+      "goal": "dc-01",
+      "goal_condition": "domain-admin",
+      "retargeted_goal": false,
+      "moved_entry": false,
+      "best_attack": "a4",
+      "margin": 0.02,
+      "candidates_considered": 800,
+      "effectiveness": {
+        "a4": 0.100716,
+        "a3": 0.098702,
+        "a1": 0.082721,
+        "a2": 0.081067,
+        "a5": 0.062041
+      },
+      "lengths": {
+        "a4": 4,
+        "a3": 5,
+        "a1": 4,
+        "a2": 5,
+        "a5": 5
+      }
+    }
+  ]
+}

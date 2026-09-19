@@ -1,0 +1,233 @@
+{
+  "machine": "Mango",
+  "split": "train",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 72,
+    "graph_edges": 626,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "mango",
+      "openssh",
+      "staging-order"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "mango:host:0",
+        "title": "Mango",
+        "summary": "Ubuntu Linux Apache virtual hosts backed by MongoDB and SUID jjs",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:component:H1",
+        "title": "Mango host",
+        "summary": "Host OS/security boundary 10.10.10.162 Ubuntu Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH root daemon Public SSH works for recovered mango user Mango host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service Web front end 0.0.0.0:80,443/tcp Apache 2.4.29-era www-data Public mango.htb and staging-order.mango.htb vhosts Mango host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:component:C3",
+        "title": "staging-order",
+        "summary": "Application Order/login app staging-order.mango.htb PHP + MongoDB client www-data Public vhost NoSQL operator injection in login Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:component:C4",
+        "title": "MongoDB",
+        "summary": "Database Document database 127.0.0.1:27017/tcp MongoDB mongodb Local Stores users/password hashes Mango host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:component:C5",
+        "title": "jjs",
+        "summary": "Binary SUID JavaScript shell /usr/lib/jvm/.../jjs Java 8 root Local; setuid root Java scripting escape Mango host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:permission:0",
+        "title": "remote client C3/C4",
+        "summary": "send Mongo operators in login fields C3/C4 staging vhost public enumerate valid usernames/passwords",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:permission:1",
+        "title": "remote client OpenSSH",
+        "summary": "SSH as mango OpenSSH password recovered from NoSQL auth mango shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:permission:2",
+        "title": "mango jjs",
+        "summary": "execute jjs jjs SUID bit and local shell root JavaScript escape",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:vulnerability:V1",
+        "title": "NoSQL operator injection C3+C4",
+        "summary": "C3+C4 MongoDB-backed PHP app staging vhost reachable $ne/$regex-like operators alter authentication query mango/admin credentials User input mapped directly to Mongo query",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mango:vulnerability:V2",
+        "title": "SUID scripting escape jjs",
+        "summary": "jjs Java 8 jjs mango local shell jjs can run Java classes/commands as effective uid 0 root SUID runtime exposed",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "credential",
+        "mango"
+      ],
+      [
+        "mango",
+        "openssh"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "escape",
+        "root"
+      ],
+      [
+        "shell",
+        "root"
+      ],
+      [
+        "java",
+        "root"
+      ],
+      [
+        "javascript",
+        "root"
+      ],
+      [
+        "scripting",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "staging-order",
+        "service",
+        "root"
+      ],
+      [
+        "apache",
+        "suid",
+        "root"
+      ],
+      [
+        "mango",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "staging-order",
+        "service",
+        "root"
+      ],
+      [
+        "apache",
+        "suid",
+        "root"
+      ],
+      [
+        "mango",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "mango",
+        "suid",
+        "javascript",
+        "java",
+        "scripting",
+        "escape",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "mango",
+        "suid",
+        "javascript",
+        "java",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 1.0
+  }
+}

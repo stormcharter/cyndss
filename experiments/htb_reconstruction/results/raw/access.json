@@ -1,0 +1,255 @@
+{
+  "machine": "Access",
+  "split": "validation",
+  "input": {
+    "documents": 16,
+    "graph_nodes": 86,
+    "graph_edges": 864,
+    "entry_concepts": [
+      "access",
+      "host",
+      "microsoft",
+      "telnet"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "access:host:0",
+        "title": "Access",
+        "summary": "Windows Server 2008 R2-era Anonymous FTP delivers Access database, mail and telnet credentials",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:component:H1",
+        "title": "Access host",
+        "summary": "Host OS/security boundary 10.10.10.98 Windows Server 2008 R2-era Administrator VPN reachable Standalone non-SMB path",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:component:C1",
+        "title": "Microsoft FTP",
+        "summary": "Service Anonymous file transfer 21/tcp Microsoft FTP SYSTEM Anonymous read Backup.zip and Access database Access host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:component:C2",
+        "title": "Telnet",
+        "summary": "Service Remote command shell 23/tcp Windows Telnet security Public/authenticated User shell after email password Access host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:component:C3",
+        "title": "IIS",
+        "summary": "Service HTTP front end 80/tcp IIS 7.5 IIS worker Public Secondary recon surface Access host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:component:C4",
+        "title": "Access database",
+        "summary": "Artifact Credential store backup.zip\\*.mdb Microsoft Access security Read after FTP download Password in database leads to mail artifact Microsoft FTP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:component:C5",
+        "title": "Outlook PST/mail",
+        "summary": "Artifact Credential artifact backup.zip\\*.pst Microsoft Outlook security Read after database password Contains telnet account secret Microsoft FTP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:component:C6",
+        "title": "Cached credentials",
+        "summary": "Artifact Windows logon cache LSA/registry Windows cached domain credentials SYSTEM Local/security subsystem RunAs/net use can reuse cached Administrator context Access host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:permission:0",
+        "title": "anonymous C1 backup.zip",
+        "summary": "read/download C1 backup.zip anonymous FTP database and mail artifacts",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:permission:1",
+        "title": "security C4/C5",
+        "summary": "read C4/C5 password recovered from database telnet secret and user shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:permission:2",
+        "title": "security Telnet",
+        "summary": "authenticate Telnet Telnet mail secret security shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:permission:3",
+        "title": "security Cached credentials",
+        "summary": "use cached Administrator credential Cached credentials cached credential/RunAs behavior Administrator file access",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:permission:4",
+        "title": "Administrator Access host",
+        "summary": "read C$ / root flag Access host valid cached credential full host control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:vulnerability:V1",
+        "title": "Anonymous backup disclosure Microsoft FTP",
+        "summary": "Microsoft FTP Microsoft FTP FTP port open; anonymous login Guest downloads backup archive credential artifacts Sensitive backups exposed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:vulnerability:V2",
+        "title": "Secrets chained through database and mail C4+C5",
+        "summary": "C4+C5 Access/Outlook artifacts Archive readable Password in MDB opens PST; mail reveals OS secret security No separation of backup contents",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "access:vulnerability:V3",
+        "title": "Cached Administrator context reusable by lower-privilege user Cached credentials",
+        "summary": "Cached credentials Windows cached credentials security shell; cached credential present RunAs/net use creates Administrator access Administrator Admin session artifacts persist",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "administrator",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "access",
+        "microsoft"
+      ],
+      [
+        "credential",
+        "security"
+      ],
+      [
+        "security",
+        "telnet"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "cached",
+        "administrator"
+      ],
+      [
+        "runas",
+        "administrator"
+      ],
+      [
+        "context",
+        "administrator"
+      ],
+      [
+        "credentials",
+        "administrator"
+      ],
+      [
+        "delivers",
+        "credentials",
+        "administrator"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "access",
+        "administrator"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "microsoft",
+        "credential",
+        "administrator"
+      ],
+      [
+        "access",
+        "administrator"
+      ],
+      [
+        "host",
+        "administrator"
+      ],
+      [
+        "telnet",
+        "windows",
+        "administrator"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "microsoft",
+        "credential",
+        "administrator"
+      ],
+      [
+        "access",
+        "administrator"
+      ],
+      [
+        "host",
+        "administrator"
+      ],
+      [
+        "telnet",
+        "windows",
+        "administrator"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "telnet",
+        "remote",
+        "command",
+        "shell",
+        "windows",
+        "security",
+        "cached",
+        "credentials",
+        "logon",
+        "cache",
+        "domain",
+        "administrator",
+        "context",
+        "reusable",
+        "lower-privilege"
+      ],
+      [
+        "telnet",
+        "remote",
+        "command",
+        "shell",
+        "windows",
+        "security",
+        "cached",
+        "credentials",
+        "logon",
+        "cache",
+        "domain",
+        "administrator"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.3333333333333333,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.5,
+    "c_chains": 4,
+    "c_hops": 2,
+    "c_coverage": 0.6666666666666666,
+    "c_ordered": 0.6666666666666666,
+    "c_precision": 0.6666666666666666,
+    "c_coverage_topk": 1.0
+  }
+}

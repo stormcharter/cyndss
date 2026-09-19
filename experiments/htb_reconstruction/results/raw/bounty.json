@@ -1,0 +1,197 @@
+{
+  "machine": "Bounty",
+  "split": "train",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 79,
+    "graph_edges": 766,
+    "entry_concepts": [
+      "aspx",
+      "bounty",
+      "host",
+      "microsoft",
+      "transfer",
+      "uploadedfiles"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "bounty:host:0",
+        "title": "Bounty",
+        "summary": "Windows Server 2008 R2 Datacenter build 7600 IIS upload host with local kernel boundary",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:component:H1",
+        "title": "Bounty host",
+        "summary": "Host OS/security boundary 10.10.10.93 Windows Server 2008 R2 Datacenter 6.1.7600 SYSTEM VPN reachable Standalone server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:component:C1",
+        "title": "Microsoft IIS",
+        "summary": "Service HTTP application front end 0.0.0.0:80/tcp IIS 7.5 IIS worker / merlin Public Hosts transfer.aspx and UploadedFiles Bounty host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:component:C2",
+        "title": "transfer.aspx",
+        "summary": "Application Multipart upload handler /transfer.aspx ASP.NET on IIS 7.5 merlin Public upload form Accepts attacker-controlled file names Microsoft IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:component:C3",
+        "title": "UploadedFiles",
+        "summary": "Directory IIS content directory /UploadedFiles/ NTFS/IIS content merlin Public read after upload web.config is interpreted when requested Microsoft IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:component:C4",
+        "title": "Windows kernel",
+        "summary": "Kernel Local privilege boundary local 6.1.7600 unpatched SYSTEM Local only Many post-auth EoP paths are viable Bounty host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:permission:0",
+        "title": "remote unauthenticated client C2 transfer.aspx/C3 UploadedFiles",
+        "summary": "upload C2 transfer.aspx/C3 UploadedFiles HTTP form reachable attacker controls executable content",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:permission:1",
+        "title": "IIS worker C3 web.config",
+        "summary": "execute C3 web.config IIS request to .config allowed command execution as merlin/IIS context",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:permission:2",
+        "title": "merlin C4 Windows kernel",
+        "summary": "exploit kernel C4 Windows kernel local code execution; missing patches SYSTEM token",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:vulnerability:V1",
+        "title": "web.config ASP execution / upload bypass C2+C3",
+        "summary": "C2+C3 IIS 7.5 Upload form reachable; .config accepted ASP code in uploaded web.config is parsed and invokes WScript.Shell merlin/IIS command execution No extension allowlist or non-executable upload root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bounty:vulnerability:V2",
+        "title": "Unpatched kernel privilege escalation Windows kernel",
+        "summary": "Windows kernel Windows 6.1.7600 Local shell as merlin Known MS10/MS11-era token or kernel bugs elevate SYSTEM EOL build with security updates absent",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "command",
+        "context",
+        "merlin"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "windows",
+        "system"
+      ],
+      [
+        "privilege",
+        "system"
+      ],
+      [
+        "security",
+        "system"
+      ],
+      [
+        "token",
+        "system"
+      ],
+      [
+        "unpatched",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "bounty",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "bounty",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ],
+      [
+        "aspx",
+        "bounty",
+        "system"
+      ],
+      [
+        "microsoft",
+        "bounty",
+        "system"
+      ],
+      [
+        "transfer",
+        "bounty",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "bounty",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ],
+      [
+        "aspx",
+        "bounty",
+        "system"
+      ],
+      [
+        "microsoft",
+        "bounty",
+        "system"
+      ],
+      [
+        "transfer",
+        "bounty",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

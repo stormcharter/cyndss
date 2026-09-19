@@ -1,0 +1,4 @@
+# Shell-скрипти виконуються на Linux — завжди LF, незалежно від платформи/autocrlf
+*.sh text eol=lf
+# Batch-файли — для Windows, завжди CRLF
+*.bat text eol=crlf

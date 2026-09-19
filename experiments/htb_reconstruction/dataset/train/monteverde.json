@@ -1,0 +1,287 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Monteverde",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/06/13/htb-monteverde.html",
+    "title": "HTB Monteverde writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2008 R2 Active Directory",
+    "deployment_role": "MEGABANK.LOCAL DC with Azure AD Connect credential store"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Monteverde DC",
+      "role": "OS/domain boundary",
+      "binding_or_path": "10.10.10.172",
+      "software_or_version": "Windows Server 2008 R2 Standard 6.1.7601",
+      "runs_as": "SYSTEM/Domain Admins",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "MEGABANK.LOCAL"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service stack",
+      "name": "AD DS stack",
+      "role": "DNS/Kerberos/LDAP/GC/RPC",
+      "binding_or_path": "53,88,389,636,3268,3269,135/high RPC",
+      "software_or_version": "Active Directory",
+      "runs_as": "SYSTEM",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Single DC and SMB"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB server",
+      "role": "Domain shares",
+      "binding_or_path": "139,445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Users$, mhope and service shares"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Identity",
+      "name": "SABatchJobs",
+      "role": "Domain service account",
+      "binding_or_path": "MEGABANK\\SABatchJobs",
+      "software_or_version": "AD account",
+      "runs_as": "domain user",
+      "exposure": "SMB authentication",
+      "evidence": "Explicit",
+      "analysis_note": "Password reused as account secret"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Azure AD Connect",
+      "role": "Directory synchronization",
+      "binding_or_path": "C:\\Program Files\\Microsoft Azure AD Sync",
+      "software_or_version": "Azure AD Connect",
+      "runs_as": "SYSTEM/service account",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Local DB stores sync credential"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C4",
+      "layer_or_type": "Database",
+      "name": "ADSync database",
+      "role": "Credential store",
+      "binding_or_path": "Local SQL/ADSync DB",
+      "software_or_version": "Azure AD Connect DB",
+      "runs_as": "SYSTEM",
+      "exposure": "Local/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Decryptable sync account password"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "MEGABANK\\SABatchJobs",
+      "principal_type": "domain user",
+      "operational_role": "batch job service",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "SMB read; password known from guessing",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "MEGABANK\\mhope",
+      "principal_type": "domain user",
+      "operational_role": "Azure sync operator",
+      "groups_or_nesting": "Azure Admins; Remote Management Users",
+      "authentication_or_effective_access": "SMB read; WinRM",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "MEGABANK\\Administrator",
+      "principal_type": "domain administrator",
+      "operational_role": "final principal",
+      "groups_or_nesting": "Domain Admins",
+      "authentication_or_effective_access": "full domain/DC control",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "DC/service authority",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "authenticate SMB",
+      "object": "C2/C3",
+      "condition_or_scope": "SABatchJobs secret guessed/reused",
+      "security_consequence": "read Users$/mhope data",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "SABatchJobs",
+      "permission_or_action": "read",
+      "object": "C2 mhope/azure.xml",
+      "condition_or_scope": "share ACL",
+      "security_consequence": "Azure sync configuration disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "mhope",
+      "permission_or_action": "read/decrypt",
+      "object": "C4/C5",
+      "condition_or_scope": "local Azure AD Connect access",
+      "security_consequence": "sync account credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "sync account",
+      "permission_or_action": "replicate/control",
+      "object": "C1",
+      "condition_or_scope": "privileged Azure/AD rights",
+      "security_consequence": "Administrator material",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "mhope/azure.xml",
+      "hosted_on": "C2",
+      "purpose": "Azure AD Connect configuration",
+      "owner_or_authority": "SABatchJobs/mhope",
+      "read_access": "SABatchJobs read",
+      "write_or_execute_access": "admins write",
+      "security_significance": "Contains local DB paths/secret clues",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "ADSync database",
+      "hosted_on": "C5",
+      "purpose": "encrypted sync credential",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "mhope local access",
+      "write_or_execute_access": "SYSTEM writes",
+      "security_significance": "Credential becomes domain material",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "domain Administrator secret",
+      "hosted_on": "C1",
+      "purpose": "final auth material",
+      "owner_or_authority": "Administrator",
+      "read_access": "sync account path",
+      "write_or_execute_access": "DC controls",
+      "security_significance": "Domain compromise",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2+C3",
+      "affected_version": "SMB/domain accounts",
+      "issue": "Password reuse/weak service secret",
+      "preconditions": "SMB reachable; user names known",
+      "vulnerable_behavior": "SABatchJobs password is guessable/reused",
+      "resulting_access": "SABatchJobs SMB session",
+      "reference": "Configuration weakness",
+      "failed_control": "Service password not unique",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4+C5",
+      "affected_version": "Azure AD Connect",
+      "issue": "Sync credential decryptable by local user",
+      "preconditions": "mhope can read configuration/DB",
+      "vulnerable_behavior": "Credential is recoverable from local sync database",
+      "resulting_access": "privileged domain credential",
+      "reference": "Azure AD Connect secret storage weakness",
+      "failed_control": "Database ACL and encryption key accessible",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C1",
+      "affected_version": "AD DS",
+      "issue": "Sync account over-privileged",
+      "preconditions": "Recovered sync credentials",
+      "vulnerable_behavior": "Replication/administrative rights expose domain secrets",
+      "resulting_access": "Administrator/domain control",
+      "reference": "Configuration weakness",
+      "failed_control": "Service account tiering failure",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "guess SABatchJobs and access SMB",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "SMB auth",
+      "resulting_principal_or_access": "mhope files",
+      "boundary_crossed": "network → share",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "SABatchJobs",
+      "action": "read azure.xml",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "share read",
+      "resulting_principal_or_access": "mhope sync artifact",
+      "boundary_crossed": "share → credential artifact",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "mhope",
+      "action": "decrypt ADSync DB",
+      "target_component_or_artifact": "C4/C5",
+      "prerequisite": "local/WinRM access",
+      "resulting_principal_or_access": "sync account",
+      "boundary_crossed": "user → domain service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "sync account",
+      "action": "replicate/access DC",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "privileged AD rights",
+      "resulting_principal_or_access": "Administrator",
+      "boundary_crossed": "service → domain admin",
+      "evidence": "Explicit"
+    }
+  ]
+}

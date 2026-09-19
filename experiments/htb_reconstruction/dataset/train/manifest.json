@@ -1,0 +1,122 @@
+{
+  "schema": "htb.writeup.analysis.manifest.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "generated": "2026-09-04",
+  "count": 22,
+  "files": [
+    {
+      "machine": "Bounty",
+      "file": "bounty.json",
+      "source": "https://0xdf.gitlab.io/2018/10/27/htb-bounty.html"
+    },
+    {
+      "machine": "Mantis",
+      "file": "mantis.json",
+      "source": "https://0xdf.gitlab.io/2020/09/03/htb-mantis.html"
+    },
+    {
+      "machine": "Netmon",
+      "file": "netmon.json",
+      "source": "https://0xdf.gitlab.io/2019/06/29/htb-netmon.html"
+    },
+    {
+      "machine": "DevOops",
+      "file": "devoops.json",
+      "source": "https://0xdf.gitlab.io/2018/10/13/htb-devoops.html"
+    },
+    {
+      "machine": "Canape",
+      "file": "canape.json",
+      "source": "https://0xdf.gitlab.io/2018/09/15/htb-canape.html"
+    },
+    {
+      "machine": "TartarSauce",
+      "file": "tartarsauce.json",
+      "source": "https://0xdf.gitlab.io/2018/10/20/htb-tartarsauce.html"
+    },
+    {
+      "machine": "Dropzone",
+      "file": "dropzone.json",
+      "source": "https://0xdf.gitlab.io/2018/11/03/htb-dropzone.html"
+    },
+    {
+      "machine": "Wall",
+      "file": "wall.json",
+      "source": "https://0xdf.gitlab.io/2019/12/07/htb-wall.html"
+    },
+    {
+      "machine": "Silo",
+      "file": "silo.json",
+      "source": "https://0xdf.gitlab.io/2018/08/04/htb-silo.html"
+    },
+    {
+      "machine": "Chatterbox",
+      "file": "chatterbox.json",
+      "source": "https://0xdf.gitlab.io/2018/06/18/htb-chatterbox.html"
+    },
+    {
+      "machine": "SwagShop",
+      "file": "swagshop.json",
+      "source": "https://0xdf.gitlab.io/2019/09/28/htb-swagshop.html"
+    },
+    {
+      "machine": "OpenAdmin",
+      "file": "openadmin.json",
+      "source": "https://0xdf.gitlab.io/2020/05/02/htb-openadmin.html"
+    },
+    {
+      "machine": "Tabby",
+      "file": "tabby.json",
+      "source": "https://0xdf.gitlab.io/2020/11/07/htb-tabby.html"
+    },
+    {
+      "machine": "Blocky",
+      "file": "blocky.json",
+      "source": "https://0xdf.gitlab.io/2020/06/30/htb-blocky.html"
+    },
+    {
+      "machine": "Magic",
+      "file": "magic.json",
+      "source": "https://0xdf.gitlab.io/2020/08/22/htb-magic.html"
+    },
+    {
+      "machine": "Curling",
+      "file": "curling.json",
+      "source": "https://0xdf.gitlab.io/2019/03/30/htb-curling.html"
+    },
+    {
+      "machine": "Mango",
+      "file": "mango.json",
+      "source": "https://0xdf.gitlab.io/2020/04/18/htb-mango.html"
+    },
+    {
+      "machine": "Cache",
+      "file": "cache.json",
+      "source": "https://0xdf.gitlab.io/2020/10/10/htb-cache.html"
+    },
+    {
+      "machine": "ServMon",
+      "file": "servmon.json",
+      "source": "https://0xdf.gitlab.io/2020/06/20/htb-servmon.html"
+    },
+    {
+      "machine": "Monteverde",
+      "file": "monteverde.json",
+      "source": "https://0xdf.gitlab.io/2020/06/13/htb-monteverde.html"
+    },
+    {
+      "machine": "Nest",
+      "file": "nest.json",
+      "source": "https://0xdf.gitlab.io/2020/06/06/htb-nest.html"
+    },
+    {
+      "machine": "Postman",
+      "file": "postman.json",
+      "source": "https://0xdf.gitlab.io/2020/03/14/htb-postman.html"
+    }
+  ]
+}

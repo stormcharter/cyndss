@@ -1,0 +1,200 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Shocker",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/05/25/htb-shocker.html",
+    "title": "HTB Shocker writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 16.04 Linux",
+    "deployment_role": "Apache CGI host with nonstandard SSH"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Shocker VM",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.56",
+      "software_or_version": "Ubuntu 16.04",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone Linux host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache HTTP Server",
+      "role": "Web/CGI front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache 2.4.18 Ubuntu",
+      "runs_as": "www-data/CGI user",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "CGI enabled"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "CGI script",
+      "name": "user.sh",
+      "role": "System-info CGI endpoint",
+      "binding_or_path": "/cgi-bin/user.sh",
+      "software_or_version": "Bash CGI",
+      "runs_as": "shelly",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Request headers become Bash environment variables"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:2222/tcp",
+      "software_or_version": "OpenSSH 7.2p2 Ubuntu 4ubuntu2.2",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Nonstandard port"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Policy",
+      "name": "sudoers rule for shelly",
+      "role": "Privilege delegation",
+      "binding_or_path": "local",
+      "software_or_version": "sudo",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "NOPASSWD /usr/bin/perl"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "shelly",
+      "principal_type": "local user/CGI identity",
+      "operational_role": "initial shell user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "execute /usr/bin/perl as root without password",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "host administrator",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "supply crafted HTTP header",
+      "object": "C2 Bash CGI",
+      "condition_or_scope": "CGI reachable",
+      "security_consequence": "Commands execute as shelly",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "shelly",
+      "permission_or_action": "sudo NOPASSWD execute",
+      "object": "/usr/bin/perl",
+      "condition_or_scope": "exact sudoers rule",
+      "security_consequence": "Arbitrary Perl code as root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "HTTP headers / CGI environment",
+      "hosted_on": "C1/C2",
+      "purpose": "request metadata",
+      "owner_or_authority": "remote client",
+      "read_access": "CGI reads",
+      "write_or_execute_access": "Bash parses",
+      "security_significance": "Untrusted header crosses into shell parser",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/usr/bin/perl",
+      "hosted_on": "H1",
+      "purpose": "general-purpose interpreter",
+      "owner_or_authority": "root package",
+      "read_access": "shelly execute via sudo",
+      "write_or_execute_access": "root execute",
+      "security_significance": "Interpreter converts narrow rule to arbitrary root code",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "vulnerable Bash CGI",
+      "issue": "Shellshock command injection",
+      "preconditions": "CGI invokes vulnerable Bash",
+      "vulnerable_behavior": "Function-style header suffix is executed",
+      "resulting_access": "shelly shell",
+      "reference": "CVE-2014-6271",
+      "failed_control": "CGI exposes vulnerable shell parser",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "sudoers",
+      "issue": "Passwordless root Perl",
+      "preconditions": "Local shelly shell",
+      "vulnerable_behavior": "Perl supports arbitrary OS command execution",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "Dangerous interpreter delegated as root",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "send Shellshock header",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "HTTP reachable",
+      "resulting_principal_or_access": "shelly",
+      "boundary_crossed": "network → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "shelly",
+      "action": "sudo perl",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "NOPASSWD rule",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "local user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

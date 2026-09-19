@@ -1,0 +1,207 @@
+{
+  "machine": "Nibbles",
+  "split": "demo",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 83,
+    "graph_edges": 712,
+    "entry_concepts": [
+      "apache",
+      "nibbleblog",
+      "nibbles",
+      "openssh"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "nibbles:host:0",
+        "title": "Nibbles",
+        "summary": "Ubuntu Linux Apache-hosted Nibbleblog CMS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:component:H1",
+        "title": "Nibbles VM",
+        "summary": "Host OS boundary 10.10.10.75 Ubuntu Linux root VPN reachable Standalone",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote administration 0.0.0.0:22/tcp OpenSSH root daemon Public Not initial vector Nibbles VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service Web application host 0.0.0.0:80/tcp Apache + PHP nibbler/web identity Public Hosts /nibbleblog Nibbles VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:component:C3",
+        "title": "Nibbleblog",
+        "summary": "Application Blog/CMS and admin console /nibbleblog/ 4.0.3 Coffee nibbler Public; admin login README exposes exact version Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:component:C4",
+        "title": "My image/plugin upload",
+        "summary": "Plugin Admin media function admin plugin page Nibbleblog 4.0.3 nibbler Authenticated Accepts PHP as image Nibbleblog",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:component:C5",
+        "title": "sudo monitor script",
+        "summary": "Policy/artifact Privileged monitoring automation /home/nibbler/personal/stuff/monitor.sh shell script root when sudo invoked Local File writable by nibbler Nibbles VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:permission:0",
+        "title": "admin My image/plugin upload",
+        "summary": "upload file My image/plugin upload weak/guessed admin credential PHP payload stored by application",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:permission:1",
+        "title": "C3/C2 payload artifact",
+        "summary": "execute uploaded PHP payload artifact HTTP request Code runs as nibbler",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:permission:2",
+        "title": "nibbler C5 monitor.sh",
+        "summary": "modify then sudo execute C5 monitor.sh file writable and NOPASSWD rule root command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nibbles:vulnerability:V1",
+        "title": "Authenticated arbitrary PHP upload My image/plugin upload",
+        "summary": "My image/plugin upload Nibbleblog 4.0.3 Admin login obtained Image plugin accepts executable PHP nibbler code execution Upload type/content validation failure",
+        "verified_cve_ids": "CVE-2015-6967"
+      },
+      {
+        "mongo_id": "nibbles:vulnerability:V2",
+        "title": "Passwordless execution of user-controlled file sudo monitor script",
+        "summary": "sudo monitor script sudoers + writable script Local nibbler shell Modified monitor.sh executes as root root Privileged rule targets writable object",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "nibbleblog"
+      ],
+      [
+        "nibbler"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2015-6967",
+        "execution",
+        "root"
+      ],
+      [
+        "admin",
+        "CVE-2015-6967",
+        "execution",
+        "root"
+      ],
+      [
+        "nibbleblog",
+        "CVE-2015-6967",
+        "execution",
+        "root"
+      ],
+      [
+        "monitor",
+        "root"
+      ],
+      [
+        "sudo",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "nibbleblog",
+        "CVE-2015-6967",
+        "execution",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "nibbles",
+        "root"
+      ],
+      [
+        "apache",
+        "host",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "nibbleblog",
+        "CVE-2015-6967",
+        "execution",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "nibbles",
+        "root"
+      ],
+      [
+        "apache",
+        "host",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "administration",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.5,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 3,
+    "c_coverage": 0.5,
+    "c_ordered": 0.5,
+    "c_precision": 0.25,
+    "c_coverage_topk": 0.5
+  }
+}

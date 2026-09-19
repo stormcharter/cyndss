@@ -1,0 +1,326 @@
+{
+  "machine": "Networked",
+  "split": "validation",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 83,
+    "graph_edges": 796,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "networked",
+      "openssh",
+      "upload"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "networked:host:0",
+        "title": "Networked",
+        "summary": "CentOS Linux Apache upload path, cleanup script and root ifcfg hook",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:component:H1",
+        "title": "Networked host",
+        "summary": "Host OS/security boundary 10.10.10.146 CentOS Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH root daemon Public Used after web foothold Networked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service Upload web app 80/tcp Apache www-data Public Allows image uploads with double extension Networked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:component:C3",
+        "title": "upload.php",
+        "summary": "Application Image upload handler /upload.php PHP www-data Public Extension/content checks can be bypassed Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:component:C4",
+        "title": "check_attack.php",
+        "summary": "Scheduled task Upload cleanup script /usr/local/bin/check_attack.php PHP/shell wrapper root Scheduled/local Filename is concatenated into shell command Networked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:component:C5",
+        "title": "ifcfg-*",
+        "summary": "Script Network interface scripts /etc/sysconfig/network-scripts/ifcfg-* Bash root Local Root invokes interface script; variable injection executes Networked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:permission:0",
+        "title": "remote client upload.php",
+        "summary": "upload double-extension image upload.php Apache upload enabled www-data webshell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:permission:1",
+        "title": "www-data check_attack.php",
+        "summary": "submit crafted filename check_attack.php cleanup script processes uploads guly shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:permission:2",
+        "title": "guly ifcfg-*",
+        "summary": "write ifcfg value ifcfg-* network script accessible root command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:permission:3",
+        "title": "root network service ifcfg-*",
+        "summary": "execute ifcfg ifcfg-* interface restart/job root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:vulnerability:V1",
+        "title": "Double-extension upload bypass upload.php",
+        "summary": "upload.php Apache/PHP upload Upload endpoint public Image accepted while PHP code remains executable www-data Executable directory and weak validation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:vulnerability:V2",
+        "title": "Filename command injection check_attack.php",
+        "summary": "check_attack.php check_attack.php www-data can submit file name Script interpolates filename into shell guly No shell escaping",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "networked:vulnerability:V3",
+        "title": "Environment/variable command injection ifcfg-*",
+        "summary": "ifcfg-* CentOS ifcfg scripts guly local shell Root interface script expands attacker-controlled value root Privileged network script trusts file content",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "www-data"
+      ],
+      [
+        "attack",
+        "check",
+        "guly"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "ifcfg",
+        "root"
+      ],
+      [
+        "network",
+        "root"
+      ],
+      [
+        "networked",
+        "root"
+      ],
+      [
+        "centos",
+        "root"
+      ],
+      [
+        "interface",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "networked",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "networked",
+        "root"
+      ],
+      [
+        "apache",
+        "hook",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "upload",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "networked",
+        "root"
+      ],
+      [
+        "apache",
+        "hook",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "upload",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "apache",
+        "upload",
+        "www-data",
+        "check",
+        "attack",
+        "cleanup",
+        "script",
+        "shell",
+        "wrapper",
+        "filename",
+        "command",
+        "injection",
+        "guly",
+        "ifcfg",
+        "network",
+        "interface",
+        "scripts",
+        "bash",
+        "environment",
+        "variable",
+        "centos",
+        "root"
+      ],
+      [
+        "apache",
+        "upload",
+        "www-data",
+        "check",
+        "attack",
+        "cleanup",
+        "script",
+        "shell",
+        "wrapper",
+        "guly",
+        "ifcfg",
+        "network",
+        "interface",
+        "scripts",
+        "bash",
+        "environment",
+        "variable",
+        "command",
+        "injection",
+        "centos",
+        "root"
+      ],
+      [
+        "upload",
+        "handler",
+        "www-data",
+        "check",
+        "attack",
+        "cleanup",
+        "script",
+        "shell",
+        "wrapper",
+        "guly",
+        "ifcfg",
+        "network",
+        "interface",
+        "scripts",
+        "bash",
+        "environment",
+        "variable",
+        "command",
+        "injection",
+        "centos",
+        "root"
+      ],
+      [
+        "apache",
+        "upload",
+        "www-data",
+        "check",
+        "attack",
+        "cleanup",
+        "script",
+        "shell",
+        "wrapper",
+        "filename",
+        "command",
+        "injection",
+        "guly",
+        "ifcfg",
+        "network",
+        "interface",
+        "scripts",
+        "bash",
+        "root"
+      ],
+      [
+        "upload",
+        "handler",
+        "www-data",
+        "check",
+        "attack",
+        "cleanup",
+        "script",
+        "shell",
+        "wrapper",
+        "filename",
+        "command",
+        "injection",
+        "guly",
+        "ifcfg",
+        "network",
+        "interface",
+        "scripts",
+        "bash",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

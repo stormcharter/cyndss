@@ -1,0 +1,192 @@
+{
+  "machine": "Blackfield",
+  "split": "validation",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 84,
+    "graph_edges": 764,
+    "entry_concepts": [
+      "blackfield"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "blackfield:host:0",
+        "title": "Blackfield",
+        "summary": "Windows Active Directory domain AS-REP roasting, RPC password reset, forensic LSASS dump and Backup Operators",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:component:H1",
+        "title": "Blackfield DC",
+        "summary": "Host OS/domain boundary 10.10.10.192 Windows Server Active Directory SYSTEM/Domain Admins VPN reachable BLACKFIELD.LOCAL",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:component:C1",
+        "title": "AD DS",
+        "summary": "Service stack DNS/Kerberos/LDAP/RPC 53,88,389,135/high RPC Active Directory SYSTEM Public/authenticated AS-REP and RPC password-reset paths Blackfield DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:component:C2",
+        "title": "SMB",
+        "summary": "Service Domain shares 139,445/tcp Windows SMB SYSTEM Guest/readable profiles$, forensic, backup shares Blackfield DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:component:C3",
+        "title": "profiles$",
+        "summary": "Share User profile share \\\\BLACKFIELD\\profiles$ SMB users Guest read Profile files and account clues SMB",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:component:C4",
+        "title": "forensic",
+        "summary": "Share Memory dump share \\\\BLACKFIELD\\forensic SMB forensic group Restricted LSASS.dmp and process dumps SMB",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:component:C5",
+        "title": "Backup Operators",
+        "summary": "Authorization Privilege group AD group/token Windows authorization SYSTEM Authenticated SeBackupPrivilege permits raw hive/VSS reads Blackfield DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:permission:0",
+        "title": "anonymous C3 profiles$",
+        "summary": "read C3 profiles$ guest share ACL usernames/AS-REP candidates",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:permission:1",
+        "title": "remote Kerberos client support",
+        "summary": "request AS-REP support DONT_REQ_PREAUTH crackable hash",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:permission:2",
+        "title": "support C1 RPC",
+        "summary": "reset force password C1 RPC BloodHound/ACL path force session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:permission:3",
+        "title": "force/forensic C4 forensic",
+        "summary": "read C4 forensic group ACL LSASS.dmp",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:permission:4",
+        "title": "svc_backup C5/C1",
+        "summary": "backup/read hives C5/C1 SeBackupPrivilege Administrator hash",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:vulnerability:V1",
+        "title": "AS-REP roasting C1+C3",
+        "summary": "C1+C3 Kerberos AD account Username known; preauth disabled KDC returns crackable response support credential DONT_REQ_PREAUTH and weak secret",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:vulnerability:V2",
+        "title": "Password reset permission on another user AD DS",
+        "summary": "AD DS RPC/AD ACL support authenticated; ACL path RPC password reset changes force credential force credential Account-control ACL too broad",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "blackfield:vulnerability:V3",
+        "title": "Memory dump and SeBackupPrivilege expose hashes C4+C5",
+        "summary": "C4+C5 LSASS/Backup Operators forensic/backup rights Read LSASS/NTDS via share or VSS Administrator hash Sensitive dumps and backup rights not restricted",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "hash",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "support"
+      ],
+      [
+        "force",
+        "forensic"
+      ],
+      [
+        "administrator",
+        "backup",
+        "forensic",
+        "material"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "administrator",
+        "hash"
+      ],
+      [
+        "sebackupprivilege",
+        "hash"
+      ],
+      [
+        "authorization",
+        "sebackupprivilege",
+        "hash"
+      ],
+      [
+        "hive",
+        "sebackupprivilege",
+        "hash"
+      ],
+      [
+        "permits",
+        "sebackupprivilege",
+        "hash"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "blackfield",
+        "backup",
+        "hash"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "blackfield",
+        "backup",
+        "hash"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "blackfield",
+        "backup",
+        "hash"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.3333333333333333,
+    "a_ordered": 0.3333333333333333,
+    "a_precision": 0.5,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 2,
+    "b_coverage": 0.3333333333333333,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.3333333333333333,
+    "c_chains": 1,
+    "c_hops": 2,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.3333333333333333,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

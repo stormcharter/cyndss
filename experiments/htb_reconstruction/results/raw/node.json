@@ -1,0 +1,222 @@
+{
+  "machine": "Node",
+  "split": "validation",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 81,
+    "graph_edges": 783,
+    "entry_concepts": [
+      "express",
+      "host",
+      "node",
+      "openssh"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "node:host:0",
+        "title": "Node",
+        "summary": "Ubuntu Linux Express app with exposed JWT/user hashes, MongoDB and local buffer overflow",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:component:H1",
+        "title": "Node host",
+        "summary": "Host OS/security boundary 10.10.10.58 Ubuntu 16.04-era Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH 7.2p2 Ubuntu root daemon Public mark login after hash recovery Node host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:component:C2",
+        "title": "Node.js Express",
+        "summary": "Application MyPlace web app 3000/tcp Node.js/Express node Public API exposes serialized user data and JWT Node host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:component:C3",
+        "title": "MongoDB",
+        "summary": "Database Scheduler database 127.0.0.1:27017/tcp MongoDB 3.2.16 mongodb Local Stores scheduler tasks/user data Node host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:component:C4",
+        "title": "backup binary",
+        "summary": "Binary Setuid/return-to-libc target /usr/local/bin/backup custom ELF root Local Buffer overflow/ret2libc Node host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:component:C5",
+        "title": "scheduler task data",
+        "summary": "Artifact Command injection input Mongo scheduler.tasks Node/mark Local Local Task command is executed by backup binary MongoDB",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:permission:0",
+        "title": "remote client Node.js Express",
+        "summary": "enumerate Express API Node.js Express 3000 public user hashes/JWT",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:permission:1",
+        "title": "remote client OpenSSH",
+        "summary": "crack hash and SSH OpenSSH credential recovered mark shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:permission:2",
+        "title": "mark MongoDB",
+        "summary": "connect Mongo scheduler MongoDB local DB access task command input",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:permission:3",
+        "title": "mark C4/C5",
+        "summary": "overflow backup/ret2libc C4/C5 binary reachable; controlled task root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:vulnerability:V1",
+        "title": "API overexposes user hashes/JWT Node.js Express",
+        "summary": "Node.js Express Node.js/Express API public Endpoint returns credentials without authorization mark credential Sensitive API fields unauthenticated",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:vulnerability:V2",
+        "title": "Writable command/task data reaches backup C3+C5",
+        "summary": "C3+C5 MongoDB scheduler mark local DB access Task command is consumed by privileged binary root command input No ownership/command allowlist",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "node:vulnerability:V3",
+        "title": "Return-to-libc buffer overflow backup binary",
+        "summary": "backup binary custom backup ELF Local user can execute binary; ASLR constraints known Oversized input controls return address and calls libc root No bounds checking; setuid root binary",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential",
+        "express",
+        "mark",
+        "node"
+      ],
+      [
+        "mark",
+        "openssh"
+      ],
+      [
+        "controlled",
+        "overflow",
+        "task"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "backup",
+        "root"
+      ],
+      [
+        "binary",
+        "root"
+      ],
+      [
+        "artifact",
+        "backup",
+        "root"
+      ],
+      [
+        "executed",
+        "backup",
+        "root"
+      ],
+      [
+        "injection",
+        "backup",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "express",
+        "ubuntu",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "node",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "express",
+        "ubuntu",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "node",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.6666666666666666
+  }
+}

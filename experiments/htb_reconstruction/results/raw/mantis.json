@@ -1,0 +1,229 @@
+{
+  "machine": "Mantis",
+  "split": "train",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 100,
+    "graph_edges": 864,
+    "entry_concepts": [
+      "mantis",
+      "orchard",
+      "server",
+      "services"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "mantis:host:0",
+        "title": "Mantis",
+        "summary": "Windows Server 2008 R2 Standard SP1 domain controller AD/DC plus IIS, MSSQL and ASP.NET application",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:component:H1",
+        "title": "Mantis DC",
+        "summary": "Host OS/domain boundary 10.10.10.52 Windows Server 2008 R2 Standard 6.1.7601 SP1 SYSTEM/Domain Admins VPN reachable HTB.LOCAL; single DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:component:C1",
+        "title": "AD DS services",
+        "summary": "Service stack DNS/Kerberos/LDAP/GC/RPC 53,88,389,636,3268,3269,135/high RPC Active Directory DS SYSTEM Public/authenticated Directory and ticket authority Mantis DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:component:C2",
+        "title": "SMB server",
+        "summary": "Service File/RPC transport 139,445/tcp Windows SMB SYSTEM Public Shares expose web/application clues Mantis DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:component:C3",
+        "title": "IIS 7.5",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp IIS 7.5 IIS worker Public Default page and host headers Mantis DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:component:C4",
+        "title": "Orchard CMS",
+        "summary": "Application ASP.NET content management 0.0.0.0:1337/tcp Orchard CMS / ASP.NET IIS worker Public Administrative site on nonstandard port IIS 7.5",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:component:C5",
+        "title": "Microsoft SQL Server",
+        "summary": "Database Database backend 1433,50255/tcp SQL Server 2014 RTM 12.00.2000 MANTIS\\SQLEXPRESS Network reachable Credentials and CMS data Mantis DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:component:C6",
+        "title": "Kerberos KDC",
+        "summary": "Identity service Ticket issuance 88/tcp Windows Kerberos krbtgt Domain users MS14-068 target AD DS services",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:permission:0",
+        "title": "james C5 MSSQL",
+        "summary": "connect/query C5 MSSQL SQL credentials recovered from site data database disclosure and possible command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:permission:1",
+        "title": "anonymous C3/C4/C2",
+        "summary": "read/enumerate C3/C4/C2 public HTTP/SMB exposure CMS/database clues disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:permission:2",
+        "title": "james C6 KDC",
+        "summary": "forge Kerberos PAC C6 KDC valid domain credential and vulnerable DC domain admin ticket accepted",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:permission:3",
+        "title": "administrator H1/C1",
+        "summary": "control H1/C1 forged ticket full DC compromise",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:vulnerability:V1",
+        "title": "Exposed CMS and weak credential path Orchard CMS",
+        "summary": "Orchard CMS Orchard/ASP.NET Application notes or DB accessible Recovered SQL/domain credential authenticates to internal services james domain session Secrets placed in application data",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:vulnerability:V2",
+        "title": "MS14-068 Kerberos PAC validation flaw Kerberos KDC",
+        "summary": "Kerberos KDC Windows Server 2008 R2 SP1 Domain user credential; vulnerable DC Forged PAC with elevated SID is accepted Domain Administrator Unpatched KDC validates attacker PAC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "mantis:vulnerability:V3",
+        "title": "Network SQL instance with over-broad user access Microsoft SQL Server",
+        "summary": "Microsoft SQL Server SQL Server 2014 RTM MSSQL port reachable; credentials recovered User can query application databases and pivot DB/application data Database trust not segmented",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "control",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "c2-c5",
+        "credential",
+        "james"
+      ],
+      [
+        "context",
+        "domain",
+        "microsoft",
+        "server"
+      ],
+      [
+        "administrator-authenticated",
+        "kerberos",
+        "ticket"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "compromise",
+        "control"
+      ],
+      [
+        "administrator",
+        "control"
+      ],
+      [
+        "forged",
+        "control"
+      ],
+      [
+        "attacker",
+        "administrator",
+        "control"
+      ],
+      [
+        "elevated",
+        "administrator",
+        "control"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "services",
+        "ticket",
+        "control"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "orchard",
+        "credential",
+        "administrator",
+        "control"
+      ],
+      [
+        "services",
+        "ticket",
+        "control"
+      ],
+      [
+        "server",
+        "administrator",
+        "control"
+      ],
+      [
+        "mantis",
+        "ticket",
+        "control"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "orchard",
+        "credential",
+        "administrator",
+        "control"
+      ],
+      [
+        "services",
+        "ticket",
+        "control"
+      ],
+      [
+        "server",
+        "administrator",
+        "control"
+      ],
+      [
+        "mantis",
+        "ticket",
+        "control"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 2,
+    "b_coverage": 0.3333333333333333,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.3333333333333333,
+    "c_chains": 4,
+    "c_hops": 3,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.25,
+    "c_coverage_topk": 1.0
+  }
+}

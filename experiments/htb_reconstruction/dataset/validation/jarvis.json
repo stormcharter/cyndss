@@ -1,0 +1,261 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Jarvis",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/11/09/htb-jarvis.html",
+    "title": "HTB Jarvis writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Debian Linux",
+    "deployment_role": "Stark Hotel PHP SQLi, sudo Python helper and systemctl root path"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Jarvis host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.143",
+      "software_or_version": "Debian 9-era Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH 7.4p1 Debian",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "pepper SSH login"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "Hotel front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "Apache 2.4.25 / PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "room.php cod parameter SQLi"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "phpMyAdmin",
+      "role": "Database administration",
+      "binding_or_path": "64999/tcp",
+      "software_or_version": "phpMyAdmin",
+      "runs_as": "www-data",
+      "exposure": "Public/filtered by WAF",
+      "evidence": "Explicit",
+      "analysis_note": "CVE-2018-12613 file inclusion/RCE"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Binary",
+      "name": "simpler.py",
+      "role": "Admin utility",
+      "binding_or_path": "/var/www/Admin-Utilities/simpler.py",
+      "software_or_version": "Python",
+      "runs_as": "pepper via sudo",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "www-data may run as pepper; command filter bypass"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "systemctl",
+      "role": "Service manager",
+      "binding_or_path": "/bin/systemctl",
+      "software_or_version": "systemd",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "pepper can link/start arbitrary service"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "SQLi/webshell and sudo helper",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "pepper",
+      "principal_type": "local user",
+      "operational_role": "utility account",
+      "groups_or_nesting": "sudo target",
+      "authentication_or_effective_access": "runs simpler.py; can start systemd unit",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "service principal",
+      "operational_role": "systemd/host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "inject room.php SQL",
+      "object": "C2",
+      "condition_or_scope": "HTTP public; WAF bypass",
+      "security_consequence": "DB/file write or web shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "sudo run simpler.py as pepper",
+      "object": "C4",
+      "condition_or_scope": "sudo rule",
+      "security_consequence": "pepper shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "pepper",
+      "permission_or_action": "link/start malicious service",
+      "object": "C5",
+      "condition_or_scope": "systemctl permitted",
+      "security_consequence": "root service shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "room.php query",
+      "hosted_on": "C2",
+      "purpose": "hotel/DB query input",
+      "owner_or_authority": "remote client",
+      "read_access": "public write",
+      "write_or_execute_access": "PHP queries DB",
+      "security_significance": "SQLi sink",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "simpler.py",
+      "hosted_on": "C4",
+      "purpose": "filtered command utility",
+      "owner_or_authority": "www-data/pepper",
+      "read_access": "www-data can execute as pepper",
+      "write_or_execute_access": "pepper owns/modifies",
+      "security_significance": "Command filter bypass",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "malicious .service unit",
+      "hosted_on": "C5",
+      "purpose": "systemd command definition",
+      "owner_or_authority": "pepper",
+      "read_access": "pepper writes /tmp",
+      "write_or_execute_access": "systemd/root executes",
+      "security_significance": "User-to-root service edge",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2+C3",
+      "affected_version": "PHP/MySQL/phpMyAdmin",
+      "issue": "SQL injection and phpMyAdmin file inclusion",
+      "preconditions": "Web ports public",
+      "vulnerable_behavior": "WAF bypass reveals DB and permits file/webshell write",
+      "resulting_access": "www-data",
+      "reference": "CVE-2018-12613 / SQLi",
+      "failed_control": "No parameterization and outdated phpMyAdmin",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "sudo simpler.py",
+      "issue": "Command filter bypass in privileged Python helper",
+      "preconditions": "www-data shell",
+      "vulnerable_behavior": "Allowed helper can be coerced to shell as pepper",
+      "resulting_access": "pepper",
+      "reference": "Sudo/configuration weakness",
+      "failed_control": "Sudo target not constrained safely",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "systemctl",
+      "issue": "Arbitrary service link/start as root",
+      "preconditions": "pepper shell",
+      "vulnerable_behavior": "systemctl loads attacker unit with ExecStart",
+      "resulting_access": "root",
+      "reference": "GTFOBins systemctl",
+      "failed_control": "NOPASSWD service-manager permission",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "exploit room.php/phpMyAdmin",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "HTTP SQLi/WAF bypass",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "network → web",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "www-data",
+      "action": "invoke simpler.py as pepper",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "sudo rule",
+      "resulting_principal_or_access": "pepper",
+      "boundary_crossed": "service → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "pepper",
+      "action": "link/start malicious unit",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "systemctl allowed",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → systemd root",
+      "evidence": "Explicit"
+    }
+  ]
+}

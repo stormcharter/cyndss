@@ -1,0 +1,229 @@
+{
+  "machine": "Help",
+  "split": "validation",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 79,
+    "graph_edges": 756,
+    "entry_concepts": [
+      "apache",
+      "express",
+      "graphql",
+      "helpdeskz",
+      "host",
+      "node",
+      "openssh"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "help:host:0",
+        "title": "Help",
+        "summary": "Ubuntu 16.04 Linux kernel 4.4.0-116 GraphQL API, HelpDeskZ and SSH/kernel EoP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:component:H1",
+        "title": "Help host",
+        "summary": "Host OS/security boundary 10.10.10.121 Ubuntu 16.04 Xenial; kernel 4.4.0-116-generic root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH 7.2p2 Ubuntu root daemon Public help user login after DB dump Help host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:component:C2",
+        "title": "Apache",
+        "summary": "Service HTTP front end 80/tcp Apache 2.4.18 Ubuntu www-data Public Default page and /support HelpDeskZ Help host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:component:C3",
+        "title": "Node/Express GraphQL",
+        "summary": "Application Credential API 3000/tcp/graphql Node.js Express node Public Introspection exposes helpme hash Help host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:component:C4",
+        "title": "HelpDeskZ",
+        "summary": "Application Ticket/support CMS /support 1.0.2 (2015) www-data Public/login Authenticated SQLi and unauthenticated upload bypass Apache",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:component:C5",
+        "title": "Linux kernel",
+        "summary": "Kernel Privilege boundary local 4.4.0-116 root Local CVE-2017-16995/CVE-2017-5899 targets Help host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:permission:0",
+        "title": "remote client Node/Express GraphQL",
+        "summary": "introspect GraphQL Node/Express GraphQL port 3000 public helpme hash",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:permission:1",
+        "title": "helpme HelpDeskZ",
+        "summary": "authenticate HelpDeskZ HelpDeskZ cracked hash ticket/SQLi access",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:permission:2",
+        "title": "helpme HelpDeskZ",
+        "summary": "exploit HelpDeskZ SQLi or upload HelpDeskZ version 1.0.2 help shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:permission:3",
+        "title": "help Linux kernel",
+        "summary": "run kernel exploit Linux kernel old kernel root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:vulnerability:V1",
+        "title": "Introspection and over-broad user resolver Node/Express GraphQL",
+        "summary": "Node/Express GraphQL Node/Express GraphQL GraphQL public Schema reveals resolver and password hash helpme credential Sensitive resolver unauthenticated",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:vulnerability:V2",
+        "title": "Authenticated blind SQLi and upload filter bypass HelpDeskZ",
+        "summary": "HelpDeskZ HelpDeskZ 1.0.2 GraphQL credential or upload endpoint Ticket attachment parameter injects SQL; file type checks bypassed help/www-data shell No parameterized query or safe upload root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "help:vulnerability:V3",
+        "title": "Kernel local privilege escalation Linux kernel",
+        "summary": "Linux kernel Linux 4.4.0-116 Local shell Known kernel flaw corrupts/abuses kernel state root Kernel unpatched for nearly a year",
+        "verified_cve_ids": "CVE-2017-16995,CVE-2017-5899"
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "express",
+        "graphql",
+        "helpme",
+        "node"
+      ],
+      [
+        "helpdeskz",
+        "shell"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2017-16995",
+        "root"
+      ],
+      [
+        "CVE-2017-5899",
+        "root"
+      ],
+      [
+        "kernel",
+        "root"
+      ],
+      [
+        "boundary",
+        "root"
+      ],
+      [
+        "local",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "helpdeskz",
+        "attachment",
+        "root"
+      ],
+      [
+        "apache",
+        "login",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "express",
+        "remote",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "helpdeskz",
+        "attachment",
+        "root"
+      ],
+      [
+        "apache",
+        "login",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "express",
+        "remote",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 1.0
+  }
+}

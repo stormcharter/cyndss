@@ -1,0 +1,235 @@
+{
+  "machine": "ServMon",
+  "split": "train",
+  "input": {
+    "documents": 12,
+    "graph_nodes": 68,
+    "graph_edges": 614,
+    "entry_concepts": [
+      "host",
+      "microsoft",
+      "nsclient",
+      "nvms-1000",
+      "openssh",
+      "servmon"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "servmon:host:0",
+        "title": "ServMon",
+        "summary": "Windows Server FTP/NVMS-1000/NSClient++ monitoring host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:component:H1",
+        "title": "ServMon host",
+        "summary": "Host OS/security boundary 10.10.10.184 Windows Server SYSTEM VPN reachable Standalone monitoring host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:component:C1",
+        "title": "Microsoft FTP",
+        "summary": "Service File transfer 21/tcp Microsoft FTP SYSTEM Anonymous read Hints at password list location ServMon host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:component:C2",
+        "title": "NVMS-1000",
+        "summary": "Application Video management web app 80/tcp NVMS-1000 SYSTEM/web service Public Directory traversal reads local files ServMon host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:component:C3",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH for Windows user Public Credential recovered through traversal ServMon host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:component:C4",
+        "title": "NSClient++",
+        "summary": "Service Monitoring agent 8443/tcp NSClient++ SYSTEM Public HTTPS/authenticated External scripts can be configured/executed ServMon host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:permission:0",
+        "title": "anonymous C1 FTP files",
+        "summary": "read C1 FTP files anonymous enabled password-list path disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:permission:1",
+        "title": "remote client NVMS-1000",
+        "summary": "traverse NVMS path NVMS-1000 public NVMS-1000 endpoint read local password files",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:permission:2",
+        "title": "nadine OpenSSH",
+        "summary": "authenticate SSH OpenSSH password from traversal local user shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:permission:3",
+        "title": "NSClient++ admin NSClient++",
+        "summary": "write/execute external script NSClient++ agent credentials and API access SYSTEM command",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:vulnerability:V1",
+        "title": "Directory traversal/local file disclosure NVMS-1000",
+        "summary": "NVMS-1000 NVMS-1000 HTTP 80 reachable Path escapes web root and reads arbitrary Windows files nadine credential No path canonicalization",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "servmon:vulnerability:V2",
+        "title": "Authenticated external-script command execution NSClient++",
+        "summary": "NSClient++ NSClient++ NSClient++ 8443 reachable; config credential recovered API accepts attacker script/command and service runs SYSTEM SYSTEM Management API over-privileged",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "microsoft",
+        "password-list",
+        "path"
+      ],
+      [
+        "credential",
+        "nadine",
+        "nvms-1000"
+      ],
+      [
+        "nadine",
+        "openssh"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "service",
+        "system"
+      ],
+      [
+        "agent",
+        "system"
+      ],
+      [
+        "authenticated",
+        "system"
+      ],
+      [
+        "command",
+        "system"
+      ],
+      [
+        "external",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "nsclient",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "nsclient",
+        "system"
+      ],
+      [
+        "microsoft",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ],
+      [
+        "servmon",
+        "system"
+      ],
+      [
+        "openssh",
+        "service",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "nsclient",
+        "system"
+      ],
+      [
+        "microsoft",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ],
+      [
+        "servmon",
+        "system"
+      ],
+      [
+        "openssh",
+        "service",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "nsclient",
+        "monitoring",
+        "agent",
+        "authenticated",
+        "external-script",
+        "command",
+        "execution",
+        "system"
+      ],
+      [
+        "microsoft",
+        "transfer",
+        "system"
+      ],
+      [
+        "nvms-1000",
+        "management",
+        "system"
+      ],
+      [
+        "nsclient",
+        "monitoring",
+        "agent",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.6666666666666666
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Silo",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/08/04/htb-silo.html",
+    "title": "HTB Silo writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2012 R2",
+    "deployment_role": "IIS and Oracle Database host"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Silo host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.82",
+      "software_or_version": "Windows Server 2012 R2",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone server"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "IIS",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 8.5-era",
+      "runs_as": "IIS worker",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "ASP.NET site and upload surface"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "Oracle TNS Listener",
+      "role": "Database listener",
+      "binding_or_path": "0.0.0.0:1521/tcp",
+      "software_or_version": "Oracle Database 11g",
+      "runs_as": "oracle service",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SID and default credentials enumerable"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Oracle HTTP/ASP.NET app",
+      "role": "Database-backed web app",
+      "binding_or_path": "IIS/Oracle integration",
+      "software_or_version": "Oracle 11g + ASP.NET",
+      "runs_as": "SYSTEM/IIS",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Can deploy/execute ASPX through DB-backed path"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "WinRM",
+      "role": "Remote management",
+      "binding_or_path": "5985/tcp",
+      "software_or_version": "Windows WSMan",
+      "runs_as": "SYSTEM",
+      "exposure": "Authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Alternate management path"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "network principal",
+      "operational_role": "Oracle/IIS recon client",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "TNS/SID and web content enumeration",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "oracle",
+      "principal_type": "database service",
+      "operational_role": "Oracle execution owner",
+      "groups_or_nesting": "ORA_DBA",
+      "authentication_or_effective_access": "database/system package control",
+      "evidence": "Inferred"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "IIS/Windows superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "enumerate SID/default Oracle accounts",
+      "object": "C2",
+      "condition_or_scope": "TNS listener public",
+      "security_consequence": "database credential/exec path",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "oracle",
+      "permission_or_action": "run PL/SQL/Java payload",
+      "object": "C2/C3",
+      "condition_or_scope": "DB account with execute privileges",
+      "security_consequence": "ASPX/webshell written or invoked",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "IIS worker",
+      "permission_or_action": "execute deployed ASPX",
+      "object": "C1/C3",
+      "condition_or_scope": "web file deployed",
+      "security_consequence": "SYSTEM shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Oracle SID/account metadata",
+      "hosted_on": "C2",
+      "purpose": "database discovery artifact",
+      "owner_or_authority": "oracle",
+      "read_access": "anonymous TNS read",
+      "write_or_execute_access": "DBA writes",
+      "security_significance": "Identifies reachable database",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "ASPX webshell",
+      "hosted_on": "C1/C3",
+      "purpose": "server-side command bridge",
+      "owner_or_authority": "oracle/IIS",
+      "read_access": "public request after deployment",
+      "write_or_execute_access": "DB/web process writes",
+      "security_significance": "DB-to-OS execution boundary",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "Oracle Database 11g",
+      "issue": "Default/weak database credential and exposed TNS",
+      "preconditions": "Listener public; SID/account names known",
+      "vulnerable_behavior": "Oracle account accepts recovered/default secret",
+      "resulting_access": "oracle database execution",
+      "reference": "Configuration weakness",
+      "failed_control": "TNS listener and privileged account exposed",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "IIS/ASP.NET integration",
+      "issue": "Database-backed file/command deployment",
+      "preconditions": "Oracle package execution",
+      "vulnerable_behavior": "Payload creates executable ASPX in webroot",
+      "resulting_access": "SYSTEM/IIS",
+      "reference": "Application trust flaw",
+      "failed_control": "DB account can write web-executable content",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "enumerate TNS and authenticate",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "1521 reachable; weak Oracle secret",
+      "resulting_principal_or_access": "oracle DB session",
+      "boundary_crossed": "network → database",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "oracle",
+      "action": "deploy ASPX payload",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "DB execute/write rights",
+      "resulting_principal_or_access": "webshell",
+      "boundary_crossed": "database → webroot",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "unauthenticated HTTP client",
+      "action": "request ASPX",
+      "target_component_or_artifact": "C1/C3",
+      "prerequisite": "webroot payload present",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "content → host",
+      "evidence": "Explicit"
+    }
+  ]
+}

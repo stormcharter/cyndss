@@ -1,0 +1,287 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Tabby",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/11/07/htb-tabby.html",
+    "title": "HTB Tabby writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Apache LFI front end and Tomcat manager on 8080"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Tabby host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.194",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone web host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used for ash/tomcat login"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "News site",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache 2.4.29-era + PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "news.php file parameter is traversal/LFI"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "news.php",
+      "role": "File include handler",
+      "binding_or_path": "/news.php?file=",
+      "software_or_version": "PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Reads Tomcat configuration files"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Tomcat",
+      "role": "Java servlet container",
+      "binding_or_path": "0.0.0.0:8080/tcp",
+      "software_or_version": "Tomcat 9.0.31",
+      "runs_as": "tomcat",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Manager text API with manager-script role"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "lxd group",
+      "role": "Linux authorization",
+      "binding_or_path": "/etc/group",
+      "software_or_version": "LXD",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "ash has lxd membership"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "LFI/read; low local rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "tomcat",
+      "principal_type": "application account",
+      "operational_role": "Tomcat manager user",
+      "groups_or_nesting": "admin-gui,manager-script",
+      "authentication_or_effective_access": "can deploy via text manager",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "ash",
+      "principal_type": "local user",
+      "operational_role": "SSH/app user",
+      "groups_or_nesting": "lxd",
+      "authentication_or_effective_access": "can start privileged LXD container",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "read tomcat-users.xml",
+      "object": "C3",
+      "condition_or_scope": "LFI file parameter",
+      "security_consequence": "tomcat password/roles",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "tomcat",
+      "permission_or_action": "deploy WAR/JSP",
+      "object": "C4",
+      "condition_or_scope": "manager-script role",
+      "security_consequence": "tomcat shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "ash",
+      "permission_or_action": "use lxd group",
+      "object": "C5",
+      "condition_or_scope": "membership shown by id",
+      "security_consequence": "mount host filesystem in root container",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root container",
+      "permission_or_action": "read/write host root",
+      "object": "H1",
+      "condition_or_scope": "LXD daemon trusted",
+      "security_consequence": "root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "/etc/tomcat9/tomcat-users.xml",
+      "hosted_on": "C3/C4",
+      "purpose": "manager credentials/roles",
+      "owner_or_authority": "tomcat",
+      "read_access": "www-data via LFI",
+      "write_or_execute_access": "root/tomcat writes",
+      "security_significance": "LFI-to-app-admin bridge",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "malicious WAR/JSP",
+      "hosted_on": "C4",
+      "purpose": "server-side payload",
+      "owner_or_authority": "tomcat",
+      "read_access": "tomcat manager",
+      "write_or_execute_access": "manager deploy",
+      "security_significance": "Tomcat command execution",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "LXD image/container mount",
+      "hosted_on": "C5",
+      "purpose": "host filesystem access",
+      "owner_or_authority": "root daemon",
+      "read_access": "ash can start container",
+      "write_or_execute_access": "container root writes host",
+      "security_significance": "Container group equals root",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Apache/PHP news.php",
+      "issue": "Directory traversal/LFI",
+      "preconditions": "file parameter public",
+      "vulnerable_behavior": "Path traversal reads arbitrary local files",
+      "resulting_access": "tomcat credential",
+      "reference": "Path traversal",
+      "failed_control": "No path normalization/allowlist",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Tomcat 9.0.31",
+      "issue": "Over-privileged manager-script account",
+      "preconditions": "Credentials obtained via LFI",
+      "vulnerable_behavior": "Text manager accepts attacker WAR",
+      "resulting_access": "tomcat shell",
+      "reference": "Configuration weakness",
+      "failed_control": "Manager role exposed on public port",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "LXD",
+      "issue": "User in docker-like lxd group",
+      "preconditions": "ash shell",
+      "vulnerable_behavior": "LXD container mounts host root",
+      "resulting_access": "root",
+      "reference": "LXD group privilege model",
+      "failed_control": "LXD socket/group trusted",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "read Tomcat config through LFI",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "HTTP file parameter",
+      "resulting_principal_or_access": "tomcat credential",
+      "boundary_crossed": "network → secret",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "deploy JSP/WAR",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "manager-script role",
+      "resulting_principal_or_access": "tomcat",
+      "boundary_crossed": "credential → app execution",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "tomcat",
+      "action": "login SSH as ash or recover ash access",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "credential reuse/path",
+      "resulting_principal_or_access": "ash",
+      "boundary_crossed": "app → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "ash",
+      "action": "launch LXD root container",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "lxd membership",
+      "resulting_principal_or_access": "root filesystem access",
+      "boundary_crossed": "user → host root",
+      "evidence": "Explicit"
+    }
+  ]
+}

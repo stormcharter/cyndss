@@ -1,0 +1,276 @@
+{
+  "machine": "Grandpa",
+  "split": "demo",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 71,
+    "graph_edges": 658,
+    "entry_concepts": [
+      "grandpa",
+      "microsoft",
+      "server",
+      "webdav"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "grandpa:host:0",
+        "title": "Grandpa",
+        "summary": "Windows Server 2003 build 3790 Legacy IIS/WebDAV server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:component:H1",
+        "title": "Grandpa server",
+        "summary": "Host OS boundary 10.10.10.14 Windows Server 2003 5.2.3790 SYSTEM VPN reachable EOL host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:component:C1",
+        "title": "Microsoft IIS",
+        "summary": "Service HTTP/WebDAV application server 0.0.0.0:80/tcp IIS 6.0 / ASP.NET NT AUTHORITY\\NETWORK SERVICE Public WebDAV methods exposed Grandpa server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:component:C2",
+        "title": "WebDAV",
+        "summary": "Protocol module Remote authoring/RPC path parser HTTP methods including PROPFIND/SEARCH/LOCK IIS 6.0 WebDAV NETWORK SERVICE Public Direct PUT not available in chosen path Microsoft IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:component:C3",
+        "title": "C:\\wmpub",
+        "summary": "Directory Writable public media directory local filesystem NTFS NETWORK SERVICE Local Staging location Grandpa server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:component:C4",
+        "title": "Windows service token",
+        "summary": "Token boundary Privilege-escalation surface local Server 2003 token model NETWORK SERVICE Local Impersonation/churrasco path Grandpa server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:permission:0",
+        "title": "remote client WebDAV",
+        "summary": "send overflow request WebDAV WebDAV reachable Code as NETWORK SERVICE",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:permission:1",
+        "title": "NETWORK SERVICE C:\\wmpub",
+        "summary": "write/stage C:\\wmpub directory ACL permits Local exploit payload available",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:permission:2",
+        "title": "NETWORK SERVICE Windows service token",
+        "summary": "impersonate privileged token Windows service token vulnerable token/service behavior SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "grandpa:vulnerability:V1",
+        "title": "ScStoragePathFromUrl buffer overflow WebDAV",
+        "summary": "WebDAV IIS 6.0 WebDAV HTTP/WebDAV reachable Crafted path overflows process memory NETWORK SERVICE code execution EOL WebDAV parser exposed",
+        "verified_cve_ids": "CVE-2017-7269"
+      },
+      {
+        "mongo_id": "grandpa:vulnerability:V2",
+        "title": "Token impersonation via Churrasco-style path Windows service token",
+        "summary": "Windows service token Windows Server 2003 service token Network Service shell Service token can capture privileged token SYSTEM Legacy token/service isolation",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "network",
+        "service",
+        "webdav"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2017-7269",
+        "reachable",
+        "system"
+      ],
+      [
+        "privileged",
+        "system"
+      ],
+      [
+        "windows",
+        "system"
+      ],
+      [
+        "behavior",
+        "system"
+      ],
+      [
+        "capture",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "server",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "webdav",
+        "reachable",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ],
+      [
+        "microsoft",
+        "path",
+        "system"
+      ],
+      [
+        "grandpa",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "webdav",
+        "reachable",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ],
+      [
+        "microsoft",
+        "path",
+        "system"
+      ],
+      [
+        "grandpa",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "webdav",
+        "remote",
+        "authoring",
+        "path",
+        "parser",
+        "scstoragepathfromurl",
+        "buffer",
+        "overflow",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "privilege-escalation",
+        "surface",
+        "server",
+        "model",
+        "impersonation",
+        "churrasco-style",
+        "system"
+      ],
+      [
+        "webdav",
+        "remote",
+        "authoring",
+        "path",
+        "parser",
+        "scstoragepathfromurl",
+        "buffer",
+        "overflow",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "privilege-escalation",
+        "surface",
+        "server",
+        "model",
+        "system"
+      ],
+      [
+        "microsoft",
+        "webdav",
+        "application",
+        "server",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "privilege-escalation",
+        "surface",
+        "model",
+        "impersonation",
+        "churrasco-style",
+        "path",
+        "system"
+      ],
+      [
+        "webdav",
+        "remote",
+        "authoring",
+        "path",
+        "parser",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "privilege-escalation",
+        "surface",
+        "server",
+        "model",
+        "impersonation",
+        "churrasco-style",
+        "system"
+      ],
+      [
+        "microsoft",
+        "webdav",
+        "application",
+        "server",
+        "network",
+        "service",
+        "windows",
+        "token",
+        "privilege-escalation",
+        "surface",
+        "model",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 2,
+    "c_coverage": 1.0,
+    "c_ordered": 1.0,
+    "c_precision": 0.3333333333333333,
+    "c_coverage_topk": 1.0
+  }
+}

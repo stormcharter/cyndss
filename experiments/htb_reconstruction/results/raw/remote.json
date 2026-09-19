@@ -1,0 +1,211 @@
+{
+  "machine": "Remote",
+  "split": "validation",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 76,
+    "graph_edges": 648,
+    "entry_concepts": [
+      "host",
+      "remote",
+      "umbraco"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "remote:host:0",
+        "title": "Remote",
+        "summary": "Windows Server host NFS export, Umbraco CMS and TeamViewer credential store",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:component:H1",
+        "title": "Remote host",
+        "summary": "Host OS/security boundary 10.10.10.180 Windows Server SYSTEM VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:component:C1",
+        "title": "NFS",
+        "summary": "Service Network filesystem 2049/tcp/udp Windows NFS SYSTEM Public export Exports C:\\ to unauthenticated client Remote host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:component:C2",
+        "title": "IIS",
+        "summary": "Service HTTP front end 80/tcp IIS IIS APPPOOL\\Umbraco Public Hosts Umbraco admin Remote host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:component:C3",
+        "title": "Umbraco",
+        "summary": "Application CMS /umbraco 7.12.4 IIS app pool Public/admin SQL CE-backed admin RCE IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:component:C4",
+        "title": "TeamViewer",
+        "summary": "Service Remote support service local/registry TeamViewer 7 SYSTEM Local Registry stores reversible credentials Remote host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:component:C5",
+        "title": "WinRM/PSExec",
+        "summary": "Service Remote management 5985/tcp/SMB WinRM Administrator Authenticated Final host access Remote host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:permission:0",
+        "title": "anonymous NFS client C1 export",
+        "summary": "read C1 export NFS export allows broad root Umbraco hash/config disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:permission:1",
+        "title": "remote client Umbraco",
+        "summary": "authenticate Umbraco Umbraco hash cracked from NFS config CMS admin",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:permission:2",
+        "title": "Umbraco admin C3/C2",
+        "summary": "execute command C3/C2 Umbraco 7.12.4 admin RCE IIS shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:permission:3",
+        "title": "IIS shell TeamViewer",
+        "summary": "read TeamViewer registry TeamViewer local service/config readable Administrator credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:permission:4",
+        "title": "administrator WinRM/PSExec",
+        "summary": "WinRM/PSExec WinRM/PSExec recovered credential SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:vulnerability:V1",
+        "title": "Over-broad export exposes host files NFS",
+        "summary": "NFS Windows NFS NFS public Client mounts export and reads application config Umbraco credential Export not restricted to required paths/hosts",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:vulnerability:V2",
+        "title": "Authenticated admin command execution Umbraco",
+        "summary": "Umbraco Umbraco 7.12.4 Admin hash cracked Umbraco parameter reaches server-side process IIS app pool Outdated CMS and weak credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "remote:vulnerability:V3",
+        "title": "Reversible credentials in registry TeamViewer",
+        "summary": "TeamViewer TeamViewer 7 Local shell Registry bytes decrypt to Administrator password Administrator Remote-support secret accessible to service user",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "hash",
+        "umbraco"
+      ],
+      [
+        "shell"
+      ],
+      [
+        "administrator",
+        "teamviewer"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "boundary",
+        "system"
+      ],
+      [
+        "exports",
+        "system"
+      ],
+      [
+        "filesystem",
+        "system"
+      ],
+      [
+        "network",
+        "system"
+      ],
+      [
+        "reachable",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "system"
+      ],
+      [
+        "remote",
+        "system"
+      ],
+      [
+        "umbraco",
+        "windows",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "system"
+      ],
+      [
+        "remote",
+        "system"
+      ],
+      [
+        "umbraco",
+        "windows",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "network",
+        "filesystem",
+        "windows",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 3,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

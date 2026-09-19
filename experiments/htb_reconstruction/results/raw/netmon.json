@@ -1,0 +1,198 @@
+{
+  "machine": "Netmon",
+  "split": "train",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 70,
+    "graph_edges": 638,
+    "entry_concepts": [
+      "archive",
+      "backup",
+      "host",
+      "microsoft",
+      "monitor",
+      "netmon",
+      "network",
+      "prtg"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "netmon:host:0",
+        "title": "Netmon",
+        "summary": "Windows Server 2016-era FTP-exposed filesystem plus PRTG monitoring web service",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:component:H1",
+        "title": "Netmon host",
+        "summary": "Host OS/security boundary 10.10.10.152 Windows Server 2016-era SYSTEM VPN reachable Standalone monitoring host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:component:C1",
+        "title": "Microsoft FTP",
+        "summary": "Service File transfer service 21/tcp Microsoft FTP SYSTEM Anonymous read FTP root exposes PRTG files Netmon host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:component:C2",
+        "title": "PRTG Network Monitor",
+        "summary": "Application HTTP monitoring console 80/tcp PRTG 18.1.37.13946 SYSTEM/PRTG service Public Web console and backups Netmon host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:component:C3",
+        "title": "PRTG backup archive",
+        "summary": "Artifact Configuration/credential artifact PRTG program data PRTG 18.1.37 SYSTEM Readable via anonymous FTP Contains recoverable web credentials Microsoft FTP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:component:C4",
+        "title": "PRTG notification endpoint",
+        "summary": "Application Command execution feature HTTP authenticated endpoint PRTG 18.1.37 SYSTEM Authenticated Notification command injection PRTG Network Monitor",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:permission:0",
+        "title": "anonymous C1/C3 FTP files",
+        "summary": "read/download C1/C3 FTP files anonymous FTP enabled backup credential disclosure",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:permission:1",
+        "title": "prtgadmin PRTG notification endpoint",
+        "summary": "configure notification PRTG notification endpoint authenticated PRTG admin attacker command runs as SYSTEM service",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:permission:2",
+        "title": "PRTG service Netmon host",
+        "summary": "execute Netmon host service runs with SYSTEM token full host compromise",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:vulnerability:V1",
+        "title": "Anonymous read exposes PRTG backup C1+C3",
+        "summary": "C1+C3 Microsoft FTP FTP reachable Unauthenticated client downloads config containing admin secret prtgadmin web session Sensitive backup stored in anonymous root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "netmon:vulnerability:V2",
+        "title": "Authenticated command injection in notification handling PRTG notification endpoint",
+        "summary": "PRTG notification endpoint PRTG 18.1.37.13946 PRTG admin session Notification command field reaches OS shell SYSTEM No command allowlist; service over-privileged",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "execution",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential",
+        "prtgadmin"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "feature",
+        "execution"
+      ],
+      [
+        "application",
+        "execution"
+      ],
+      [
+        "injection",
+        "execution"
+      ],
+      [
+        "monitor",
+        "execution"
+      ],
+      [
+        "network",
+        "execution"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "monitor",
+        "execution"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "monitor",
+        "execution"
+      ],
+      [
+        "network",
+        "execution"
+      ],
+      [
+        "host",
+        "application",
+        "execution"
+      ],
+      [
+        "netmon",
+        "application",
+        "execution"
+      ],
+      [
+        "archive",
+        "system",
+        "execution"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "monitor",
+        "execution"
+      ],
+      [
+        "network",
+        "execution"
+      ],
+      [
+        "host",
+        "application",
+        "execution"
+      ],
+      [
+        "netmon",
+        "application",
+        "execution"
+      ],
+      [
+        "archive",
+        "system",
+        "execution"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

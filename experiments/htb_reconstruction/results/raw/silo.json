@@ -1,0 +1,203 @@
+{
+  "machine": "Silo",
+  "split": "train",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 68,
+    "graph_edges": 545,
+    "entry_concepts": [
+      "host",
+      "listener",
+      "oracle",
+      "silo"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "silo:host:0",
+        "title": "Silo",
+        "summary": "Windows Server 2012 R2 IIS and Oracle Database host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:component:H1",
+        "title": "Silo host",
+        "summary": "Host OS/security boundary 10.10.10.82 Windows Server 2012 R2 SYSTEM VPN reachable Standalone server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:component:C1",
+        "title": "IIS",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp IIS 8.5-era IIS worker Public ASP.NET site and upload surface Silo host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:component:C2",
+        "title": "Oracle TNS Listener",
+        "summary": "Database Database listener 0.0.0.0:1521/tcp Oracle Database 11g oracle service Public SID and default credentials enumerable Silo host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:component:C3",
+        "title": "Oracle HTTP/ASP.NET app",
+        "summary": "Application Database-backed web app IIS/Oracle integration Oracle 11g + ASP.NET SYSTEM/IIS Public Can deploy/execute ASPX through DB-backed path IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:component:C4",
+        "title": "WinRM",
+        "summary": "Service Remote management 5985/tcp Windows WSMan SYSTEM Authenticated Alternate management path Silo host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:permission:0",
+        "title": "anonymous Oracle TNS Listener",
+        "summary": "enumerate SID/default Oracle accounts Oracle TNS Listener TNS listener public database credential/exec path",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:permission:1",
+        "title": "oracle C2/C3",
+        "summary": "run PL/SQL/Java payload C2/C3 DB account with execute privileges ASPX/webshell written or invoked",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:permission:2",
+        "title": "IIS worker C1/C3",
+        "summary": "execute deployed ASPX C1/C3 web file deployed SYSTEM shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:vulnerability:V1",
+        "title": "Default/weak database credential and exposed TNS Oracle TNS Listener",
+        "summary": "Oracle TNS Listener Oracle Database 11g Listener public; SID/account names known Oracle account accepts recovered/default secret oracle database execution TNS listener and privileged account exposed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "silo:vulnerability:V2",
+        "title": "Database-backed file/command deployment Oracle HTTP/ASP.NET app",
+        "summary": "Oracle HTTP/ASP.NET app IIS/ASP.NET integration Oracle package execution Payload creates executable ASPX in webroot SYSTEM/IIS DB account can write web-executable content",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "listener",
+        "oracle",
+        "session"
+      ],
+      [
+        "webshell"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "database-backed",
+        "system"
+      ],
+      [
+        "integration",
+        "system"
+      ],
+      [
+        "invoked",
+        "aspx",
+        "system"
+      ],
+      [
+        "java",
+        "aspx",
+        "system"
+      ],
+      [
+        "privileges",
+        "aspx",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "listener",
+        "path",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ],
+      [
+        "silo",
+        "system"
+      ],
+      [
+        "oracle",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "listener",
+        "path",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ],
+      [
+        "silo",
+        "system"
+      ],
+      [
+        "oracle",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "oracle",
+        "database-backed",
+        "command",
+        "deployment",
+        "integration",
+        "system"
+      ],
+      [
+        "oracle",
+        "database-backed",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 2,
+    "c_coverage": 0.5,
+    "c_ordered": 0.5,
+    "c_precision": 0.3333333333333333,
+    "c_coverage_topk": 0.5
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "machine": "Nest",
+  "split": "train",
+  "input": {
+    "documents": 16,
+    "graph_nodes": 91,
+    "graph_edges": 855,
+    "entry_concepts": [
+      "host",
+      "nest",
+      "reporting"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "nest:host:0",
+        "title": "Nest",
+        "summary": "Windows standalone SMB host Guest/Data/Secure$ shares plus HQK Reporting service",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:component:H1",
+        "title": "Nest host",
+        "summary": "Host OS/security boundary 10.10.10.178 Windows SYSTEM VPN reachable Standalone workgroup",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:component:C1",
+        "title": "SMB server",
+        "summary": "Service File shares/named pipes 445/tcp Windows SMB SYSTEM Guest and credentialed Data, Users, Secure$ ACL differences Nest host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:component:C2",
+        "title": "Data share",
+        "summary": "Share Department files \\\\HTB-NEST\\Data SMB share/service Guest read; TempUser more Configs and HR welcome file SMB server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:component:C3",
+        "title": "HQK Reporting",
+        "summary": "Service Custom query service 4386/tcp Reporting Service V1.2 C.Smith/user process Public Directory traversal, debug command and query engine Nest host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:component:C4",
+        "title": "AD Integration Module",
+        "summary": "Binary .NET helper Users\\C.Smith\\HQK Reporting\\AD Integration Module VB.NET/.NET C.Smith SMB read Decrypts C.Smith password SMB server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:component:C5",
+        "title": "PSExec",
+        "summary": "Service SMB service execution ADMIN$ / Service Control Sysinternals/SMB SYSTEM Authenticated admin Final shell path SMB server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:permission:0",
+        "title": "anonymous C2 Data share",
+        "summary": "read C2 Data share guest ACL TempUser credential clue",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:permission:1",
+        "title": "TempUser C4/config files",
+        "summary": "read C4/config files share ACL C.Smith encrypted password and decryptor",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:permission:2",
+        "title": "C.Smith HQK Reporting",
+        "summary": "read ADS/debug/config HQK Reporting authenticated SMB; ADS readable debug password and administrator artifact",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:permission:3",
+        "title": "C.Smith HQK Reporting",
+        "summary": "debug/query HQK Reporting debug password administrator credential memory disclosure",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:permission:4",
+        "title": "Administrator C1/C5",
+        "summary": "PSExec C1/C5 SMB admin credential SYSTEM shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:vulnerability:V1",
+        "title": "Guest/temporary accounts read sensitive config C1+C2",
+        "summary": "C1+C2 SMB share ACL SMB reachable Department share discloses credentials and paths TempUser/C.Smith Inadequate share/file ACLs",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:vulnerability:V2",
+        "title": "Directory traversal and debug secret in ADS HQK Reporting",
+        "summary": "HQK Reporting HQK Reporting V1.2 4386 reachable; C.Smith share access SETDIR permits .. and ADS stores debug password debug/query access No path confinement; secret hidden only by ADS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:vulnerability:V3",
+        "title": "Reversible/custom password encryption AD Integration Module",
+        "summary": "AD Integration Module VB.NET AD Integration Module Binary readable Decryption routine recovers C.Smith password C.Smith Key/algorithm shipped with binary",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "nest:vulnerability:V4",
+        "title": "Administrator credential reused for service execution PSExec",
+        "summary": "PSExec PSExec/SMB Admin secret recovered SMB service control creates SYSTEM process SYSTEM Admin credential reaches user-readable artifacts",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "tempuser"
+      ],
+      [
+        "smith"
+      ],
+      [
+        "administrator",
+        "artifact",
+        "reporting"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "admin",
+        "system"
+      ],
+      [
+        "psexec",
+        "system"
+      ],
+      [
+        "control",
+        "system"
+      ],
+      [
+        "execution",
+        "system"
+      ],
+      [
+        "shell",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "system"
+      ],
+      [
+        "nest",
+        "system"
+      ],
+      [
+        "reporting",
+        "host",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "system"
+      ],
+      [
+        "nest",
+        "system"
+      ],
+      [
+        "reporting",
+        "host",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 3,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}
