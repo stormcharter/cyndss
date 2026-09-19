@@ -1,0 +1,216 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Granny",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/03/06/htb-granny.html",
+    "title": "HTB Granny writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2003 SP2",
+    "deployment_role": "Writable IIS/WebDAV content server"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Granny server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.15",
+      "software_or_version": "Windows Server 2003 SP2",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "EOL host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft IIS",
+      "role": "HTTP/ASP.NET server",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 6.0 / ASP.NET",
+      "runs_as": "NT AUTHORITY\\NETWORK SERVICE",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "WebDAV authoring enabled"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Protocol module",
+      "name": "WebDAV",
+      "role": "Remote content authoring",
+      "binding_or_path": "PUT and MOVE methods",
+      "software_or_version": "IIS 6.0 WebDAV",
+      "runs_as": "NETWORK SERVICE",
+      "exposure": "Public unauthenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Extension checks differ between upload and rename"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Directory",
+      "name": "IIS document root",
+      "role": "Published executable content",
+      "binding_or_path": "HTTP namespace",
+      "software_or_version": "NTFS",
+      "runs_as": "NETWORK SERVICE",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Writable through WebDAV"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Token boundary",
+      "name": "Windows service token",
+      "role": "Local privilege surface",
+      "binding_or_path": "local",
+      "software_or_version": "Server 2003 SP2",
+      "runs_as": "NETWORK SERVICE",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Impersonation privileges"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "NT AUTHORITY\\NETWORK SERVICE",
+      "principal_type": "service identity",
+      "operational_role": "IIS worker",
+      "groups_or_nesting": "service principals",
+      "authentication_or_effective_access": "execute ASPX; local service privileges",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Lakis",
+      "principal_type": "local user",
+      "operational_role": "profile/flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "ordinary profile",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "local system",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "PUT non-executable file",
+      "object": "C3",
+      "condition_or_scope": "WebDAV write enabled",
+      "security_consequence": "Attacker content stored",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "anonymous",
+      "permission_or_action": "MOVE/rename",
+      "object": "payload extension",
+      "condition_or_scope": "WebDAV MOVE allowed",
+      "security_consequence": "File becomes .aspx and executable",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "NETWORK SERVICE",
+      "permission_or_action": "abuse impersonation/kernel path",
+      "object": "C4",
+      "condition_or_scope": "service token and unpatched OS",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "uploaded payload",
+      "hosted_on": "C3",
+      "purpose": "attacker ASP.NET content",
+      "owner_or_authority": "anonymous",
+      "read_access": "public invoke",
+      "write_or_execute_access": "PUT/MOVE write; IIS execute",
+      "security_significance": "Two-method chain bypasses upload extension control",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2/C3",
+      "affected_version": "IIS 6.0 WebDAV",
+      "issue": "PUT/MOVE extension-filter bypass",
+      "preconditions": "Unauthenticated authoring methods enabled",
+      "vulnerable_behavior": "Upload benign extension then MOVE to .aspx",
+      "resulting_access": "NETWORK SERVICE code execution",
+      "reference": "Configuration/design weakness",
+      "failed_control": "Write and execute allowed in same namespace; inconsistent checks",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Windows Server 2003 SP2",
+      "issue": "Service-token privilege escalation",
+      "preconditions": "Local Network Service shell",
+      "vulnerable_behavior": "Impersonation path yields privileged token",
+      "resulting_access": "SYSTEM",
+      "reference": "MS09-012 / CVE-2009-0079 family",
+      "failed_control": "Over-privileged legacy service token",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "PUT payload with safe extension",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "WebDAV authoring",
+      "resulting_principal_or_access": "stored payload",
+      "boundary_crossed": "network → content write",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "anonymous",
+      "action": "MOVE to .aspx and request",
+      "target_component_or_artifact": "C2/C1",
+      "prerequisite": "rename permitted",
+      "resulting_principal_or_access": "NETWORK SERVICE",
+      "boundary_crossed": "content write → service execution",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "NETWORK SERVICE",
+      "action": "run token EoP",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "unpatched/token privileges",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "service identity → system",
+      "evidence": "Explicit"
+    }
+  ]
+}

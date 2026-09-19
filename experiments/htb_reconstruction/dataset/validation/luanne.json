@@ -1,0 +1,323 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Luanne",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/03/27/htb-luanne.html",
+    "title": "HTB Luanne writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "NetBSD",
+    "deployment_role": "Supervisor leak, Lua API command injection, SSH key and doas"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Luanne host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.218",
+      "software_or_version": "NetBSD 9-era",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone BSD host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH 8.0 NetBSD",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "jimmy SSH login"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Medusa/httpd",
+      "role": "Web front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "NetBSD httpd/Medusa",
+      "runs_as": "www",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Lua-backed web API"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Supervisor",
+      "role": "Process manager",
+      "binding_or_path": "9001/tcp",
+      "software_or_version": "Supervisor",
+      "runs_as": "root",
+      "exposure": "Public/basic auth",
+      "evidence": "Explicit",
+      "analysis_note": "Process list reveals localhost web app"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Lua web API",
+      "role": "Command endpoint",
+      "binding_or_path": "localhost/webapi",
+      "software_or_version": "Lua",
+      "runs_as": "www",
+      "exposure": "Local/public via C2",
+      "evidence": "Explicit",
+      "analysis_note": "Query concatenated into shell command"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "localhost status site",
+      "role": "Basic-auth web app",
+      "binding_or_path": "127.0.0.1:3000-ish",
+      "software_or_version": "httpd",
+      "runs_as": "jimmy",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Contains SSH key/htpasswd"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "doas",
+      "role": "BSD authorization",
+      "binding_or_path": "/etc/doas.conf",
+      "software_or_version": "doas",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "jimmy may run arbitrary commands as root"
+    },
+    {
+      "component_id": "C7",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "encrypted backup",
+      "role": "PGP artifact",
+      "binding_or_path": "/home/jimmy/backups",
+      "software_or_version": "netpgp/PGP",
+      "runs_as": "jimmy",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Contains doas password"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www",
+      "principal_type": "service identity",
+      "operational_role": "Lua/httpd worker",
+      "groups_or_nesting": "www",
+      "authentication_or_effective_access": "web API shell",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "jimmy",
+      "principal_type": "local user",
+      "operational_role": "SSH/user flag owner",
+      "groups_or_nesting": "doas",
+      "authentication_or_effective_access": "reads backup and can run doas",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "doas target",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read Supervisor process list",
+      "object": "C3",
+      "condition_or_scope": "default/basic auth exposed",
+      "security_consequence": "localhost app path",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "inject Lua API command",
+      "object": "C4",
+      "condition_or_scope": "API path discovered",
+      "security_consequence": "www shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www",
+      "permission_or_action": "read htpasswd/SSH key",
+      "object": "C5",
+      "condition_or_scope": "local web service",
+      "security_consequence": "jimmy credential/key",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "jimmy",
+      "permission_or_action": "decrypt backup",
+      "object": "C7",
+      "condition_or_scope": "PGP tooling/password clue",
+      "security_consequence": "doas password",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "jimmy",
+      "permission_or_action": "doas arbitrary command",
+      "object": "C6",
+      "condition_or_scope": "valid doas password",
+      "security_consequence": "root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Supervisor process list",
+      "hosted_on": "C3",
+      "purpose": "service/path disclosure",
+      "owner_or_authority": "root",
+      "read_access": "public/basic auth",
+      "write_or_execute_access": "Supervisor writes",
+      "security_significance": "Reveals hidden app",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Lua API query",
+      "hosted_on": "C4",
+      "purpose": "untrusted command parameter",
+      "owner_or_authority": "remote client",
+      "read_access": "public request",
+      "write_or_execute_access": "Lua executes",
+      "security_significance": "Command injection source",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": ".htpasswd/SSH key",
+      "hosted_on": "C5",
+      "purpose": "jimmy authentication",
+      "owner_or_authority": "jimmy",
+      "read_access": "www can read",
+      "write_or_execute_access": "jimmy owns",
+      "security_significance": "Credential bridge",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "PGP backup",
+      "hosted_on": "C7",
+      "purpose": "doas password",
+      "owner_or_authority": "jimmy",
+      "read_access": "jimmy can read/decrypt",
+      "write_or_execute_access": "backup job writes",
+      "security_significance": "Encrypted secret still recoverable",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Supervisor",
+      "issue": "Default/basic-auth process disclosure",
+      "preconditions": "9001 public",
+      "vulnerable_behavior": "Supervisor reveals command lines and localhost endpoints",
+      "resulting_access": "web API path",
+      "reference": "Configuration weakness",
+      "failed_control": "Management interface exposed",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Lua API",
+      "issue": "Command injection",
+      "preconditions": "API reachable",
+      "vulnerable_behavior": "Lua concatenates query into shell command",
+      "resulting_access": "www shell",
+      "reference": "Command injection",
+      "failed_control": "No escaping/parameterization",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C6+C7",
+      "affected_version": "doas/PGP",
+      "issue": "Doas password recoverable from encrypted backup",
+      "preconditions": "jimmy can read backup",
+      "vulnerable_behavior": "PGP key/password path decrypts credential",
+      "resulting_access": "root",
+      "reference": "Credential storage weakness",
+      "failed_control": "Root authorization secret stored with user data",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "read Supervisor process list",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "9001 exposed",
+      "resulting_principal_or_access": "web API path",
+      "boundary_crossed": "network → topology",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "exploit Lua command injection",
+      "target_component_or_artifact": "C2/C4",
+      "prerequisite": "API path",
+      "resulting_principal_or_access": "www",
+      "boundary_crossed": "network → service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "www",
+      "action": "read localhost key/htpasswd",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "local access",
+      "resulting_principal_or_access": "jimmy",
+      "boundary_crossed": "service → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "jimmy",
+      "action": "decrypt backup and doas",
+      "target_component_or_artifact": "C7/C6",
+      "prerequisite": "credential artifact",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

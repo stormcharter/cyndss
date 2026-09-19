@@ -1,0 +1,257 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Mango",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/04/18/htb-mango.html",
+    "title": "HTB Mango writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Apache virtual hosts backed by MongoDB and SUID jjs"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Mango host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.162",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SSH works for recovered mango user"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "Web front end",
+      "binding_or_path": "0.0.0.0:80,443/tcp",
+      "software_or_version": "Apache 2.4.29-era",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "mango.htb and staging-order.mango.htb vhosts"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "staging-order",
+      "role": "Order/login app",
+      "binding_or_path": "staging-order.mango.htb",
+      "software_or_version": "PHP + MongoDB client",
+      "runs_as": "www-data",
+      "exposure": "Public vhost",
+      "evidence": "Explicit",
+      "analysis_note": "NoSQL operator injection in login"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "MongoDB",
+      "role": "Document database",
+      "binding_or_path": "127.0.0.1:27017/tcp",
+      "software_or_version": "MongoDB",
+      "runs_as": "mongodb",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Stores users/password hashes"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Binary",
+      "name": "jjs",
+      "role": "SUID JavaScript shell",
+      "binding_or_path": "/usr/lib/jvm/.../jjs",
+      "software_or_version": "Java 8",
+      "runs_as": "root",
+      "exposure": "Local; setuid root",
+      "evidence": "Explicit",
+      "analysis_note": "Java scripting escape"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web app access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "mango",
+      "principal_type": "local user",
+      "operational_role": "database/SSH user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "SSH session after NoSQL enumeration",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "admin",
+      "principal_type": "local user",
+      "operational_role": "application/admin account",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "credential hash enumerated",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "SUID binary owner",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "send Mongo operators in login fields",
+      "object": "C3/C4",
+      "condition_or_scope": "staging vhost public",
+      "security_consequence": "enumerate valid usernames/passwords",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "SSH as mango",
+      "object": "C1",
+      "condition_or_scope": "password recovered from NoSQL auth",
+      "security_consequence": "mango shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "mango",
+      "permission_or_action": "execute jjs",
+      "object": "C5",
+      "condition_or_scope": "SUID bit and local shell",
+      "security_consequence": "root JavaScript escape",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Mongo user documents",
+      "hosted_on": "C4",
+      "purpose": "application authentication records",
+      "owner_or_authority": "mongodb",
+      "read_access": "C3 query path",
+      "write_or_execute_access": "app writes",
+      "security_significance": "NoSQL injection disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "staging-order login fields",
+      "hosted_on": "C3",
+      "purpose": "untrusted JSON/operator input",
+      "owner_or_authority": "remote client",
+      "read_access": "public write",
+      "write_or_execute_access": "app queries Mongo",
+      "security_significance": "Injection sink",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "jjs SUID binary",
+      "hosted_on": "C5",
+      "purpose": "Java scripting runtime",
+      "owner_or_authority": "root",
+      "read_access": "mango can execute",
+      "write_or_execute_access": "root executes",
+      "security_significance": "SUID-to-root bridge",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3+C4",
+      "affected_version": "MongoDB-backed PHP app",
+      "issue": "NoSQL operator injection",
+      "preconditions": "staging vhost reachable",
+      "vulnerable_behavior": "$ne/$regex-like operators alter authentication query",
+      "resulting_access": "mango/admin credentials",
+      "reference": "NoSQL injection",
+      "failed_control": "User input mapped directly to Mongo query",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "Java 8 jjs",
+      "issue": "SUID scripting escape",
+      "preconditions": "mango local shell",
+      "vulnerable_behavior": "jjs can run Java classes/commands as effective uid 0",
+      "resulting_access": "root",
+      "reference": "GTFOBins jjs / SUID misconfiguration",
+      "failed_control": "SUID runtime exposed",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "enumerate vhost and inject operators",
+      "target_component_or_artifact": "C2/C3/C4",
+      "prerequisite": "Host header/vhost discovered",
+      "resulting_principal_or_access": "mango/admin credential",
+      "boundary_crossed": "network → credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "SSH as mango",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "recovered password",
+      "resulting_principal_or_access": "mango",
+      "boundary_crossed": "credential → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "mango",
+      "action": "launch jjs SUID escape",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "local SUID binary",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

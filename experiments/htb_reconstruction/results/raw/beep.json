@@ -1,0 +1,254 @@
+{
+  "machine": "Beep",
+  "split": "demo",
+  "input": {
+    "documents": 17,
+    "graph_nodes": 114,
+    "graph_edges": 1054,
+    "entry_concepts": [
+      "apache",
+      "asterisk",
+      "beep",
+      "elastix",
+      "freepbx",
+      "graph",
+      "mail",
+      "manager",
+      "mysql",
+      "services",
+      "vtiger",
+      "webmin"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "beep:host:0",
+        "title": "Beep",
+        "summary": "CentOS 5-era Linux PBX appliance with mail, database and admin stack",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:H1",
+        "title": "Beep PBX",
+        "summary": "Host OS/appliance boundary 10.10.10.7 CentOS 5-era root VPN reachable Large legacy service surface",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C1",
+        "title": "Mail services",
+        "summary": "Service stack SMTP/POP/IMAP/user enumeration 25,110,143,993,995/tcp Postfix; Cyrus 2.3.7 postfix/cyrus Public SMTP VRFY reveals accounts Beep PBX",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C2",
+        "title": "Apache HTTPS",
+        "summary": "Service PBX web front end 80,443/tcp Apache 2.2.3 apache Public Hosts Elastix/FreePBX/vTiger Beep PBX",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C3",
+        "title": "Elastix / FreePBX",
+        "summary": "Application PBX administration / and PBX paths Elastix 2.2.0; FreePBX 2.10.0 asterisk/apache Public/login Old PHP application Apache HTTPS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C4",
+        "title": "vTiger CRM graph.php",
+        "summary": "Application CRM graph rendering /vtigercrm/graph.php Elastix bundle apache Public current_language LFI Elastix / FreePBX",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C5",
+        "title": "MySQL",
+        "summary": "Service PBX application database 0.0.0.0:3306/tcp MySQL mysql Public Credentials appear in config Beep PBX",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C6",
+        "title": "Webmin",
+        "summary": "Service System management 0.0.0.0:10000/tcp Webmin legacy TLS root Public Credential-reuse route Beep PBX",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C7",
+        "title": "Asterisk Manager/SIP/FAX",
+        "summary": "Service Telephony control plane 4559,5038 and SIP-related ports Asterisk/HylaFAX asterisk Public Extension 233 discoverable Beep PBX",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:component:C8",
+        "title": "asterisk sudoers",
+        "summary": "Policy Privilege delegation local sudo root Local NOPASSWD nmap/yum/chmod/chown/service etc. Beep PBX",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:permission:0",
+        "title": "remote client Mail services",
+        "summary": "SMTP VRFY enumerate Mail services SMTP reachable Valid local usernames disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:permission:1",
+        "title": "remote client vTiger CRM graph.php",
+        "summary": "traverse current_language vTiger CRM graph.php old PHP null-byte behavior Read local PBX config/credentials",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:permission:2",
+        "title": "remote client C3/C7",
+        "summary": "invoke FreePBX/Elastix RCE C3/C7 extension known; vulnerable app Code as asterisk",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:permission:3",
+        "title": "asterisk C8 approved binaries",
+        "summary": "sudo NOPASSWD C8 approved binaries local shell root execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:vulnerability:V1",
+        "title": "Local file inclusion via current_language vTiger CRM graph.php",
+        "summary": "vTiger CRM graph.php Elastix 2.2.0 bundle HTTP access; null-byte-compatible PHP Path traversal reads arbitrary local files Credential disclosure Unsanitized include path",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:vulnerability:V2",
+        "title": "Remote command execution C3/C7",
+        "summary": "C3/C7 FreePBX 2.10.0 / Elastix 2.2.0 Reach PBX and identify valid extension Crafted PBX request executes command asterisk shell Legacy unauthenticated PBX handler",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "beep:vulnerability:V3",
+        "title": "Broad passwordless admin binaries asterisk sudoers",
+        "summary": "asterisk sudoers sudoers Local asterisk shell Allowed tools provide shell/file ownership primitives root Service account has excessive sudo authority",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "application",
+        "credentials",
+        "graph",
+        "vtiger"
+      ],
+      [
+        "asterisk"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "sudo",
+        "root"
+      ],
+      [
+        "binaries",
+        "root"
+      ],
+      [
+        "nopasswd",
+        "root"
+      ],
+      [
+        "sudoers",
+        "root"
+      ],
+      [
+        "command",
+        "legacy",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "webmin",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "webmin",
+        "root"
+      ],
+      [
+        "services",
+        "reachable",
+        "root"
+      ],
+      [
+        "manager",
+        "service",
+        "root"
+      ],
+      [
+        "mysql",
+        "service",
+        "root"
+      ],
+      [
+        "graph",
+        "local",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "webmin",
+        "root"
+      ],
+      [
+        "services",
+        "reachable",
+        "root"
+      ],
+      [
+        "manager",
+        "service",
+        "root"
+      ],
+      [
+        "mysql",
+        "service",
+        "root"
+      ],
+      [
+        "graph",
+        "local",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "webmin",
+        "system",
+        "management",
+        "legacy",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.5
+  }
+}

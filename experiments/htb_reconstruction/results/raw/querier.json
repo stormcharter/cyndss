@@ -1,0 +1,195 @@
+{
+  "machine": "Querier",
+  "split": "validation",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 86,
+    "graph_edges": 772,
+    "entry_concepts": [
+      "host",
+      "querier"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "querier:host:0",
+        "title": "Querier",
+        "summary": "Windows workgroup host SMB report share, MSSQL and GPP/service privilege path",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:component:H1",
+        "title": "Querier host",
+        "summary": "Host OS/security boundary 10.10.10.125 Windows workgroup SYSTEM VPN reachable Standalone database/reporting host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:component:C1",
+        "title": "SMB",
+        "summary": "Service File shares 139,445/tcp Windows SMB SYSTEM Guest/readable Reports share Reports workbook exposed Querier host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:component:C2",
+        "title": "Reports share",
+        "summary": "Share Excel macro files \\\\QUERIER\\Reports SMB reporting Guest read Currency Volume Report.xlsm SMB",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:component:C3",
+        "title": "MSSQL",
+        "summary": "Database Database server 1433/tcp Microsoft SQL Server MSSQLSERVER Network/authenticated Reporting database and xp_cmdshell Querier host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:component:C4",
+        "title": "Responder/SMB callback",
+        "summary": "Protocol Net-NTLMv2 capture sink attacker listener SMB/NTLM attacker Triggered by SQL UNC path Captures service account challenge Querier host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:component:C5",
+        "title": "Windows service",
+        "summary": "Service Privilege boundary local Windows service/PowerUp SYSTEM Local Service or GPP material supports final EoP Querier host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:permission:0",
+        "title": "guest C2 Reports",
+        "summary": "read C2 Reports SMB guest ACL macro credentials",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:permission:1",
+        "title": "reporting MSSQL",
+        "summary": "connect/query MSSQL credentials in macro MSSQL session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:permission:2",
+        "title": "reporting C3/C4",
+        "summary": "force UNC callback C3/C4 xp_dirtree or equivalent Net-NTLMv2 challenge captured/cracked",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:permission:3",
+        "title": "reporting/mrb3n MSSQL",
+        "summary": "execute xp_cmdshell MSSQL SQL role after hash reuse Windows shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:permission:4",
+        "title": "mrb3n Windows service",
+        "summary": "abuse service/GPP Windows service local enumeration SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:vulnerability:V1",
+        "title": "Guest-readable macro workbook C1+C2",
+        "summary": "C1+C2 SMB guest SMB public Guest downloads VBA and connection string reporting credential Reports share ACL too broad",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:vulnerability:V2",
+        "title": "UNC callback leaks Net-NTLMv2 C3+C4",
+        "summary": "C3+C4 MSSQL/NTLM MSSQL authenticated xp_dirtree reaches attacker SMB listener reporting hash Outbound SMB unrestricted",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "querier:vulnerability:V3",
+        "title": "SQL command execution plus weak local service/GPP C3+C5",
+        "summary": "C3+C5 MSSQL/service MSSQL role and local shell xp_cmdshell/service material creates SYSTEM path SYSTEM Database/service account over-privileged",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credentials",
+        "reporting"
+      ],
+      [
+        "material",
+        "net-ntlmv2"
+      ],
+      [
+        "mrb3n",
+        "mssql",
+        "shell"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "local",
+        "system"
+      ],
+      [
+        "boundary",
+        "system"
+      ],
+      [
+        "material",
+        "system"
+      ],
+      [
+        "service",
+        "system"
+      ],
+      [
+        "windows",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "system"
+      ],
+      [
+        "querier",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "system"
+      ],
+      [
+        "querier",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 2,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

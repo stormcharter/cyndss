@@ -1,0 +1,337 @@
+{
+  "machine": "Arctic",
+  "split": "demo",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 87,
+    "graph_edges": 934,
+    "entry_concepts": [
+      "administrator",
+      "adobe",
+      "arctic",
+      "coldfusion",
+      "connector",
+      "fckeditor",
+      "jrun",
+      "server",
+      "upload"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "arctic:host:0",
+        "title": "Arctic",
+        "summary": "Windows Server 2008 R2 build 7600 ColdFusion/JRun application server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:component:H1",
+        "title": "Arctic server",
+        "summary": "Host OS boundary 10.10.10.11 Windows Server 2008 R2 6.1.7600 SYSTEM VPN reachable Slow standalone VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:component:C1",
+        "title": "JRun Web Server",
+        "summary": "Service HTTP connector/application front end 0.0.0.0:8500/tcp JRun / ColdFusion ARCTIC\\tolis Public Exposes CFIDE Arctic server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:component:C2",
+        "title": "Adobe ColdFusion Administrator",
+        "summary": "Application Application administration /CFIDE/administrator ColdFusion 8 tolis via service Public login Legacy admin surface JRun Web Server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:component:C3",
+        "title": "FCKeditor CFM upload connector",
+        "summary": "Connector File upload handler /CFIDE/scripts/ajax/FCKeditor/.../upload.cfm ColdFusion 8.0.1-era tolis Public Unauthenticated upload path JRun Web Server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:component:C4",
+        "title": "password.properties",
+        "summary": "File ColdFusion admin hash store ColdFusion lib path ColdFusion 8 tolis/SYSTEM Local; traversal-reachable Alternate admin compromise path Arctic server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:component:C5",
+        "title": "Windows tracing service path",
+        "summary": "Kernel/service Local privilege boundary local build 7600 unpatched SYSTEM Local MS10-059 target Arctic server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:permission:0",
+        "title": "remote unauthenticated client FCKeditor CFM upload connector",
+        "summary": "upload file with crafted CurrentFolder/null termination FCKeditor CFM upload connector connector exposed JSP written below /userfiles/file",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:permission:1",
+        "title": "remote client password.properties",
+        "summary": "traverse/read password.properties vulnerable CFIDE path Admin hash disclosure",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:permission:2",
+        "title": "tolis Windows tracing service path",
+        "summary": "exploit service tracing flaw Windows tracing service path unpatched build SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "arctic:vulnerability:V1",
+        "title": "Unauthenticated arbitrary file upload/execution FCKeditor CFM upload connector",
+        "summary": "FCKeditor CFM upload connector ColdFusion 8.0.1 Connector publicly reachable Null-terminated path places JSP in executable directory ARCTIC\\tolis Upload validation/path handling failure",
+        "verified_cve_ids": "CVE-2009-2265"
+      },
+      {
+        "mongo_id": "arctic:vulnerability:A1",
+        "title": "Directory traversal to admin hash C2/C4",
+        "summary": "C2/C4 ColdFusion 8 CFIDE reachable Traversal reads password.properties ColdFusion admin access Sensitive file reachable through traversal",
+        "verified_cve_ids": "CVE-2010-2861"
+      },
+      {
+        "mongo_id": "arctic:vulnerability:V2",
+        "title": "Service-tracing token privilege escalation Windows tracing service path",
+        "summary": "Windows tracing service path Windows Server 2008 R2 build 7600 Local shell Vulnerable tracing service yields privileged execution SYSTEM Missing security update",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "connector",
+        "fckeditor",
+        "payload",
+        "upload"
+      ],
+      [
+        "jrun",
+        "server",
+        "tolis"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2009-2265",
+        "execution",
+        "system"
+      ],
+      [
+        "CVE-2010-2861",
+        "reachable",
+        "system"
+      ],
+      [
+        "local",
+        "system"
+      ],
+      [
+        "tracing",
+        "system"
+      ],
+      [
+        "windows",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "server",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "administrator",
+        "service",
+        "system"
+      ],
+      [
+        "adobe",
+        "service",
+        "system"
+      ],
+      [
+        "jrun",
+        "server",
+        "system"
+      ],
+      [
+        "coldfusion",
+        "alternate",
+        "system"
+      ],
+      [
+        "fckeditor",
+        "path",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "administrator",
+        "service",
+        "system"
+      ],
+      [
+        "adobe",
+        "service",
+        "system"
+      ],
+      [
+        "jrun",
+        "server",
+        "system"
+      ],
+      [
+        "coldfusion",
+        "alternate",
+        "system"
+      ],
+      [
+        "fckeditor",
+        "path",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "fckeditor",
+        "upload",
+        "connector",
+        "handler",
+        "coldfusion",
+        "unauthenticated",
+        "arbitrary",
+        "execution",
+        "tolis",
+        "windows",
+        "tracing",
+        "service",
+        "path",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "service-tracing",
+        "token",
+        "escalation",
+        "server",
+        "system"
+      ],
+      [
+        "jrun",
+        "server",
+        "connector",
+        "application",
+        "front",
+        "coldfusion",
+        "tolis",
+        "windows",
+        "tracing",
+        "service",
+        "path",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "service-tracing",
+        "token",
+        "escalation",
+        "system"
+      ],
+      [
+        "adobe",
+        "coldfusion",
+        "administrator",
+        "application",
+        "administration",
+        "tolis",
+        "windows",
+        "tracing",
+        "service",
+        "path",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "service-tracing",
+        "token",
+        "escalation",
+        "server",
+        "system"
+      ],
+      [
+        "fckeditor",
+        "upload",
+        "connector",
+        "handler",
+        "coldfusion",
+        "tolis",
+        "windows",
+        "tracing",
+        "service",
+        "path",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "service-tracing",
+        "token",
+        "escalation",
+        "server",
+        "system"
+      ],
+      [
+        "fckeditor",
+        "upload",
+        "connector",
+        "handler",
+        "coldfusion",
+        "unauthenticated",
+        "arbitrary",
+        "execution",
+        "tolis",
+        "windows",
+        "tracing",
+        "service",
+        "path",
+        "local",
+        "privilege",
+        "boundary",
+        "build",
+        "unpatched",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.5,
+    "b_ordered": 0.5,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 1.0
+  }
+}

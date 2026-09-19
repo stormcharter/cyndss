@@ -1,0 +1,216 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Bounty",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/10/27/htb-bounty.html",
+    "title": "HTB Bounty writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2008 R2 Datacenter build 7600",
+    "deployment_role": "IIS upload host with local kernel boundary"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Bounty host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.93",
+      "software_or_version": "Windows Server 2008 R2 Datacenter 6.1.7600",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone server"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft IIS",
+      "role": "HTTP application front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 7.5",
+      "runs_as": "IIS worker / merlin",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts transfer.aspx and UploadedFiles"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "transfer.aspx",
+      "role": "Multipart upload handler",
+      "binding_or_path": "/transfer.aspx",
+      "software_or_version": "ASP.NET on IIS 7.5",
+      "runs_as": "merlin",
+      "exposure": "Public upload form",
+      "evidence": "Explicit",
+      "analysis_note": "Accepts attacker-controlled file names"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Directory",
+      "name": "UploadedFiles",
+      "role": "IIS content directory",
+      "binding_or_path": "/UploadedFiles/",
+      "software_or_version": "NTFS/IIS content",
+      "runs_as": "merlin",
+      "exposure": "Public read after upload",
+      "evidence": "Explicit",
+      "analysis_note": "web.config is interpreted when requested"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Kernel",
+      "name": "Windows kernel",
+      "role": "Local privilege boundary",
+      "binding_or_path": "local",
+      "software_or_version": "6.1.7600 unpatched",
+      "runs_as": "SYSTEM",
+      "exposure": "Local only",
+      "evidence": "Explicit",
+      "analysis_note": "Many post-auth EoP paths are viable"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "merlin",
+      "principal_type": "local user",
+      "operational_role": "web upload/flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "interactive shell after web.config execution",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "IIS APPPOOL\\DefaultAppPool",
+      "principal_type": "service identity",
+      "operational_role": "IIS worker context",
+      "groups_or_nesting": "IIS_IUSRS",
+      "authentication_or_effective_access": "serves ASP/ASP.NET content; low local rights",
+      "evidence": "Inferred"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "kernel superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "upload",
+      "object": "C2 transfer.aspx/C3 UploadedFiles",
+      "condition_or_scope": "HTTP form reachable",
+      "security_consequence": "attacker controls executable content",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "IIS worker",
+      "permission_or_action": "execute",
+      "object": "C3 web.config",
+      "condition_or_scope": "IIS request to .config allowed",
+      "security_consequence": "command execution as merlin/IIS context",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "merlin",
+      "permission_or_action": "exploit kernel",
+      "object": "C4 Windows kernel",
+      "condition_or_scope": "local code execution; missing patches",
+      "security_consequence": "SYSTEM token",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "transfer.aspx",
+      "hosted_on": "C1/C2",
+      "purpose": "Upload endpoint",
+      "owner_or_authority": "merlin",
+      "read_access": "public read",
+      "write_or_execute_access": "remote multipart write",
+      "security_significance": "Crosses upload-to-execution boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "UploadedFiles/web.config",
+      "hosted_on": "C3",
+      "purpose": "ASP handler configuration plus script",
+      "owner_or_authority": "merlin",
+      "read_access": "public HTTP request",
+      "write_or_execute_access": "attacker write; IIS executes",
+      "security_significance": "Webroot file becomes code",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2+C3",
+      "affected_version": "IIS 7.5",
+      "issue": "web.config ASP execution / upload bypass",
+      "preconditions": "Upload form reachable; .config accepted",
+      "vulnerable_behavior": "ASP code in uploaded web.config is parsed and invokes WScript.Shell",
+      "resulting_access": "merlin/IIS command execution",
+      "reference": "Configuration + ASP handler abuse",
+      "failed_control": "No extension allowlist or non-executable upload root",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Windows 6.1.7600",
+      "issue": "Unpatched kernel privilege escalation",
+      "preconditions": "Local shell as merlin",
+      "vulnerable_behavior": "Known MS10/MS11-era token or kernel bugs elevate",
+      "resulting_access": "SYSTEM",
+      "reference": "MS10-015 / MS11-046 family",
+      "failed_control": "EOL build with security updates absent",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote unauthenticated client",
+      "action": "submit crafted upload",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "HTTP upload allowed",
+      "resulting_principal_or_access": "merlin web command context",
+      "boundary_crossed": "network → application execution",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "merlin",
+      "action": "run local EoP",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "unpatched build",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "user → kernel superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

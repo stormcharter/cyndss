@@ -1,0 +1,225 @@
+{
+  "machine": "Valentine",
+  "split": "demo",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 80,
+    "graph_edges": 731,
+    "entry_concepts": [
+      "apache",
+      "heartbeat",
+      "openssh",
+      "openssl",
+      "valentine"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "valentine:host:0",
+        "title": "Valentine",
+        "summary": "Ubuntu 16.04 Linux TLS/SSH host with privileged tmux session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:component:H1",
+        "title": "Valentine VM",
+        "summary": "Host OS boundary 10.10.10.79 Ubuntu 16.04 root VPN reachable Standalone",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH 7.2p2 Ubuntu root daemon Public Accepts hype key Valentine VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:component:C2",
+        "title": "Apache HTTP/HTTPS",
+        "summary": "Service Web/TLS front end 0.0.0.0:80,443/tcp Apache 2.4.18 www-data Public TLS links vulnerable OpenSSL Valentine VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:component:C3",
+        "title": "OpenSSL heartbeat",
+        "summary": "Library TLS cryptographic library HTTPS handshake/heartbeat OpenSSL 1.0.1f-class Apache Public TLS Heartbleed memory disclosure Apache HTTP/HTTPS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:component:C4",
+        "title": "/dev",
+        "summary": "Web directory Development artifacts HTTP path /dev static files www-data Public Exposes encrypted hype private key/decoder material Apache HTTP/HTTPS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:component:C5",
+        "title": "root tmux server",
+        "summary": "Service/session Privileged persistent shell socket /.devs/dev_sess tmux 2.1 root Local socket Socket group grants hype read/write Valentine VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:permission:0",
+        "title": "anonymous /dev",
+        "summary": "read encrypted private key /dev public web path Obtains hype SSH key ciphertext",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:permission:1",
+        "title": "remote TLS client OpenSSL heartbeat",
+        "summary": "read process memory OpenSSL heartbeat Heartbleed Leaks passphrase/key material",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:permission:2",
+        "title": "hype C5 tmux socket",
+        "summary": "attach read/write C5 tmux socket socket mode/group permits Control existing root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:vulnerability:V1",
+        "title": "Heartbeat memory disclosure OpenSSL heartbeat",
+        "summary": "OpenSSL heartbeat OpenSSL 1.0.1f-class HTTPS reachable Oversized heartbeat response leaks Apache memory SSH key passphrase disclosure Vulnerable TLS library",
+        "verified_cve_ids": "CVE-2014-0160"
+      },
+      {
+        "mongo_id": "valentine:vulnerability:V2",
+        "title": "Encrypted private key exposed publicly /dev",
+        "summary": "/dev web content HTTP access Attacker downloads hype key Credential material Secrets in document root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "valentine:vulnerability:V3",
+        "title": "Group-writable root tmux socket root tmux server",
+        "summary": "root tmux server tmux 2.1 session socket Local hype shell Attach to existing root session root shell Privileged IPC object grants lower-user access",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential",
+        "encrypted"
+      ],
+      [
+        "heartbeat",
+        "openssl",
+        "passphrase"
+      ],
+      [
+        "hype",
+        "openssh"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2014-0160",
+        "reachable",
+        "root"
+      ],
+      [
+        "shell",
+        "root"
+      ],
+      [
+        "socket",
+        "root"
+      ],
+      [
+        "hype",
+        "root"
+      ],
+      [
+        "access",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "valentine",
+        "root"
+      ],
+      [
+        "heartbeat",
+        "reachable",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "openssl",
+        "service",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "valentine",
+        "root"
+      ],
+      [
+        "heartbeat",
+        "reachable",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "openssl",
+        "service",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.3333333333333333,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.5,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.5,
+    "c_coverage_topk": 0.6666666666666666
+  }
+}

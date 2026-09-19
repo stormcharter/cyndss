@@ -1,0 +1,295 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Irked",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/04/27/htb-irked.html",
+    "title": "HTB Irked writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Debian Linux",
+    "deployment_role": "UnrealIRCd service plus steganographic user credential and SUID helper"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Irked host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.117",
+      "software_or_version": "Debian Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used after stego password"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache",
+      "role": "HTTP front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "Apache",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts irked.jpg clue image"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "rpcbind",
+      "role": "RPC discovery",
+      "binding_or_path": "111/tcp",
+      "software_or_version": "rpcbind",
+      "runs_as": "root",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Recon only"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "UnrealIRCd",
+      "role": "IRC daemon",
+      "binding_or_path": "6697,8067/tcp",
+      "software_or_version": "UnrealIRCd 3.2.8.1",
+      "runs_as": "ircd",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Backdoored command handler"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Binary",
+      "name": "viewuser",
+      "role": "SUID helper",
+      "binding_or_path": "/usr/bin/viewuser",
+      "software_or_version": "custom ELF",
+      "runs_as": "root",
+      "exposure": "Local; setuid root",
+      "evidence": "Explicit",
+      "analysis_note": "Executes /tmp/listusers via shell"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "remote IRC client",
+      "principal_type": "network principal",
+      "operational_role": "unauthenticated IRC user",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "can reach UnrealIRCd",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "djmardov",
+      "principal_type": "local user",
+      "operational_role": "SSH/flag owner",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "password from steganographic image",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "reads web image",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "SUID owner",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "viewuser effective uid 0",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "IRC client",
+      "permission_or_action": "send crafted command",
+      "object": "C4",
+      "condition_or_scope": "IRC port reachable",
+      "security_consequence": "command execution as ircd/service",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "download image",
+      "object": "C2",
+      "condition_or_scope": "HTTP public",
+      "security_consequence": "stego password clue",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "djmardov",
+      "permission_or_action": "SSH login",
+      "object": "C1",
+      "condition_or_scope": "password extracted from image",
+      "security_consequence": "user shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "djmardov",
+      "permission_or_action": "execute viewuser",
+      "object": "C5",
+      "condition_or_scope": "SUID bit",
+      "security_consequence": "root runs /tmp/listusers",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "djmardov",
+      "permission_or_action": "create /tmp/listusers",
+      "object": "C5",
+      "condition_or_scope": "script path missing and /tmp writable",
+      "security_consequence": "root shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "irked.jpg",
+      "hosted_on": "C2",
+      "purpose": "steganographic password carrier",
+      "owner_or_authority": "www-data/site owner",
+      "read_access": "public read",
+      "write_or_execute_access": "site owner writes",
+      "security_significance": "Password crosses HTTP/stego boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/usr/bin/viewuser",
+      "hosted_on": "C5",
+      "purpose": "privileged user-list helper",
+      "owner_or_authority": "root",
+      "read_access": "djmardov execute",
+      "write_or_execute_access": "root owns",
+      "security_significance": "SUID execution sink",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/tmp/listusers",
+      "hosted_on": "C5",
+      "purpose": "helper script expected by viewuser",
+      "owner_or_authority": "djmardov/tmp ACL",
+      "read_access": "djmardov can create",
+      "write_or_execute_access": "root executes",
+      "security_significance": "Writable missing dependency",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C4",
+      "affected_version": "UnrealIRCd 3.2.8.1",
+      "issue": "Backdoor command injection",
+      "preconditions": "IRC service public",
+      "vulnerable_behavior": "Special command executes shell command",
+      "resulting_access": "ircd/service shell",
+      "reference": "CVE-2010-2075",
+      "failed_control": "Backdoored release deployed",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "custom viewuser",
+      "issue": "SUID helper calls /tmp/listusers",
+      "preconditions": "djmardov local shell",
+      "vulnerable_behavior": "Shell follows predictable writable script path",
+      "resulting_access": "root",
+      "reference": "SUID/path trust flaw",
+      "failed_control": "Root helper does not use protected path",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C2",
+      "affected_version": "stego image",
+      "issue": "Credential hidden in public image",
+      "preconditions": "Image public",
+      "vulnerable_behavior": "Steghide data yields SSH password",
+      "resulting_access": "djmardov",
+      "reference": "Information disclosure",
+      "failed_control": "Secret embedded in web content",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote IRC client",
+      "action": "exploit UnrealIRCd backdoor",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "IRC reachable",
+      "resulting_principal_or_access": "service shell",
+      "boundary_crossed": "network → service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "read/steg image",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "HTTP public",
+      "resulting_principal_or_access": "djmardov password",
+      "boundary_crossed": "network → credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "remote client",
+      "action": "SSH as djmardov",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "password recovered",
+      "resulting_principal_or_access": "djmardov",
+      "boundary_crossed": "credential → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "djmardov",
+      "action": "create /tmp/listusers and run viewuser",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "SUID + writable /tmp",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

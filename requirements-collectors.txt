@@ -1,0 +1,23 @@
+# Залежності для колекторів даних. Запускаються на хості (не в Docker),
+# тому винесені окремо від requirements.txt (там — лише пакети shipper'а).
+#
+# Встановити:  pip install -r requirements-collectors.txt
+#
+# Версії запінені (==) на те, що реально стоїть і працює в робочому оточенні.
+
+# Спільне
+pymongo==4.17.0
+python-dotenv==1.2.1
+
+# Telegram (tg.py, migrate_history.py)
+telethon==1.43.2
+motor==3.7.1
+
+# YouTube (collectors/youtube.py)
+youtube-transcript-api==0.6.2
+yt-dlp==2026.3.17          # опціонально: лише для перебору каналів/плейлистів
+
+# Веб-сайти та RSS (collectors/website.py)
+httpx==0.28.1              # NB: у shipper (requirements.txt) інша версія — 0.27.2
+trafilatura==2.0.0
+feedparser==6.0.12

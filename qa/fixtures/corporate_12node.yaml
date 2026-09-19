@@ -1,0 +1,137 @@
+name: "corporate-12node"
+description: "12-asset corporate twin with state, control, and vulnerability nodes"
+
+nodes:
+  # ── 12 Assets ──
+  - { id: fw01,   kind: asset,   label: "Perimeter Firewall",   attributes: { cost: 15000 } }
+  - { id: rtr01,  kind: asset,   label: "Core Router",          attributes: { cost: 8000 } }
+  - { id: sw01,   kind: asset,   label: "Core Switch",          attributes: { cost: 5000 } }
+  - { id: ws01,   kind: asset,   label: "Workstation 1",        attributes: { cost: 2000 } }
+  - { id: ws02,   kind: asset,   label: "Workstation 2",        attributes: { cost: 2000 } }
+  - { id: ws03,   kind: asset,   label: "Workstation 3",        attributes: { cost: 2000 } }
+  - { id: web01,  kind: asset,   label: "Web Server",           attributes: { cost: 12000 } }
+  - { id: db01,   kind: asset,   label: "Database Server",      attributes: { cost: 18000 } }
+  - { id: ad01,   kind: asset,   label: "Active Directory",     attributes: { cost: 10000 } }
+  - { id: nas01,  kind: asset,   label: "NAS Storage",          attributes: { cost: 6000 } }
+  - { id: siem01, kind: asset,   label: "SIEM Collector",       attributes: { cost: 20000 } }
+  - { id: wif01,  kind: asset,   label: "WiFi Access Point",    attributes: { cost: 1500 } }
+
+  # ── 5 Vulnerabilities ──
+  - { id: vuln-web,  kind: vuln, label: "Web App Vuln",         attributes: { severity: high, evidence_terms: ["web application vulnerability", "CVE-2021-44228"], external_ids: ["CVE-2021-44228", "CVE-2023-20198"] } }
+  - { id: vuln-db,   kind: vuln, label: "DB Injection Vuln",    attributes: { severity: critical, evidence_terms: ["database injection vulnerability"], external_ids: ["CVE-2023-34362"] } }
+  - { id: vuln-ad,   kind: vuln, label: "AD Weak Auth Vuln",    attributes: { severity: high, evidence_terms: ["active directory weak authentication"], external_ids: ["T1078"] } }
+  - { id: vuln-ws,   kind: vuln, label: "WS Lateral Movement",  attributes: { severity: medium, evidence_terms: ["workstation lateral movement"], external_ids: ["T1021"] } }
+  - { id: vuln-wifi, kind: vuln, label: "WiFi Rogue AP Vuln",   attributes: { severity: medium, evidence_terms: ["rogue wireless access point"], external_ids: ["T1557"] } }
+
+  # ── 8 Controls ──
+  - { id: ctrl-fw,      kind: control, label: "Firewall Rules",       attributes: { cost: 2000, personnel: 1, regulatory_approved: true, evidence_terms: ["firewall hardening"] } }
+  - { id: ctrl-ids,     kind: control, label: "IDS Signatures",       attributes: { cost: 5000, personnel: 1, regulatory_approved: true, evidence_terms: ["intrusion detection signatures"] } }
+  - { id: ctrl-siem,    kind: control, label: "SIEM Rules",           attributes: { cost: 3000, personnel: 1, regulatory_approved: true, evidence_terms: ["security monitoring rules"] } }
+  - { id: ctrl-backup,  kind: control, label: "Backup Policy",        attributes: { cost: 4000, personnel: 1, regulatory_approved: true, evidence_terms: ["backup recovery policy"] } }
+  - { id: ctrl-encrypt, kind: control, label: "Encryption at Rest",   attributes: { cost: 3500, personnel: 1, regulatory_approved: true, evidence_terms: ["data encryption at rest"] } }
+  - { id: ctrl-patch,   kind: control, label: "Patch Management",     attributes: { cost: 1500, personnel: 1, regulatory_approved: true, evidence_terms: ["security patch management"] } }
+  - { id: ctrl-seg,     kind: control, label: "Network Segmentation", attributes: { cost: 6000, personnel: 1, regulatory_approved: true, evidence_terms: ["network segmentation"] } }
+  - { id: ctrl-auth,    kind: control, label: "Auth Hardening",       attributes: { cost: 2500, personnel: 1, regulatory_approved: true, evidence_terms: ["authentication hardening"] } }
+
+  # ── 2 States ──
+  - { id: state-vulnerable, kind: state, label: "S0: Vulnerable" }
+  - { id: state-perimeter,  kind: state, label: "Perimeter Hardened" }
+  - { id: state-segmented,  kind: state, label: "Network Segmented" }
+  - { id: state-monitored,  kind: state, label: "Monitoring Active" }
+  - { id: state-patched,    kind: state, label: "Systems Patched" }
+  - { id: state-encrypted,  kind: state, label: "Data Encrypted" }
+  - { id: state-resilient,  kind: state, label: "Backup Resilient" }
+  - { id: state-hardened,   kind: state, label: "Auth Hardened" }
+  - { id: state-secured,    kind: state, label: "ST: Secured" }
+
+edges:
+  # ── Asset topology (directed) ──
+  - { source: rtr01,  target: fw01,  relation: "routes_to",    weight: 1.0 }
+  - { source: rtr01,  target: sw01,  relation: "routes_to",    weight: 1.0 }
+  - { source: sw01,   target: ws01,  relation: "connects_to",  weight: 1.0 }
+  - { source: sw01,   target: ws02,  relation: "connects_to",  weight: 1.0 }
+  - { source: sw01,   target: ws03,  relation: "connects_to",  weight: 1.0 }
+  - { source: sw01,   target: web01, relation: "connects_to",  weight: 1.0 }
+  - { source: sw01,   target: db01,  relation: "connects_to",  weight: 1.0 }
+  - { source: sw01,   target: ad01,  relation: "connects_to",  weight: 1.0 }
+  - { source: sw01,   target: nas01, relation: "connects_to",  weight: 1.0 }
+  - { source: wif01,  target: sw01,  relation: "connects_to",  weight: 0.8 }
+
+  # ── Vulnerability relations (asset → vuln) ──
+  - { source: web01,  target: vuln-web,  relation: "has_vuln",  weight: 1.0 }
+  - { source: db01,   target: vuln-db,   relation: "has_vuln",  weight: 1.0 }
+  - { source: ad01,   target: vuln-ad,   relation: "has_vuln",  weight: 1.0 }
+  - { source: ws01,   target: vuln-ws,   relation: "has_vuln",  weight: 1.0 }
+  - { source: wif01,  target: vuln-wifi, relation: "has_vuln",  weight: 1.0 }
+
+  # ── Control mitigations (control → vuln) ──
+  - { source: ctrl-fw,      target: vuln-web,  relation: "mitigates", weight: 1.0 }
+  - { source: ctrl-patch,   target: vuln-web,  relation: "mitigates", weight: 0.8 }
+  - { source: ctrl-patch,   target: vuln-db,   relation: "mitigates", weight: 0.8 }
+  - { source: ctrl-encrypt, target: vuln-db,   relation: "mitigates", weight: 1.0 }
+  - { source: ctrl-auth,    target: vuln-ad,   relation: "mitigates", weight: 1.0 }
+  - { source: ctrl-seg,     target: vuln-ws,   relation: "mitigates", weight: 1.0 }
+  - { source: ctrl-ids,     target: vuln-wifi, relation: "mitigates", weight: 1.0 }
+  - { source: ctrl-siem,    target: vuln-ad,   relation: "detects",       weight: 1.0 }
+  - { source: ctrl-backup,  target: vuln-web,  relation: "recovers_from", weight: 1.0 }
+
+  # ── State transitions (S0 → controls → intermediate → ST) ──
+  - { source: state-vulnerable, target: ctrl-fw,          relation: "applies", weight: 1.0 }
+  - { source: ctrl-fw,          target: state-perimeter,  relation: "enables", weight: 1.0 }
+  - { source: state-perimeter,  target: ctrl-seg,         relation: "applies", weight: 1.0 }
+  - { source: ctrl-seg,         target: state-segmented,  relation: "enables", weight: 1.0 }
+  - { source: state-segmented,  target: ctrl-siem,        relation: "applies", weight: 1.0 }
+  - { source: ctrl-siem,        target: state-monitored,  relation: "enables", weight: 1.0 }
+  - { source: state-monitored,  target: ctrl-patch,       relation: "applies", weight: 1.0 }
+  - { source: ctrl-patch,       target: state-patched,    relation: "enables", weight: 1.0 }
+  - { source: state-patched,    target: ctrl-encrypt,     relation: "applies", weight: 0.8 }
+  - { source: ctrl-encrypt,     target: state-encrypted,  relation: "enables", weight: 1.0 }
+  - { source: state-encrypted,  target: ctrl-backup,      relation: "applies", weight: 1.0 }
+  - { source: ctrl-backup,      target: state-resilient,  relation: "enables", weight: 1.0 }
+  - { source: state-resilient,  target: ctrl-auth,        relation: "applies", weight: 1.0 }
+  - { source: ctrl-auth,        target: state-hardened,   relation: "enables", weight: 1.0 }
+  - { source: state-hardened,   target: ctrl-ids,         relation: "applies", weight: 0.8 }
+  - { source: ctrl-ids,         target: state-secured,    relation: "enables", weight: 1.0 }
+  # ── Обхідні переходи (≥5 альтернативних шляхів S0→ST) ──
+  - { source: state-vulnerable, target: ctrl-seg,     relation: "applies", weight: 0.8 }
+  - { source: state-perimeter,  target: ctrl-siem,    relation: "applies", weight: 0.8 }
+  - { source: state-segmented,  target: ctrl-patch,   relation: "applies", weight: 0.8 }
+  - { source: state-monitored,  target: ctrl-encrypt, relation: "applies", weight: 0.8 }
+  - { source: state-encrypted,  target: ctrl-auth,    relation: "applies", weight: 0.8 }
+  - { source: state-resilient,  target: ctrl-ids,     relation: "applies", weight: 0.8 }
+
+current_state: state-vulnerable
+goal_state: state-secured
+
+constraints:
+  - { criterion: budget,    limit: 100000 }
+  - { criterion: months,    limit: 8 }
+  - { criterion: personnel, limit: 6 }
+  - { criterion: regulatory, limit: 1 }
+
+criteria:
+  - name: technical_feasibility
+    weight: 0.20
+    description: "How technically feasible is implementing this control?"
+  - name: risk
+    weight: 0.20
+    description: "What is the residual risk after this control?"
+  - name: time
+    weight: 0.15
+    description: "How many months to implement?"
+  - name: resources
+    weight: 0.15
+    description: "Personnel and budget requirements?"
+  - name: legal
+    weight: 0.10
+    description: "Regulatory compliance requirements?"
+  - name: consequences
+    weight: 0.15
+    description: "Impact on operations and business continuity?"
+  - name: content_fit
+    weight: 0.05
+    description: "How well does the scenario fit the corpus evidence content?"
+
+metadata:
+  description: "12-asset corporate twin with state, control, and vulnerability nodes"
+  paper: "Когнітивний кіберполігон"

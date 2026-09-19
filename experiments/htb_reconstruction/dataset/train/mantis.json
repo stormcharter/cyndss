@@ -1,0 +1,300 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Mantis",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/09/03/htb-mantis.html",
+    "title": "HTB Mantis writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2008 R2 Standard SP1 domain controller",
+    "deployment_role": "AD/DC plus IIS, MSSQL and ASP.NET application"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Mantis DC",
+      "role": "OS/domain boundary",
+      "binding_or_path": "10.10.10.52",
+      "software_or_version": "Windows Server 2008 R2 Standard 6.1.7601 SP1",
+      "runs_as": "SYSTEM/Domain Admins",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "HTB.LOCAL; single DC"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service stack",
+      "name": "AD DS services",
+      "role": "DNS/Kerberos/LDAP/GC/RPC",
+      "binding_or_path": "53,88,389,636,3268,3269,135/high RPC",
+      "software_or_version": "Active Directory DS",
+      "runs_as": "SYSTEM",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Directory and ticket authority"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB server",
+      "role": "File/RPC transport",
+      "binding_or_path": "139,445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Shares expose web/application clues"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "IIS 7.5",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 7.5",
+      "runs_as": "IIS worker",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Default page and host headers"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C3",
+      "layer_or_type": "Application",
+      "name": "Orchard CMS",
+      "role": "ASP.NET content management",
+      "binding_or_path": "0.0.0.0:1337/tcp",
+      "software_or_version": "Orchard CMS / ASP.NET",
+      "runs_as": "IIS worker",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Administrative site on nonstandard port"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "Microsoft SQL Server",
+      "role": "Database backend",
+      "binding_or_path": "1433,50255/tcp",
+      "software_or_version": "SQL Server 2014 RTM 12.00.2000",
+      "runs_as": "MANTIS\\SQLEXPRESS",
+      "exposure": "Network reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Credentials and CMS data"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "C1",
+      "layer_or_type": "Identity service",
+      "name": "Kerberos KDC",
+      "role": "Ticket issuance",
+      "binding_or_path": "88/tcp",
+      "software_or_version": "Windows Kerberos",
+      "runs_as": "krbtgt",
+      "exposure": "Domain users",
+      "evidence": "Explicit",
+      "analysis_note": "MS14-068 target"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "HTB\\james",
+      "principal_type": "domain user",
+      "operational_role": "initial SQL/CMS user",
+      "groups_or_nesting": "Domain Users",
+      "authentication_or_effective_access": "valid password from application notes; ordinary rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "HTB\\administrator",
+      "principal_type": "domain administrator",
+      "operational_role": "DC/host superuser",
+      "groups_or_nesting": "Domain Admins",
+      "authentication_or_effective_access": "full directory and host control",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "MANTIS\\SQLEXPRESS",
+      "principal_type": "service identity",
+      "operational_role": "SQL execution context",
+      "groups_or_nesting": "SQL server roles",
+      "authentication_or_effective_access": "database access; not initially OS admin",
+      "evidence": "Inferred"
+    },
+    {
+      "principal": "anonymous",
+      "principal_type": "network principal",
+      "operational_role": "unauthenticated web/SMB client",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "can enumerate exposed services",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "james",
+      "permission_or_action": "connect/query",
+      "object": "C5 MSSQL",
+      "condition_or_scope": "SQL credentials recovered from site data",
+      "security_consequence": "database disclosure and possible command execution",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read/enumerate",
+      "object": "C3/C4/C2",
+      "condition_or_scope": "public HTTP/SMB exposure",
+      "security_consequence": "CMS/database clues disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "james",
+      "permission_or_action": "forge Kerberos PAC",
+      "object": "C6 KDC",
+      "condition_or_scope": "valid domain credential and vulnerable DC",
+      "security_consequence": "domain admin ticket accepted",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "administrator",
+      "permission_or_action": "control",
+      "object": "H1/C1",
+      "condition_or_scope": "forged ticket",
+      "security_consequence": "full DC compromise",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "CMS developer notes",
+      "hosted_on": "C4/C5",
+      "purpose": "database credential clue",
+      "owner_or_authority": "application owner",
+      "read_access": "public/readable via web",
+      "write_or_execute_access": "application admins write",
+      "security_significance": "Bridges web to SQL",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "MSSQL databases",
+      "hosted_on": "C5",
+      "purpose": "Orchard/application data",
+      "owner_or_authority": "MANTIS\\SQLEXPRESS",
+      "read_access": "james query rights",
+      "write_or_execute_access": "DBA/system writes",
+      "security_significance": "Contains service and domain clues",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Kerberos PAC/ticket",
+      "hosted_on": "C6",
+      "purpose": "authorization assertion",
+      "owner_or_authority": "KDC",
+      "read_access": "james can request/forge",
+      "write_or_execute_access": "krbtgt/DC signs",
+      "security_significance": "Crosses domain trust boundary",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C4",
+      "affected_version": "Orchard/ASP.NET",
+      "issue": "Exposed CMS and weak credential path",
+      "preconditions": "Application notes or DB accessible",
+      "vulnerable_behavior": "Recovered SQL/domain credential authenticates to internal services",
+      "resulting_access": "james domain session",
+      "reference": "Configuration weakness",
+      "failed_control": "Secrets placed in application data",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C6",
+      "affected_version": "Windows Server 2008 R2 SP1",
+      "issue": "MS14-068 Kerberos PAC validation flaw",
+      "preconditions": "Domain user credential; vulnerable DC",
+      "vulnerable_behavior": "Forged PAC with elevated SID is accepted",
+      "resulting_access": "Domain Administrator",
+      "reference": "MS14-068 / CVE-2014-6324",
+      "failed_control": "Unpatched KDC validates attacker PAC",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "SQL Server 2014 RTM",
+      "issue": "Network SQL instance with over-broad user access",
+      "preconditions": "MSSQL port reachable; credentials recovered",
+      "vulnerable_behavior": "User can query application databases and pivot",
+      "resulting_access": "DB/application data",
+      "reference": "Configuration weakness",
+      "failed_control": "Database trust not segmented",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "enumerate web/SMB and recover notes",
+      "target_component_or_artifact": "C2-C5",
+      "prerequisite": "public services",
+      "resulting_principal_or_access": "james credential",
+      "boundary_crossed": "network → domain user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "james",
+      "action": "connect to MSSQL and query CMS data",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "valid SQL credential",
+      "resulting_principal_or_access": "domain context and SID information",
+      "boundary_crossed": "domain user → database",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "james",
+      "action": "forge MS14-068 ticket",
+      "target_component_or_artifact": "C6",
+      "prerequisite": "unpatched KDC",
+      "resulting_principal_or_access": "Administrator-authenticated ticket",
+      "boundary_crossed": "domain user → domain admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "administrator",
+      "action": "access DC services",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "forged ticket",
+      "resulting_principal_or_access": "SYSTEM/domain control",
+      "boundary_crossed": "domain admin → host",
+      "evidence": "Explicit"
+    }
+  ]
+}

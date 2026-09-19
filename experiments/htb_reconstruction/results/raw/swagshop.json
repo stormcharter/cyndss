@@ -1,0 +1,194 @@
+{
+  "machine": "SwagShop",
+  "split": "train",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 66,
+    "graph_edges": 512,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "magento",
+      "openssh",
+      "swagshop"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "swagshop:host:0",
+        "title": "SwagShop",
+        "summary": "Ubuntu Linux Magento 1.9.2.1 storefront with permissive sudo",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:component:H1",
+        "title": "SwagShop host",
+        "summary": "Host OS/security boundary 10.10.10.140 Ubuntu Linux root VPN reachable Standalone web host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH root daemon Public Used after web compromise SwagShop host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service HTTP storefront 0.0.0.0:80/tcp Apache + PHP www-data Public Magento front end/admin SwagShop host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:component:C3",
+        "title": "Magento",
+        "summary": "Application E-commerce CMS /magento 1.9.2.1 www-data Public Admin API/SQL injection exploit Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:component:C4",
+        "title": "sudo vi rule",
+        "summary": "Authorization Local authorization /etc/sudoers sudo + vi root Local www-data may run vi on /var/www/html/* SwagShop host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:permission:0",
+        "title": "remote client Magento",
+        "summary": "exploit Magento admin/API Magento HTTP reachable; vulnerable release admin/www-data application control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:permission:1",
+        "title": "www-data C4 vi",
+        "summary": "sudo execute C4 vi NOPASSWD rule matches webroot glob vi escape yields root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:permission:2",
+        "title": "root SwagShop host",
+        "summary": "read/write SwagShop host vi shell full host control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:vulnerability:V1",
+        "title": "Unauthenticated SQL/admin account creation path Magento",
+        "summary": "Magento Magento CE 1.9.2.1 Magento exposed Crafted request creates/uses admin or web execution www-data/admin Legacy CMS and unsafe query handling",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "swagshop:vulnerability:V2",
+        "title": "NOPASSWD editor escape via wildcard sudo vi rule",
+        "summary": "sudo vi rule sudo + vi www-data shell vi can execute arbitrary commands as root root Web user granted unrestricted editor",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "shell",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "www-data"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "root",
+        "shell"
+      ],
+      [
+        "escape",
+        "shell"
+      ],
+      [
+        "execute",
+        "shell"
+      ],
+      [
+        "nopasswd",
+        "shell"
+      ],
+      [
+        "authorization",
+        "rule",
+        "shell"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "shell"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "shell"
+      ],
+      [
+        "apache",
+        "service",
+        "shell"
+      ],
+      [
+        "magento",
+        "remote",
+        "shell"
+      ],
+      [
+        "host",
+        "shell"
+      ],
+      [
+        "swagshop",
+        "shell"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "shell"
+      ],
+      [
+        "apache",
+        "service",
+        "shell"
+      ],
+      [
+        "magento",
+        "remote",
+        "shell"
+      ],
+      [
+        "host",
+        "shell"
+      ],
+      [
+        "swagshop",
+        "shell"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

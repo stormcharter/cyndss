@@ -1,0 +1,318 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Access",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/03/02/htb-access.html",
+    "title": "HTB Access writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2008 R2-era",
+    "deployment_role": "Anonymous FTP delivers Access database, mail and telnet credentials"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Access host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.98",
+      "software_or_version": "Windows Server 2008 R2-era",
+      "runs_as": "Administrator",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone non-SMB path"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft FTP",
+      "role": "Anonymous file transfer",
+      "binding_or_path": "21/tcp",
+      "software_or_version": "Microsoft FTP",
+      "runs_as": "SYSTEM",
+      "exposure": "Anonymous read",
+      "evidence": "Explicit",
+      "analysis_note": "Backup.zip and Access database"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Telnet",
+      "role": "Remote command shell",
+      "binding_or_path": "23/tcp",
+      "software_or_version": "Windows Telnet",
+      "runs_as": "security",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "User shell after email password"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "IIS",
+      "role": "HTTP front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "IIS 7.5",
+      "runs_as": "IIS worker",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Secondary recon surface"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C1",
+      "layer_or_type": "Artifact",
+      "name": "Access database",
+      "role": "Credential store",
+      "binding_or_path": "backup.zip\\*.mdb",
+      "software_or_version": "Microsoft Access",
+      "runs_as": "security",
+      "exposure": "Read after FTP download",
+      "evidence": "Explicit",
+      "analysis_note": "Password in database leads to mail artifact"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C1",
+      "layer_or_type": "Artifact",
+      "name": "Outlook PST/mail",
+      "role": "Credential artifact",
+      "binding_or_path": "backup.zip\\*.pst",
+      "software_or_version": "Microsoft Outlook",
+      "runs_as": "security",
+      "exposure": "Read after database password",
+      "evidence": "Explicit",
+      "analysis_note": "Contains telnet account secret"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "Cached credentials",
+      "role": "Windows logon cache",
+      "binding_or_path": "LSA/registry",
+      "software_or_version": "Windows cached domain credentials",
+      "runs_as": "SYSTEM",
+      "exposure": "Local/security subsystem",
+      "evidence": "Explicit",
+      "analysis_note": "RunAs/net use can reuse cached Administrator context"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "FTP guest",
+      "operational_role": "initial file reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "download backup.zip",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "security",
+      "principal_type": "local user",
+      "operational_role": "telnet/flag user",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "Telnet login from mail secret",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "local administrator",
+      "operational_role": "cached credential owner",
+      "groups_or_nesting": "Administrators",
+      "authentication_or_effective_access": "cached credentials/RunAs access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read/download",
+      "object": "C1 backup.zip",
+      "condition_or_scope": "anonymous FTP",
+      "security_consequence": "database and mail artifacts",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "security",
+      "permission_or_action": "read",
+      "object": "C4/C5",
+      "condition_or_scope": "password recovered from database",
+      "security_consequence": "telnet secret and user shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "security",
+      "permission_or_action": "authenticate Telnet",
+      "object": "C2",
+      "condition_or_scope": "mail secret",
+      "security_consequence": "security shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "security",
+      "permission_or_action": "use cached Administrator credential",
+      "object": "C6",
+      "condition_or_scope": "cached credential/RunAs behavior",
+      "security_consequence": "Administrator file access",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Administrator",
+      "permission_or_action": "read C$ / root flag",
+      "object": "H1",
+      "condition_or_scope": "valid cached credential",
+      "security_consequence": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "backup.zip",
+      "hosted_on": "C1",
+      "purpose": "database/mail archive",
+      "owner_or_authority": "security/backup operator",
+      "read_access": "anonymous FTP read",
+      "write_or_execute_access": "backup writer",
+      "security_significance": "Crosses unauthenticated file boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Access .mdb",
+      "hosted_on": "C4",
+      "purpose": "stored account password",
+      "owner_or_authority": "security",
+      "read_access": "downloaded archive read",
+      "write_or_execute_access": "Access app writes",
+      "security_significance": "Leads to PST",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Outlook PST",
+      "hosted_on": "C5",
+      "purpose": "mail credential",
+      "owner_or_authority": "security",
+      "read_access": "database password permits read",
+      "write_or_execute_access": "mail client writes",
+      "security_significance": "Contains Telnet secret",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "LSA cached credentials",
+      "hosted_on": "C6",
+      "purpose": "reusable logon material",
+      "owner_or_authority": "Administrator/SYSTEM",
+      "read_access": "security shell can query/use",
+      "write_or_execute_access": "SYSTEM writes",
+      "security_significance": "Local privilege bridge",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "Microsoft FTP",
+      "issue": "Anonymous backup disclosure",
+      "preconditions": "FTP port open; anonymous login",
+      "vulnerable_behavior": "Guest downloads backup archive",
+      "resulting_access": "credential artifacts",
+      "reference": "Configuration weakness",
+      "failed_control": "Sensitive backups exposed",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4+C5",
+      "affected_version": "Access/Outlook artifacts",
+      "issue": "Secrets chained through database and mail",
+      "preconditions": "Archive readable",
+      "vulnerable_behavior": "Password in MDB opens PST; mail reveals OS secret",
+      "resulting_access": "security",
+      "reference": "Credential management failure",
+      "failed_control": "No separation of backup contents",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C6",
+      "affected_version": "Windows cached credentials",
+      "issue": "Cached Administrator context reusable by lower-privilege user",
+      "preconditions": "security shell; cached credential present",
+      "vulnerable_behavior": "RunAs/net use creates Administrator access",
+      "resulting_access": "Administrator",
+      "reference": "Windows credential handling weakness",
+      "failed_control": "Admin session artifacts persist",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "download backup.zip",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "FTP guest",
+      "resulting_principal_or_access": "Access DB/PST",
+      "boundary_crossed": "network → archive",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "anonymous",
+      "action": "extract DB password and PST secret",
+      "target_component_or_artifact": "C4/C5",
+      "prerequisite": "archive read",
+      "resulting_principal_or_access": "security credential",
+      "boundary_crossed": "artifact → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "anonymous",
+      "action": "Telnet as security",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "mail password",
+      "resulting_principal_or_access": "security",
+      "boundary_crossed": "credential → shell",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "security",
+      "action": "reuse cached Administrator credentials",
+      "target_component_or_artifact": "C6",
+      "prerequisite": "local cache artifact",
+      "resulting_principal_or_access": "Administrator files",
+      "boundary_crossed": "user → admin",
+      "evidence": "Explicit"
+    }
+  ]
+}

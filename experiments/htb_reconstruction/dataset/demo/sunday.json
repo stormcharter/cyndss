@@ -1,0 +1,272 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Sunday",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/09/29/htb-sunday.html",
+    "title": "HTB Sunday writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Oracle Solaris / SunOS",
+    "deployment_role": "Legacy multiuser UNIX host"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Sunday server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.76",
+      "software_or_version": "SunOS/Solaris",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Legacy services"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "finger",
+      "role": "User-information service",
+      "binding_or_path": "0.0.0.0:79/tcp",
+      "software_or_version": "Solaris finger",
+      "runs_as": "daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Discloses valid usernames"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "rpcbind",
+      "role": "RPC mapper",
+      "binding_or_path": "0.0.0.0:111/tcp",
+      "software_or_version": "rpcbind v2-4",
+      "runs_as": "root",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Recon"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SunSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22022/tcp",
+      "software_or_version": "SunSSH 1.3",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Weak user secret"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "smserverd",
+      "role": "Solaris management service",
+      "binding_or_path": "0.0.0.0:65258/tcp",
+      "software_or_version": "smserverd 1",
+      "runs_as": "root",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Not used"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "password/shadow backup",
+      "role": "Backup credential database",
+      "binding_or_path": "local backup path",
+      "software_or_version": "Solaris hashes",
+      "runs_as": "root/admin",
+      "exposure": "Readable after sunny foothold",
+      "evidence": "Explicit",
+      "analysis_note": "Sammy hash can be cracked"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Policy",
+      "name": "sudoers delegation",
+      "role": "Privilege rules",
+      "binding_or_path": "local",
+      "software_or_version": "sudo",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "sunny→/root/troll; sammy→/usr/bin/wget"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "sunny",
+      "principal_type": "local SSH user",
+      "operational_role": "initial foothold",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "sudo NOPASSWD /root/troll",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "sammy",
+      "principal_type": "local SSH user",
+      "operational_role": "lateral account",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "sudo NOPASSWD /usr/bin/wget",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "host administrator",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "query usernames",
+      "object": "C1 finger",
+      "condition_or_scope": "public service",
+      "security_consequence": "sunny and sammy disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "sunny",
+      "permission_or_action": "read",
+      "object": "C5 backup",
+      "condition_or_scope": "file permission allows",
+      "security_consequence": "Sammy password hash disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "sammy",
+      "permission_or_action": "sudo NOPASSWD execute",
+      "object": "/usr/bin/wget",
+      "condition_or_scope": "sudoers rule",
+      "security_consequence": "Arbitrary root file write/read",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "sunny",
+      "permission_or_action": "sudo NOPASSWD execute",
+      "object": "/root/troll",
+      "condition_or_scope": "exact rule; target later replaceable in alternate chain",
+      "security_consequence": "root code",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "password/shadow backup",
+      "hosted_on": "C5",
+      "purpose": "credential recovery backup",
+      "owner_or_authority": "root/admin",
+      "read_access": "sunny read",
+      "write_or_execute_access": "privileged write",
+      "security_significance": "Exposes crackable sammy hash",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/root/troll",
+      "hosted_on": "C6",
+      "purpose": "sudo-approved executable",
+      "owner_or_authority": "root",
+      "read_access": "sunny execute through sudo",
+      "write_or_execute_access": "root write/alternate overwrite path",
+      "security_significance": "Can become privilege bridge",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C3",
+      "affected_version": "finger + SunSSH",
+      "issue": "Username disclosure plus weak password",
+      "preconditions": "Network access",
+      "vulnerable_behavior": "Enumerated sunny credential is guessable",
+      "resulting_access": "sunny SSH",
+      "reference": "Configuration weakness",
+      "failed_control": "Legacy identity disclosure and weak authentication",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "credential backup",
+      "issue": "Readable password-hash backup",
+      "preconditions": "sunny shell",
+      "vulnerable_behavior": "Backup exposes sammy hash for offline cracking",
+      "resulting_access": "sammy account",
+      "reference": "Configuration weakness",
+      "failed_control": "Sensitive backup permission failure",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C6",
+      "affected_version": "sudoers",
+      "issue": "Passwordless wget / trusted executable abuse",
+      "preconditions": "sammy shell",
+      "vulnerable_behavior": "wget can write privileged files or replace trusted content",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "Powerful file-transfer tool delegated as root",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "finger enumerate and weak-secret login",
+      "target_component_or_artifact": "C1/C3",
+      "prerequisite": "public services",
+      "resulting_principal_or_access": "sunny",
+      "boundary_crossed": "network → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "sunny",
+      "action": "read/crack backup hash",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "file readable",
+      "resulting_principal_or_access": "sammy",
+      "boundary_crossed": "local user → lateral user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "sammy",
+      "action": "sudo wget write privileged file",
+      "target_component_or_artifact": "C6",
+      "prerequisite": "NOPASSWD rule",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "lateral user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

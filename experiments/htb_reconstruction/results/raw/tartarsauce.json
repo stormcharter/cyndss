@@ -1,0 +1,217 @@
+{
+  "machine": "TartarSauce",
+  "split": "train",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 86,
+    "graph_edges": 773,
+    "entry_concepts": [
+      "apache",
+      "guestbook",
+      "gwolle",
+      "host",
+      "tartarsauce",
+      "wordpress"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "tartarsauce:host:0",
+        "title": "TartarSauce",
+        "summary": "Ubuntu Linux WordPress host with vulnerable guestbook and root backup job",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:component:H1",
+        "title": "TartarSauce host",
+        "summary": "Host OS/security boundary 10.10.10.88 Ubuntu Linux root VPN reachable Standalone web host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:component:C1",
+        "title": "Apache/PHP",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp Apache + PHP www-data Public WordPress under /webservices/wp TartarSauce host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:component:C2",
+        "title": "WordPress",
+        "summary": "Application CMS /webservices/wp WordPress www-data Public Plugins and uploads are served by Apache Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:component:C3",
+        "title": "Gwolle Guestbook",
+        "summary": "Module WordPress plugin wp-content/plugins/gwolle-gb 1.5.3 www-data Public plugin endpoint RFI includes remote PHP WordPress",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:component:C4",
+        "title": "backuperer",
+        "summary": "Scheduled task Root backup script /usr/sbin/backuperer 1.0.2 custom root via cron Local every 5 minutes Runs tar as onuma and compares attacker-influenced tree TartarSauce host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:component:C5",
+        "title": "onuma",
+        "summary": "Identity Local backup account /home/onuma Linux account onuma Local tar is intentionally run as this user TartarSauce host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:permission:0",
+        "title": "remote client Gwolle Guestbook",
+        "summary": "supply remote abspath Gwolle Guestbook plugin endpoint accepts abspath PHP is included as www-data",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:permission:1",
+        "title": "www-data C4/C5",
+        "summary": "invoke local tar as onuma C4/C5 script calls sudo -u onuma tar onuma shell via tar checkpoint",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:permission:2",
+        "title": "onuma backuperer",
+        "summary": "race tar/check files backuperer backup temp tree and symlink/hardlink behavior write/read root-owned target; root script compromise",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:permission:3",
+        "title": "root cron backuperer",
+        "summary": "execute backuperer five-minute schedule root-controlled result",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:vulnerability:V1",
+        "title": "Remote file inclusion Gwolle Guestbook",
+        "summary": "Gwolle Guestbook Gwolle Guestbook 1.5.3 Plugin endpoint public abspath points to attacker PHP www-data web shell No local path allowlist",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "tartarsauce:vulnerability:V2",
+        "title": "Tar race / unsafe privileged backup backuperer",
+        "summary": "backuperer backuperer 1.0.2 www-data or onuma foothold User-controlled files influence root tar/diff flow root file write or shell Root cron trusts web-controlled tree",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "guestbook",
+        "gwolle",
+        "www-data"
+      ],
+      [
+        "onuma"
+      ],
+      [
+        "altered",
+        "backuperer",
+        "root-owned",
+        "target"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "backuperer",
+        "root"
+      ],
+      [
+        "cron",
+        "root"
+      ],
+      [
+        "tree",
+        "root"
+      ],
+      [
+        "backup",
+        "root"
+      ],
+      [
+        "account",
+        "backup",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "gwolle",
+        "guestbook",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "tartarsauce",
+        "root"
+      ],
+      [
+        "apache",
+        "host",
+        "root"
+      ],
+      [
+        "guestbook",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "gwolle",
+        "guestbook",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "tartarsauce",
+        "root"
+      ],
+      [
+        "apache",
+        "host",
+        "root"
+      ],
+      [
+        "guestbook",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.3333333333333333,
+    "a_ordered": 0.3333333333333333,
+    "a_precision": 0.5,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 2,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.6666666666666666,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

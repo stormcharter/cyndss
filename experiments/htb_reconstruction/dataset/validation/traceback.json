@@ -1,0 +1,269 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Traceback",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/08/15/htb-traceback.html",
+    "title": "HTB Traceback writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 18.04 Linux",
+    "deployment_role": "Apache planted webshell, Luvit sudo and root MOTD scripts"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Traceback host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.181",
+      "software_or_version": "Ubuntu 18.04 Bionic; OpenSSH 7.6p1; Apache 2.4.29",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH 7.6p1",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SSH for webadmin"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache",
+      "role": "HTTP front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "Apache 2.4.29",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Planted Smevk webshell exposed"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Smevk webshell",
+      "role": "PHP command bridge",
+      "binding_or_path": "/smevk.php",
+      "software_or_version": "PHP",
+      "runs_as": "webadmin",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Backdoor left by prior actor"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Binary",
+      "name": "Luvit",
+      "role": "Lua interpreter",
+      "binding_or_path": "/home/sysadmin/luvit",
+      "software_or_version": "Luvit",
+      "runs_as": "sysadmin",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "webadmin sudo may execute arbitrary Lua"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Scheduled task",
+      "name": "MOTD scripts",
+      "role": "Login-time root hooks",
+      "binding_or_path": "/etc/update-motd.d",
+      "software_or_version": "shell scripts",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "webadmin can write scripts executed at SSH login"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "webadmin",
+      "principal_type": "local user",
+      "operational_role": "SSH/webshell foothold",
+      "groups_or_nesting": "sudo sysadmin",
+      "authentication_or_effective_access": "can run Luvit as sysadmin",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "sysadmin",
+      "principal_type": "local user",
+      "operational_role": "Lua interpreter owner",
+      "groups_or_nesting": "sudo target",
+      "authentication_or_effective_access": "runs /home/sysadmin/luvit",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "login/scheduled principal",
+      "operational_role": "MOTD executor",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "runs update-motd scripts on every login",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "invoke planted webshell",
+      "object": "C2/C3",
+      "condition_or_scope": "HTTP public",
+      "security_consequence": "webadmin command execution",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "webadmin",
+      "permission_or_action": "sudo run Luvit",
+      "object": "C4",
+      "condition_or_scope": "sudo rule",
+      "security_consequence": "sysadmin shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "webadmin/sysadmin",
+      "permission_or_action": "write MOTD script",
+      "object": "C5",
+      "condition_or_scope": "directory write permission",
+      "security_consequence": "root code executes at SSH login",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root",
+      "permission_or_action": "run MOTD",
+      "object": "C5",
+      "condition_or_scope": "login event",
+      "security_consequence": "root shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Smevk webshell",
+      "hosted_on": "C3",
+      "purpose": "planted backdoor",
+      "owner_or_authority": "unknown prior actor",
+      "read_access": "public read/execute",
+      "write_or_execute_access": "webadmin inherits command context",
+      "security_significance": "Initial foothold",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/home/sysadmin/luvit",
+      "hosted_on": "C4",
+      "purpose": "Lua runtime",
+      "owner_or_authority": "sysadmin",
+      "read_access": "webadmin can invoke via sudo",
+      "write_or_execute_access": "sysadmin owns",
+      "security_significance": "Sudo interpreter escape",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/etc/update-motd.d/*",
+      "hosted_on": "C5",
+      "purpose": "login banner scripts",
+      "owner_or_authority": "root",
+      "read_access": "webadmin can write",
+      "write_or_execute_access": "root executes",
+      "security_significance": "Privileged login hook",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Smevk PHP webshell",
+      "issue": "Unauthenticated planted backdoor",
+      "preconditions": "HTTP public",
+      "vulnerable_behavior": "Page executes supplied commands",
+      "resulting_access": "webadmin",
+      "reference": "Backdoor/configuration failure",
+      "failed_control": "Unremoved webshell",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Luvit",
+      "issue": "Sudo permits arbitrary Lua interpreter as sysadmin",
+      "preconditions": "webadmin shell",
+      "vulnerable_behavior": "Lua can spawn commands as target user",
+      "resulting_access": "sysadmin",
+      "reference": "Sudo interpreter escape",
+      "failed_control": "Interpreter treated as safe command",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "update-motd.d",
+      "issue": "Writable login-time root scripts",
+      "preconditions": "webadmin/sysadmin shell",
+      "vulnerable_behavior": "Root runs script on SSH login",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "MOTD directory ACL too broad",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "invoke Smevk",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "public web",
+      "resulting_principal_or_access": "webadmin",
+      "boundary_crossed": "network → webshell",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "webadmin",
+      "action": "run Luvit as sysadmin",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "sudo rule",
+      "resulting_principal_or_access": "sysadmin",
+      "boundary_crossed": "user → delegated user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "webadmin/sysadmin",
+      "action": "write MOTD payload and trigger SSH",
+      "target_component_or_artifact": "C5/C1",
+      "prerequisite": "directory writable",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → root login hook",
+      "evidence": "Explicit"
+    }
+  ]
+}

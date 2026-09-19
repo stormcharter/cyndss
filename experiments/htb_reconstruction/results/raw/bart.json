@@ -1,0 +1,360 @@
+{
+  "machine": "Bart",
+  "split": "validation",
+  "input": {
+    "documents": 17,
+    "graph_nodes": 109,
+    "graph_edges": 1099,
+    "entry_concepts": [
+      "bart",
+      "forum",
+      "host",
+      "monitor",
+      "site"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "bart:host:0",
+        "title": "Bart",
+        "summary": "Windows IIS 10 host Three virtual hosts, PHP log poison and Winlogon secret",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:component:H1",
+        "title": "Bart host",
+        "summary": "Host OS/security boundary 10.10.10.81 Windows (IIS 10.0; build not disclosed in writeup) Administrator VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:component:C1",
+        "title": "IIS",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp Microsoft IIS 10.0 IUSR Public Routes forum.bart.htb, monitor.bart.htb and internal-01.bart.htb Bart host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:component:C2",
+        "title": "forum site",
+        "summary": "Application Static employee portal forum.bart.htb Static HTML IIS Public Publishes names/roles used for account discovery IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:component:C3",
+        "title": "monitor site",
+        "summary": "Application PHP account portal monitor.bart.htb PHP IIS Public login Forgot-password oracle and weak Harvey password IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:component:C4",
+        "title": "simple_chat",
+        "summary": "Application PHP chat application internal-01.bart.htb/simple_chat custom PHP IUSR Login/register Registration endpoint still enabled IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:component:C5",
+        "title": "log.php",
+        "summary": "Application Log writer internal-01.bart.htb/log/log.php PHP IUSR Authenticated chat user filename and User-Agent are written to PHP-readable log simple_chat",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:component:C6",
+        "title": "Winlogon registry",
+        "summary": "Artifact AutoLogon credential store HKLM\\...\\Winlogon Windows registry SYSTEM Local/IUSR read Administrator password stored in DefaultPassword Bart host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:permission:0",
+        "title": "forum visitor forum site",
+        "summary": "read names/roles forum site public forum candidate Harvey account",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:permission:1",
+        "title": "attacker monitor site",
+        "summary": "authenticate monitor monitor site forgot-password oracle plus weak password Harvey session",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:permission:2",
+        "title": "Harvey simple_chat",
+        "summary": "register chat account simple_chat register.php still reachable internal chat access",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:permission:3",
+        "title": "Harvey/chat user log.php",
+        "summary": "write log filename and User-Agent log.php authenticated chat/log link PHP webshell as IUSR",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:permission:4",
+        "title": "IUSR Winlogon registry",
+        "summary": "read Winlogon values Winlogon registry 64-bit shell/registry read Administrator credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:permission:5",
+        "title": "Administrator C1/H1",
+        "summary": "runas/net use C1/H1 credential recovered full host/root files",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:vulnerability:V1",
+        "title": "Username oracle plus weak password monitor site",
+        "summary": "monitor site custom PHP monitor monitor login public Forgot-password response reveals valid account; password is guessable Harvey session Account recovery leaks validity; weak secret",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:vulnerability:V2",
+        "title": "Log poisoning / PHP code injection C4+C5",
+        "summary": "C4+C5 custom PHP chat Chat account can be registered User-Agent PHP is stored in file later included by PHP IUSR webshell Untrusted log path and content execute as PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "bart:vulnerability:V3",
+        "title": "Winlogon stores Administrator password in plaintext Winlogon registry",
+        "summary": "Winlogon registry Windows IIS host IUSR shell; registry readable DefaultPassword returns reusable admin secret Administrator AutoLogon secret not protected",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "administrator",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "candidate",
+        "harvey"
+      ],
+      [
+        "chat"
+      ],
+      [
+        "iusr"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "credential",
+        "administrator"
+      ],
+      [
+        "registry",
+        "administrator"
+      ],
+      [
+        "autologon",
+        "administrator"
+      ],
+      [
+        "defaultpassword",
+        "administrator"
+      ],
+      [
+        "shell",
+        "administrator"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "administrator"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "administrator"
+      ],
+      [
+        "monitor",
+        "password",
+        "administrator"
+      ],
+      [
+        "forum",
+        "read",
+        "administrator"
+      ],
+      [
+        "site",
+        "password",
+        "administrator"
+      ],
+      [
+        "bart",
+        "administrator"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "administrator"
+      ],
+      [
+        "monitor",
+        "password",
+        "administrator"
+      ],
+      [
+        "forum",
+        "read",
+        "administrator"
+      ],
+      [
+        "site",
+        "password",
+        "administrator"
+      ],
+      [
+        "bart",
+        "administrator"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "monitor",
+        "site",
+        "account",
+        "portal",
+        "username",
+        "oracle",
+        "plus",
+        "weak",
+        "password",
+        "custom",
+        "harvey",
+        "simple",
+        "chat",
+        "application",
+        "iusr",
+        "winlogon",
+        "registry",
+        "autologon",
+        "credential",
+        "store",
+        "windows",
+        "stores",
+        "administrator",
+        "plaintext",
+        "host"
+      ],
+      [
+        "monitor",
+        "site",
+        "account",
+        "portal",
+        "username",
+        "oracle",
+        "plus",
+        "weak",
+        "password",
+        "custom",
+        "harvey",
+        "writer",
+        "iusr",
+        "winlogon",
+        "registry",
+        "autologon",
+        "credential",
+        "store",
+        "windows",
+        "stores",
+        "administrator",
+        "plaintext",
+        "host"
+      ],
+      [
+        "forum",
+        "site",
+        "static",
+        "employee",
+        "portal",
+        "html",
+        "harvey",
+        "simple",
+        "chat",
+        "application",
+        "custom",
+        "iusr",
+        "winlogon",
+        "registry",
+        "autologon",
+        "credential",
+        "store",
+        "windows",
+        "stores",
+        "administrator",
+        "password",
+        "plaintext",
+        "host"
+      ],
+      [
+        "forum",
+        "site",
+        "static",
+        "employee",
+        "portal",
+        "html",
+        "harvey",
+        "writer",
+        "iusr",
+        "winlogon",
+        "registry",
+        "autologon",
+        "credential",
+        "store",
+        "windows",
+        "stores",
+        "administrator",
+        "password",
+        "plaintext",
+        "host"
+      ],
+      [
+        "monitor",
+        "site",
+        "account",
+        "portal",
+        "harvey",
+        "simple",
+        "chat",
+        "application",
+        "custom",
+        "iusr",
+        "winlogon",
+        "registry",
+        "autologon",
+        "credential",
+        "store",
+        "windows",
+        "stores",
+        "administrator",
+        "password",
+        "plaintext",
+        "host"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

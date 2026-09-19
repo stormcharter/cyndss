@@ -1,0 +1,310 @@
+{
+  "machine": "Optimum",
+  "split": "demo",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 82,
+    "graph_edges": 882,
+    "entry_concepts": [
+      "engine",
+      "httpfileserver",
+      "macro",
+      "optimum",
+      "rejetto",
+      "search",
+      "server"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "optimum:host:0",
+        "title": "Optimum",
+        "summary": "Windows Server 2012 R2-era x64 Standalone HFS file server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:component:H1",
+        "title": "Optimum server",
+        "summary": "Host OS boundary 10.10.10.8 Windows x64 SYSTEM VPN reachable Only one TCP service exposed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:component:C1",
+        "title": "Rejetto HttpFileServer",
+        "summary": "Service HTTP file sharing/UI 0.0.0.0:80/tcp HFS 2.3 OPTIMUM\\kostas Public 32-bit process on 64-bit OS Optimum server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:component:C2",
+        "title": "HFS search macro engine",
+        "summary": "Application feature Evaluates search templates HTTP query/macro context HFS 2.3.x kostas Public through C1 Untrusted query reaches exec macro Rejetto HttpFileServer",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:component:C3",
+        "title": "Secondary Logon / Windows token handling",
+        "summary": "Service Local privilege subsystem local Windows unpatched SYSTEM Local only MS16-032 target Optimum server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:component:C4",
+        "title": "SysWOW64 vs Sysnative PowerShell",
+        "summary": "Runtime path Architecture boundary local process 32-bit HFS on x64 Windows kostas Local Must invoke 64-bit PowerShell for reliable EoP Optimum server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:permission:0",
+        "title": "remote unauthenticated client HFS search macro engine",
+        "summary": "inject HFS macro command HFS search macro engine HTTP port reachable Code as kostas",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:permission:1",
+        "title": "kostas SysWOW64 vs Sysnative PowerShell",
+        "summary": "invoke 64-bit PowerShell via Sysnative SysWOW64 vs Sysnative PowerShell 32-bit HFS process Can run x64 MS16-032 exploit",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:permission:2",
+        "title": "kostas Secondary Logon / Windows token handling",
+        "summary": "abuse token/handle flaw Secondary Logon / Windows token handling unpatched OS and secondary logon conditions SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "optimum:vulnerability:V1",
+        "title": "Search-macro command injection HFS search macro engine",
+        "summary": "HFS search macro engine HFS 2.3 HTTP access; crafted search query HFS expands exec macro from request OPTIMUM\\kostas code execution Untrusted template input reaches command execution",
+        "verified_cve_ids": "CVE-2014-6287"
+      },
+      {
+        "mongo_id": "optimum:vulnerability:V2",
+        "title": "Handle/token privilege escalation Secondary Logon / Windows token handling",
+        "summary": "Secondary Logon / Windows token handling Windows Secondary Logon Local shell; architecture-correct process Leaked handles/tokens permit privileged process creation SYSTEM Missing update; token isolation failure",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "engine",
+        "kostas",
+        "macro",
+        "search"
+      ],
+      [
+        "architecture-correct",
+        "powershell",
+        "shell",
+        "sysnative",
+        "syswow64"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2014-6287",
+        "optimum",
+        "system"
+      ],
+      [
+        "handling",
+        "system"
+      ],
+      [
+        "logon",
+        "system"
+      ],
+      [
+        "secondary",
+        "system"
+      ],
+      [
+        "token",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "server",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "httpfileserver",
+        "service",
+        "system"
+      ],
+      [
+        "rejetto",
+        "service",
+        "system"
+      ],
+      [
+        "engine",
+        "reachable",
+        "system"
+      ],
+      [
+        "macro",
+        "reachable",
+        "system"
+      ],
+      [
+        "search",
+        "reachable",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "httpfileserver",
+        "service",
+        "system"
+      ],
+      [
+        "rejetto",
+        "service",
+        "system"
+      ],
+      [
+        "engine",
+        "reachable",
+        "system"
+      ],
+      [
+        "macro",
+        "reachable",
+        "system"
+      ],
+      [
+        "search",
+        "reachable",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "search",
+        "macro",
+        "engine",
+        "evaluates",
+        "templates",
+        "search-macro",
+        "command",
+        "injection",
+        "kostas",
+        "secondary",
+        "logon",
+        "windows",
+        "token",
+        "handling",
+        "local",
+        "privilege",
+        "subsystem",
+        "unpatched",
+        "handle",
+        "escalation",
+        "system"
+      ],
+      [
+        "rejetto",
+        "httpfileserver",
+        "sharing",
+        "kostas",
+        "secondary",
+        "logon",
+        "windows",
+        "token",
+        "handling",
+        "local",
+        "privilege",
+        "subsystem",
+        "unpatched",
+        "handle",
+        "escalation",
+        "system"
+      ],
+      [
+        "search",
+        "macro",
+        "engine",
+        "evaluates",
+        "templates",
+        "kostas",
+        "secondary",
+        "logon",
+        "windows",
+        "token",
+        "handling",
+        "local",
+        "privilege",
+        "subsystem",
+        "unpatched",
+        "handle",
+        "escalation",
+        "system"
+      ],
+      [
+        "search",
+        "macro",
+        "engine",
+        "evaluates",
+        "templates",
+        "search-macro",
+        "command",
+        "injection",
+        "kostas",
+        "secondary",
+        "logon",
+        "windows",
+        "token",
+        "handling",
+        "local",
+        "privilege",
+        "subsystem",
+        "unpatched",
+        "system"
+      ],
+      [
+        "rejetto",
+        "httpfileserver",
+        "sharing",
+        "kostas",
+        "secondary",
+        "logon",
+        "windows",
+        "token",
+        "handling",
+        "local",
+        "privilege",
+        "subsystem",
+        "unpatched",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.5
+  }
+}

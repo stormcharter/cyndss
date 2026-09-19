@@ -1,0 +1,245 @@
+{
+  "machine": "Sunday",
+  "split": "demo",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 101,
+    "graph_edges": 985,
+    "entry_concepts": [
+      "finger",
+      "rpcbind",
+      "server",
+      "smserverd",
+      "sunday",
+      "sunssh"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "sunday:host:0",
+        "title": "Sunday",
+        "summary": "Oracle Solaris / SunOS Legacy multiuser UNIX host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:component:H1",
+        "title": "Sunday server",
+        "summary": "Host OS boundary 10.10.10.76 SunOS/Solaris root VPN reachable Legacy services",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:component:C1",
+        "title": "finger",
+        "summary": "Service User-information service 0.0.0.0:79/tcp Solaris finger daemon Public Discloses valid usernames Sunday server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:component:C2",
+        "title": "rpcbind",
+        "summary": "Service RPC mapper 0.0.0.0:111/tcp rpcbind v2-4 root Public Recon Sunday server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:component:C3",
+        "title": "SunSSH",
+        "summary": "Service Remote shell 0.0.0.0:22022/tcp SunSSH 1.3 root daemon Public Weak user secret Sunday server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:component:C4",
+        "title": "smserverd",
+        "summary": "Service Solaris management service 0.0.0.0:65258/tcp smserverd 1 root Public Not used Sunday server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:component:C5",
+        "title": "password/shadow backup",
+        "summary": "Artifact Backup credential database local backup path Solaris hashes root/admin Readable after sunny foothold Sammy hash can be cracked Sunday server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:component:C6",
+        "title": "sudoers delegation",
+        "summary": "Policy Privilege rules local sudo root Local sunny→/root/troll; sammy→/usr/bin/wget Sunday server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:permission:0",
+        "title": "anonymous C1 finger",
+        "summary": "query usernames C1 finger public service sunny and sammy disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:permission:1",
+        "title": "sunny C5 backup",
+        "summary": "read C5 backup file permission allows Sammy password hash disclosed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:permission:2",
+        "title": "sammy /usr/bin/wget",
+        "summary": "sudo NOPASSWD execute /usr/bin/wget sudoers rule Arbitrary root file write/read",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:permission:3",
+        "title": "sunny /root/troll",
+        "summary": "sudo NOPASSWD execute /root/troll exact rule; target later replaceable in alternate chain root code",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:vulnerability:V1",
+        "title": "Username disclosure plus weak password C1+C3",
+        "summary": "C1+C3 finger + SunSSH Network access Enumerated sunny credential is guessable sunny SSH Legacy identity disclosure and weak authentication",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:vulnerability:V2",
+        "title": "Readable password-hash backup password/shadow backup",
+        "summary": "password/shadow backup credential backup sunny shell Backup exposes sammy hash for offline cracking sammy account Sensitive backup permission failure",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "sunday:vulnerability:V3",
+        "title": "Passwordless wget / trusted executable abuse sudoers delegation",
+        "summary": "sudoers delegation sudoers sammy shell wget can write privileged files or replace trusted content root Powerful file-transfer tool delegated as root",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "sunny"
+      ],
+      [
+        "backup",
+        "password",
+        "sammy",
+        "shadow"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "server",
+        "root"
+      ],
+      [
+        "access",
+        "sunssh",
+        "root"
+      ],
+      [
+        "allows",
+        "read",
+        "root"
+      ],
+      [
+        "authentication",
+        "sunssh",
+        "root"
+      ],
+      [
+        "disclosure",
+        "sunssh",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "server",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "server",
+        "root"
+      ],
+      [
+        "sunday",
+        "root"
+      ],
+      [
+        "rpcbind",
+        "root"
+      ],
+      [
+        "smserverd",
+        "root"
+      ],
+      [
+        "finger",
+        "public",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "server",
+        "root"
+      ],
+      [
+        "sunday",
+        "root"
+      ],
+      [
+        "rpcbind",
+        "root"
+      ],
+      [
+        "smserverd",
+        "root"
+      ],
+      [
+        "finger",
+        "public",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "rpcbind",
+        "mapper",
+        "v2-4",
+        "root"
+      ],
+      [
+        "sunssh",
+        "remote",
+        "shell",
+        "root"
+      ],
+      [
+        "smserverd",
+        "solaris",
+        "management",
+        "service",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

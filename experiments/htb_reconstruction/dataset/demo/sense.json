@@ -1,0 +1,200 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Sense",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/03/11/htb-sense.html",
+    "title": "HTB Sense writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "FreeBSD pfSense appliance",
+    "deployment_role": "Firewall management appliance"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Appliance",
+      "name": "Sense firewall",
+      "role": "OS/appliance boundary",
+      "binding_or_path": "10.10.10.60",
+      "software_or_version": "FreeBSD / pfSense",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Management plane is the challenge surface"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "lighttpd HTTP",
+      "role": "Redirect to TLS management",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "lighttpd",
+      "runs_as": "root/web",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Redirect only"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "pfSense WebConfigurator",
+      "role": "Firewall administration GUI",
+      "binding_or_path": "0.0.0.0:443/tcp",
+      "software_or_version": "pfSense 2.1.3-RELEASE",
+      "runs_as": "root",
+      "exposure": "Public login",
+      "evidence": "Explicit",
+      "analysis_note": "Authenticated PHP actions run privileged"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application endpoint",
+      "name": "status_rrd_graph_img.php",
+      "role": "RRD graph generation",
+      "binding_or_path": "HTTPS status graph path",
+      "software_or_version": "pfSense 2.1.3",
+      "runs_as": "root",
+      "exposure": "Authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Command injection endpoint"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Static artifact",
+      "name": "system-users.txt",
+      "role": "Support-ticket text",
+      "binding_or_path": "/system-users.txt",
+      "software_or_version": "text file",
+      "runs_as": "web server",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Discloses username/password policy clue"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "Rohit",
+      "principal_type": "pfSense/local admin",
+      "operational_role": "WebConfigurator administrator",
+      "groups_or_nesting": "admins",
+      "authentication_or_effective_access": "management login; command endpoint access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "appliance execution identity",
+      "operational_role": "web back end and OS superuser",
+      "groups_or_nesting": "wheel",
+      "authentication_or_effective_access": "full appliance control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read",
+      "object": "C4 system-users.txt",
+      "condition_or_scope": "public HTTPS",
+      "security_consequence": "Rohit username and default-password clue",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Rohit",
+      "permission_or_action": "invoke graph function",
+      "object": "C3",
+      "condition_or_scope": "authenticated GUI session",
+      "security_consequence": "command processed by root PHP context",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "system-users.txt",
+      "hosted_on": "C4",
+      "purpose": "support ticket/user provisioning note",
+      "owner_or_authority": "support/web",
+      "read_access": "public read",
+      "write_or_execute_access": "server write",
+      "security_significance": "Leaks username Rohit and 'company defaults' secret clue",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "RRD graph command parameters",
+      "hosted_on": "C3",
+      "purpose": "graph-generation inputs",
+      "owner_or_authority": "Rohit session",
+      "read_access": "authenticated submit",
+      "write_or_execute_access": "root process executes",
+      "security_significance": "App input crosses into root shell command",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C4/C2",
+      "affected_version": "pfSense 2.1.3",
+      "issue": "Public operational note + unchanged default-derived credential",
+      "preconditions": "Public file readable",
+      "vulnerable_behavior": "Attacker derives valid admin login",
+      "resulting_access": "Rohit/pfSense admin",
+      "reference": "Configuration weakness",
+      "failed_control": "Sensitive support data and weak password practice",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "pfSense 2.1.3",
+      "issue": "Authenticated graph command injection",
+      "preconditions": "Valid WebConfigurator session",
+      "vulnerable_behavior": "Unsanitized graph parameter reaches shell",
+      "resulting_access": "root code execution",
+      "reference": "EDB-43560 / Metasploit pfSense graph injection",
+      "failed_control": "Root web back end executes untrusted data",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "read support note and authenticate",
+      "target_component_or_artifact": "C4/C2",
+      "prerequisite": "public note + default-derived secret",
+      "resulting_principal_or_access": "Rohit admin",
+      "boundary_crossed": "network → app admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "Rohit",
+      "action": "inject graph command",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "authenticated session",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "app admin → appliance root",
+      "evidence": "Explicit"
+    }
+  ]
+}

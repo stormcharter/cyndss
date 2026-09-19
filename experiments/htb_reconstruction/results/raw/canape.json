@@ -1,0 +1,195 @@
+{
+  "machine": "Canape",
+  "split": "train",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 79,
+    "graph_edges": 810,
+    "entry_concepts": [
+      "apache",
+      "canape",
+      "host",
+      "python"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "canape:host:0",
+        "title": "Canape",
+        "summary": "Ubuntu Linux Apache/Python app backed by CouchDB and root service supervisor",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:component:H1",
+        "title": "Canape host",
+        "summary": "Host OS/security boundary 10.10.10.70 Ubuntu Linux root VPN reachable Single host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:component:C1",
+        "title": "Apache/Python web app",
+        "summary": "Application HTTP front end 0.0.0.0:80/tcp Apache + Flask/Python www-data Public; .git exposed Serializes user input into CouchDB documents Canape host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:component:C2",
+        "title": "CouchDB",
+        "summary": "Database Document database 127.0.0.1:5984,5986 CouchDB 2.0.0 homer Local web/app access Erlang cookie and database data Canape host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:component:C3",
+        "title": "SSH",
+        "summary": "Service Remote shell 0.0.0.0:65535/tcp OpenSSH root daemon Public Used after password/key recovery Canape host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:component:C4",
+        "title": "runsrv/OS_Daemons",
+        "summary": "Scheduled task Root service supervisor /home/homer/etc custom shell scripts root Local Executes files from homer-controlled directory on restart Canape host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:permission:0",
+        "title": "remote client C1/C2",
+        "summary": "submit crafted serialized value C1/C2 web endpoint stores/loads Python pickle homer command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:permission:1",
+        "title": "homer runsrv/OS_Daemons",
+        "summary": "read/write home service files runsrv/OS_Daemons home directory ownership root supervisor loads attacker-controlled program",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:permission:2",
+        "title": "root supervisor runsrv/OS_Daemons",
+        "summary": "execute runsrv/OS_Daemons service restart/cron root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:vulnerability:V1",
+        "title": "Python pickle deserialization C1+C2",
+        "summary": "C1+C2 Flask/Python Endpoint reachable; serialized document accepted Pickle executes attacker-defined callables homer shell Application treats untrusted object as trusted",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "canape:vulnerability:V2",
+        "title": "Root executes files from user-writable home runsrv/OS_Daemons",
+        "summary": "runsrv/OS_Daemons custom root supervisor homer can modify service directory Restart invokes homer-controlled script root Root service has no protected command directory",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "homer"
+      ],
+      [
+        "daemons",
+        "execute",
+        "root",
+        "runsrv",
+        "supervisor"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "service",
+        "root"
+      ],
+      [
+        "supervisor",
+        "root"
+      ],
+      [
+        "daemons",
+        "root"
+      ],
+      [
+        "runsrv",
+        "root"
+      ],
+      [
+        "directory",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "canape",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "python",
+        "backed",
+        "root"
+      ],
+      [
+        "canape",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "python",
+        "backed",
+        "root"
+      ],
+      [
+        "canape",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "remote",
+        "shell",
+        "openssh",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.5,
+    "a_ordered": 0.5,
+    "a_precision": 0.5,
+    "a_coverage_topk": 0.5,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.5,
+    "b_ordered": 0.5,
+    "b_precision": 0.5,
+    "c_chains": 4,
+    "c_hops": 2,
+    "c_coverage": 0.5,
+    "c_ordered": 0.5,
+    "c_precision": 0.3333333333333333,
+    "c_coverage_topk": 0.5
+  }
+}

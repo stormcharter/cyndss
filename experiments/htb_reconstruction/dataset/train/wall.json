@@ -1,0 +1,216 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Wall",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/12/07/htb-wall.html",
+    "title": "HTB Wall writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu/CentOS-era Linux",
+    "deployment_role": "Apache plus Centreon monitoring console and local privilege boundary"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Wall host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.157",
+      "software_or_version": "Linux (CentOS 7.6/PHP 5.4.16 in Centreon path)",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone monitoring host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used after web foothold"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts hidden /centreon path"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Centreon",
+      "role": "Infrastructure monitoring UI",
+      "binding_or_path": "/centreon",
+      "software_or_version": "19.04",
+      "runs_as": "www-data",
+      "exposure": "Public login",
+      "evidence": "Explicit",
+      "analysis_note": "Authenticated command injection in poller form"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Centreon Engine",
+      "role": "Poller command runner",
+      "binding_or_path": "/usr/sbin/centengine",
+      "software_or_version": "19.04",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Poller executes configured plugin commands"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/Centreon worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web shell and UI access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "centreon_admin",
+      "principal_type": "application account",
+      "operational_role": "monitoring administrator",
+      "groups_or_nesting": "Centreon admin",
+      "authentication_or_effective_access": "can configure poller commands",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "Centreon engine identity",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "enumerate/login",
+      "object": "C3",
+      "condition_or_scope": "Centreon path exposed; credentials recovered",
+      "security_consequence": "Centreon admin session",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "centreon_admin",
+      "permission_or_action": "set poller command",
+      "object": "C3/C4",
+      "condition_or_scope": "authenticated form",
+      "security_consequence": "root command through centengine",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "centengine",
+      "permission_or_action": "execute plugin",
+      "object": "C4",
+      "condition_or_scope": "root service token",
+      "security_consequence": "root shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Centreon login/session",
+      "hosted_on": "C3",
+      "purpose": "UI authorization state",
+      "owner_or_authority": "centreon_admin",
+      "read_access": "admin session",
+      "write_or_execute_access": "admin can edit",
+      "security_significance": "Attacker-controlled poller configuration",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "poller command definition",
+      "hosted_on": "C4",
+      "purpose": "monitoring check command",
+      "owner_or_authority": "root",
+      "read_access": "admin read",
+      "write_or_execute_access": "admin write; root execute",
+      "security_significance": "Direct trust edge to root",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Centreon 19.04",
+      "issue": "Authenticated command injection",
+      "preconditions": "Centreon admin credentials/session",
+      "vulnerable_behavior": "Poller form concatenates untrusted command fields",
+      "resulting_access": "root via Centreon Engine",
+      "reference": "CVE-2019-13024",
+      "failed_control": "No command validation/escaping",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Centreon Engine 19.04",
+      "issue": "Poller runs as root",
+      "preconditions": "Any command injection into poller",
+      "vulnerable_behavior": "Engine inherits root",
+      "resulting_access": "root",
+      "reference": "Least-privilege failure",
+      "failed_control": "Monitoring daemon over-privileged",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "reach hidden Centreon and authenticate",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "web enumeration and credential path",
+      "resulting_principal_or_access": "centreon_admin",
+      "boundary_crossed": "network → application admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "centreon_admin",
+      "action": "inject poller command",
+      "target_component_or_artifact": "C3/C4",
+      "prerequisite": "authenticated vulnerable form",
+      "resulting_principal_or_access": "root shell",
+      "boundary_crossed": "application admin → host root",
+      "evidence": "Explicit"
+    }
+  ]
+}

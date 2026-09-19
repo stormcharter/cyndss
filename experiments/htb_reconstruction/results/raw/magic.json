@@ -1,0 +1,227 @@
+{
+  "machine": "Magic",
+  "split": "train",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 82,
+    "graph_edges": 731,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "magic",
+      "openssh"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "magic:host:0",
+        "title": "Magic",
+        "summary": "Ubuntu Linux PHP/MySQL image portal with SUID sysinfo binary",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:component:H1",
+        "title": "Magic host",
+        "summary": "Host OS/security boundary 10.10.10.185 Ubuntu Linux root VPN reachable Standalone web host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH root daemon Public Used after DB credential recovery Magic host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service Image portal 0.0.0.0:80/tcp Apache 2.4.29 + PHP www-data Public Login, upload, image processing Magic host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:component:C3",
+        "title": "MySQL",
+        "summary": "Database Application database 127.0.0.1:3306/tcp MySQL mysql Local Stores users and password material Magic host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:component:C4",
+        "title": "Upload endpoint",
+        "summary": "Application Image upload/webshell sink /upload.php PHP www-data Authenticated Double-extension/image header bypass Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:component:C5",
+        "title": "sysinfo",
+        "summary": "Binary SUID binary /bin/sysinfo custom ELF root Local; setuid root Calls system utilities through PATH Magic host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:permission:0",
+        "title": "remote client C2/C3",
+        "summary": "bypass login/SQLi C2/C3 login query injectable web/database access",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:permission:1",
+        "title": "authenticated uploader Upload endpoint",
+        "summary": "write executable upload Upload endpoint upload checks spoofed image type and extension www-data shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:permission:2",
+        "title": "www-data sysinfo",
+        "summary": "execute sysinfo with PATH sysinfo SUID root binary calls relative utility root command execution",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:vulnerability:V1",
+        "title": "SQL injection authentication bypass C2+C3",
+        "summary": "C2+C3 PHP/MySQL image portal Login form public SQL predicate altered to bypass account check authenticated upload access Queries concatenate form fields",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:vulnerability:V2",
+        "title": "File-type/double-extension bypass Upload endpoint",
+        "summary": "Upload endpoint custom PHP upload Authenticated session Image header and extension checks can be bypassed; PHP is served www-data Upload directory executable",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "magic:vulnerability:V3",
+        "title": "PATH hijack in root binary sysinfo",
+        "summary": "sysinfo custom SUID sysinfo www-data local shell Binary invokes utility without absolute path root Privileged process trusts user PATH",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "session"
+      ],
+      [
+        "endpoint",
+        "upload",
+        "www-data"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "path",
+        "root"
+      ],
+      [
+        "utility",
+        "root"
+      ],
+      [
+        "binary",
+        "root"
+      ],
+      [
+        "suid",
+        "root"
+      ],
+      [
+        "sysinfo",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "magic",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "magic",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "apache",
+        "portal",
+        "www-data",
+        "sysinfo",
+        "suid",
+        "binary",
+        "custom",
+        "path",
+        "hijack",
+        "root"
+      ],
+      [
+        "apache",
+        "portal",
+        "www-data",
+        "sysinfo",
+        "suid",
+        "binary",
+        "custom",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

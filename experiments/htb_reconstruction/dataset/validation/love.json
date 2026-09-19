@@ -1,0 +1,318 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Love",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/08/07/htb-love.html",
+    "title": "HTB Love writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows host",
+    "deployment_role": "Public Voting System, SSRF to localhost credential page and AlwaysInstallElevated"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Love host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.239",
+      "software_or_version": "Windows (Apache/PHP on XAMPP)",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Many Windows services exposed"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "HTTP front end",
+      "binding_or_path": "80,443/tcp",
+      "software_or_version": "Apache 2.4.46 / PHP 7.3.27",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "staging.love.htb and Voting System"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Voting System",
+      "role": "PHP web app",
+      "binding_or_path": "vote/admin",
+      "software_or_version": "Voting System",
+      "runs_as": "www-data",
+      "exposure": "Public/admin",
+      "evidence": "Explicit",
+      "analysis_note": "File upload RCE"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "staging proxy",
+      "role": "URL fetcher",
+      "binding_or_path": "staging.love.htb",
+      "software_or_version": "PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SSRF to 127.0.0.1:5000"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "localhost service",
+      "role": "Credential/status page",
+      "binding_or_path": "127.0.0.1:5000",
+      "software_or_version": "HTTP",
+      "runs_as": "local admin",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Leaks Voting System admin credentials"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "AlwaysInstallElevated",
+      "role": "Windows MSI policy",
+      "binding_or_path": "HKLM/HKCU registry",
+      "software_or_version": "Windows Installer",
+      "runs_as": "SYSTEM",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Any user can install MSI as SYSTEM"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "WinRM/SMB",
+      "role": "Remote management",
+      "binding_or_path": "5985/5986,445/tcp",
+      "software_or_version": "WinRM/SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Final host access"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "SSRF/Voting app execution",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "admin",
+      "principal_type": "application account",
+      "operational_role": "Voting System administrator",
+      "groups_or_nesting": "web admin",
+      "authentication_or_effective_access": "credentials leaked by localhost service",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Phoebe/user",
+      "principal_type": "local user",
+      "operational_role": "initial Windows account",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "webshell/user flag",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "installer/host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "request arbitrary URL",
+      "object": "C3",
+      "condition_or_scope": "staging fetch endpoint public",
+      "security_consequence": "localhost service response",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "read admin credential",
+      "object": "C4",
+      "condition_or_scope": "SSRF reaches 127.0.0.1:5000",
+      "security_consequence": "Voting admin",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "admin",
+      "permission_or_action": "upload PHP payload",
+      "object": "C2",
+      "condition_or_scope": "admin auth",
+      "security_consequence": "webshell/user shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Phoebe/user",
+      "permission_or_action": "install crafted MSI",
+      "object": "C5",
+      "condition_or_scope": "AlwaysInstallElevated enabled",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "SYSTEM",
+      "permission_or_action": "WinRM/SMB",
+      "object": "C6",
+      "condition_or_scope": "local system token",
+      "security_consequence": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "SSRF URL parameter",
+      "hosted_on": "C3",
+      "purpose": "server-side request",
+      "owner_or_authority": "remote client",
+      "read_access": "public write",
+      "write_or_execute_access": "staging fetches",
+      "security_significance": "Network boundary bypass",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "localhost:5000 response",
+      "hosted_on": "C4",
+      "purpose": "admin credentials",
+      "owner_or_authority": "local admin",
+      "read_access": "www-data via SSRF",
+      "write_or_execute_access": "service writes",
+      "security_significance": "Credential disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Voting System upload",
+      "hosted_on": "C2",
+      "purpose": "PHP webshell",
+      "owner_or_authority": "www-data",
+      "read_access": "admin write",
+      "write_or_execute_access": "Apache executes",
+      "security_significance": "Code execution",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "MSI payload",
+      "hosted_on": "C5",
+      "purpose": "Windows Installer package",
+      "owner_or_authority": "Phoebe/user",
+      "read_access": "user creates",
+      "write_or_execute_access": "SYSTEM Installer executes",
+      "security_significance": "Policy-to-system transition",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3+C4",
+      "affected_version": "PHP URL fetcher",
+      "issue": "Server-side request forgery",
+      "preconditions": "Public URL fetch parameter",
+      "vulnerable_behavior": "Server requests localhost-only service",
+      "resulting_access": "admin credential",
+      "reference": "SSRF",
+      "failed_control": "No destination allowlist",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C2",
+      "affected_version": "Voting System",
+      "issue": "Admin file upload RCE",
+      "preconditions": "Credentials from SSRF",
+      "vulnerable_behavior": "Upload filter accepts PHP payload",
+      "resulting_access": "www-data/Phoebe",
+      "reference": "Unrestricted upload",
+      "failed_control": "Admin upload directory executable",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "Windows Installer policy",
+      "issue": "AlwaysInstallElevated",
+      "preconditions": "Both registry policies enabled",
+      "vulnerable_behavior": "Any authenticated user installs MSI as SYSTEM",
+      "resulting_access": "SYSTEM",
+      "reference": "AlwaysInstallElevated misconfiguration",
+      "failed_control": "Installer policy grants system token",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "exploit SSRF",
+      "target_component_or_artifact": "C1/C3/C4",
+      "prerequisite": "public staging URL fetch",
+      "resulting_principal_or_access": "admin credential",
+      "boundary_crossed": "network → localhost",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "authenticate and upload webshell",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "admin credential",
+      "resulting_principal_or_access": "Phoebe/user",
+      "boundary_crossed": "credential → service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "Phoebe/user",
+      "action": "install malicious MSI",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "policy enabled",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "user → installer system",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "SYSTEM",
+      "action": "access WinRM/SMB",
+      "target_component_or_artifact": "C6",
+      "prerequisite": "system token",
+      "resulting_principal_or_access": "host control",
+      "boundary_crossed": "system → host",
+      "evidence": "Explicit"
+    }
+  ]
+}

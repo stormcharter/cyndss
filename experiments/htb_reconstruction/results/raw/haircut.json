@@ -1,0 +1,204 @@
+{
+  "machine": "Haircut",
+  "split": "validation",
+  "input": {
+    "documents": 11,
+    "graph_nodes": 60,
+    "graph_edges": 548,
+    "entry_concepts": [
+      "apache",
+      "curl",
+      "haircut",
+      "host",
+      "openssh",
+      "wrapper"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "haircut:host:0",
+        "title": "Haircut",
+        "summary": "Ubuntu Linux Apache curl wrapper and SUID screen 4.5.0",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:component:H1",
+        "title": "Haircut host",
+        "summary": "Host OS/security boundary 10.10.10.139 Ubuntu Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH root daemon Public Used after web shell Haircut host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service HTTP front end 80/tcp Apache/PHP www-data Public /haircut curl page Haircut host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:component:C3",
+        "title": "curl wrapper",
+        "summary": "Application URL fetcher /haircut/index.php curl www-data Public Parameter injection writes/exposes command output Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:component:C4",
+        "title": "screen",
+        "summary": "Binary SUID terminal multiplexer /usr/bin/screen 4.5.0 root Local; setuid root ld.so.preload exploit Haircut host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:permission:0",
+        "title": "remote client curl wrapper",
+        "summary": "inject curl parameter curl wrapper HTTP page public www-data command/webshell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:permission:1",
+        "title": "www-data C1/C3",
+        "summary": "run command as mike C1/C3 local shell/credential mike",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:permission:2",
+        "title": "mike screen",
+        "summary": "execute SUID screen exploit screen screen 4.5.0 setuid root via ld.so.preload",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:vulnerability:V1",
+        "title": "Parameter injection/command execution curl wrapper",
+        "summary": "curl wrapper PHP/curl wrapper HTTP public User-controlled URL/options alter curl behavior and write shell www-data/mike No allowlist or safe argument construction",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "haircut:vulnerability:V2",
+        "title": "SUID ld.so.preload exploit screen",
+        "summary": "screen screen 4.5.0 Local user shell Screen logging writes /etc/ld.so.preload; next root binary loads library root Vulnerable SUID screen binary deployed",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "www-data"
+      ],
+      [
+        "mike"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "exploit",
+        "root"
+      ],
+      [
+        "preload",
+        "root"
+      ],
+      [
+        "binary",
+        "root"
+      ],
+      [
+        "setuid",
+        "root"
+      ],
+      [
+        "front",
+        "host",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "apache",
+        "haircut",
+        "root"
+      ],
+      [
+        "wrapper",
+        "linux",
+        "root"
+      ],
+      [
+        "haircut",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "apache",
+        "haircut",
+        "root"
+      ],
+      [
+        "wrapper",
+        "linux",
+        "root"
+      ],
+      [
+        "haircut",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "machine": "Cascade",
+  "split": "validation",
+  "input": {
+    "documents": 16,
+    "graph_nodes": 77,
+    "graph_edges": 715,
+    "entry_concepts": [
+      "cascade",
+      "ldap"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "cascade:host:0",
+        "title": "Cascade",
+        "summary": "Windows Active Directory host LDAP/RPC/SMB credential recovery, TightVNC and deleted-object ACL",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:component:H1",
+        "title": "Cascade DC",
+        "summary": "Host OS/domain boundary 10.10.10.182 Windows Active Directory SYSTEM/Domain Admins VPN reachable CASC-DC1 domain controller",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:component:C1",
+        "title": "LDAP/RPC",
+        "summary": "Service stack Directory enumeration 389/636,135/high RPC AD DS/RPC SYSTEM Public/authenticated User descriptions and deleted objects readable Cascade DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:component:C2",
+        "title": "SMB",
+        "summary": "Service Domain shares 139,445/tcp Windows SMB SYSTEM Authenticated Audit$, Data, IT shares Cascade DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:component:C3",
+        "title": "TightVNC",
+        "summary": "Service Remote desktop service 5900/tcp/config TightVNC s.smith Local/SMB config Password stored in reversible form Cascade DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:component:C4",
+        "title": "Audit.db",
+        "summary": "Database SQLite audit database Audit$\\DB\\Audit.db SQLite ArkSvc SMB read CascAudit reads account data SMB",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:component:C5",
+        "title": "CascAudit.exe",
+        "summary": "Binary .NET audit parser Audit$\\CascAudit.exe .NET/PE32 ArkSvc SMB read/execute Decrypts service password from DB SMB",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:component:C6",
+        "title": "AD Recycle Bin",
+        "summary": "Directory Deleted directory objects LDAP deleted objects Active Directory Domain Admins Authenticated query TempAdmin object retains usable password LDAP/RPC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:permission:0",
+        "title": "anonymous/low-priv LDAP C1 user descriptions",
+        "summary": "read C1 user descriptions directory-readable s.smith credential clue",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:permission:1",
+        "title": "s.smith C2 TightVNC config",
+        "summary": "read C2 TightVNC config SMB ACL VNC password for service user",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:permission:2",
+        "title": "ArkSvc C4/C5 Audit.db/CascAudit",
+        "summary": "read/execute C4/C5 Audit.db/CascAudit Audit share ACL decrypts password",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:permission:3",
+        "title": "ArkSvc AD Recycle Bin",
+        "summary": "query deleted objects AD Recycle Bin AD Recycle Bin readable TempAdmin secret",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:permission:4",
+        "title": "TempAdmin H1/C2",
+        "summary": "authenticate H1/C2 password reused by Administrator domain admin",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:vulnerability:V1",
+        "title": "Credential in readable user description LDAP/RPC",
+        "summary": "LDAP/RPC AD LDAP LDAP query allowed Low-priv user reads secret clue s.smith Sensitive data in directory metadata",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:vulnerability:V2",
+        "title": "Reversible password stored in config C3+C2",
+        "summary": "C3+C2 TightVNC SMB access Config decrypts to service credential ArkSvc/s.smith VNC secret not protected",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cascade:vulnerability:V3",
+        "title": "Decryptor and deleted admin object expose reusable admin password C5+C6",
+        "summary": "C5+C6 CascAudit/AD Recycle Bin ArkSvc access .NET decryptor plus deleted account data recovers password Administrator Deleted account and admin password not rotated",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "admin",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "smith"
+      ],
+      [
+        "arksvc",
+        "credential"
+      ],
+      [
+        "admin",
+        "c4-c6",
+        "password",
+        "tempadmin"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "administrator",
+        "admin"
+      ],
+      [
+        "authenticate",
+        "admin"
+      ],
+      [
+        "decryptor",
+        "admin"
+      ],
+      [
+        "expose",
+        "admin"
+      ],
+      [
+        "plus",
+        "admin"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "ldap",
+        "object",
+        "admin"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "ldap",
+        "object",
+        "admin"
+      ],
+      [
+        "cascade",
+        "domain",
+        "admin"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "ldap",
+        "object",
+        "admin"
+      ],
+      [
+        "cascade",
+        "domain",
+        "admin"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.3333333333333333,
+    "a_ordered": 0.3333333333333333,
+    "a_precision": 0.5,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 2,
+    "b_coverage": 0.3333333333333333,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.3333333333333333,
+    "c_chains": 2,
+    "c_hops": 2,
+    "c_coverage": 0.3333333333333333,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.3333333333333333,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

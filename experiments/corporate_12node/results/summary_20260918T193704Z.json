@@ -1,0 +1,548 @@
+{
+  "model": "corporate-12node",
+  "criteria": [
+    "technical_feasibility",
+    "risk",
+    "time",
+    "resources",
+    "legal",
+    "consequences",
+    "content_fit"
+  ],
+  "max_scenarios": 5,
+  "runs_per_temperature": 3,
+  "temperatures": [
+    0.0,
+    0.7
+  ],
+  "scenarios": [
+    {
+      "index": 0,
+      "label": "Firewall Rules -> Network Segmentation -> Patch Management -> Encryption at Rest -> Auth Hardening -> IDS Signatures",
+      "path_labels": [
+        "S0: Vulnerable",
+        "Firewall Rules",
+        "Perimeter Hardened",
+        "Network Segmentation",
+        "Network Segmented",
+        "Patch Management",
+        "Systems Patched",
+        "Encryption at Rest",
+        "Data Encrypted",
+        "Auth Hardening",
+        "Auth Hardened",
+        "IDS Signatures",
+        "ST: Secured"
+      ],
+      "within_constraints": true,
+      "by_temperature": {
+        "0.0": {
+          "j_values": [
+            0.8,
+            0.79,
+            0.79
+          ],
+          "j_mean": 0.7933,
+          "j_stdev": 0.0047,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.9,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.9,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.9,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 1
+        },
+        "0.7": {
+          "j_values": [
+            0.8075,
+            0.7925,
+            0.755
+          ],
+          "j_mean": 0.785,
+          "j_stdev": 0.0221,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.85,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.85,
+              "risk": 0.7,
+              "time": 0.85,
+              "resources": 0.8,
+              "legal": 0.75,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.7,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 3
+        }
+      }
+    },
+    {
+      "index": 1,
+      "label": "Firewall Rules -> Network Segmentation -> SIEM Rules -> Encryption at Rest -> Auth Hardening -> IDS Signatures",
+      "path_labels": [
+        "S0: Vulnerable",
+        "Firewall Rules",
+        "Perimeter Hardened",
+        "Network Segmentation",
+        "Network Segmented",
+        "SIEM Rules",
+        "Monitoring Active",
+        "Encryption at Rest",
+        "Data Encrypted",
+        "Auth Hardening",
+        "Auth Hardened",
+        "IDS Signatures",
+        "ST: Secured"
+      ],
+      "within_constraints": true,
+      "by_temperature": {
+        "0.0": {
+          "j_values": [
+            0.755,
+            0.755,
+            0.755
+          ],
+          "j_mean": 0.755,
+          "j_stdev": 0.0,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 5
+        },
+        "0.7": {
+          "j_values": [
+            0.7975,
+            0.8225,
+            0.7775
+          ],
+          "j_mean": 0.7992,
+          "j_stdev": 0.0184,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.75,
+              "resources": 0.9,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.9,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.85
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.75,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 2
+        }
+      }
+    },
+    {
+      "index": 2,
+      "label": "Firewall Rules -> Network Segmentation -> SIEM Rules -> Encryption at Rest -> Backup Policy -> IDS Signatures",
+      "path_labels": [
+        "S0: Vulnerable",
+        "Firewall Rules",
+        "Perimeter Hardened",
+        "Network Segmentation",
+        "Network Segmented",
+        "SIEM Rules",
+        "Monitoring Active",
+        "Encryption at Rest",
+        "Data Encrypted",
+        "Backup Policy",
+        "Backup Resilient",
+        "IDS Signatures",
+        "ST: Secured"
+      ],
+      "within_constraints": true,
+      "by_temperature": {
+        "0.0": {
+          "j_values": [
+            0.79,
+            0.79,
+            0.79
+          ],
+          "j_mean": 0.79,
+          "j_stdev": 0.0,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 2
+        },
+        "0.7": {
+          "j_values": [
+            0.82,
+            0.765,
+            0.815
+          ],
+          "j_mean": 0.8,
+          "j_stdev": 0.0248,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.9,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.7,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.9,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 1
+        }
+      }
+    },
+    {
+      "index": 3,
+      "label": "Network Segmentation -> Patch Management -> Encryption at Rest -> Auth Hardening -> IDS Signatures",
+      "path_labels": [
+        "S0: Vulnerable",
+        "Network Segmentation",
+        "Network Segmented",
+        "Patch Management",
+        "Systems Patched",
+        "Encryption at Rest",
+        "Data Encrypted",
+        "Auth Hardening",
+        "Auth Hardened",
+        "IDS Signatures",
+        "ST: Secured"
+      ],
+      "within_constraints": true,
+      "by_temperature": {
+        "0.0": {
+          "j_values": [
+            0.765,
+            0.765,
+            0.765
+          ],
+          "j_mean": 0.765,
+          "j_stdev": 0.0,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 4
+        },
+        "0.7": {
+          "j_values": [
+            0.75,
+            0.8,
+            0.78
+          ],
+          "j_mean": 0.7767,
+          "j_stdev": 0.0205,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.7,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.8,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.9,
+              "risk": 0.8,
+              "time": 0.6,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 4
+        }
+      }
+    },
+    {
+      "index": 4,
+      "label": "Network Segmentation -> Patch Management -> Encryption at Rest -> Backup Policy -> Auth Hardening -> IDS Signatures",
+      "path_labels": [
+        "S0: Vulnerable",
+        "Network Segmentation",
+        "Network Segmented",
+        "Patch Management",
+        "Systems Patched",
+        "Encryption at Rest",
+        "Data Encrypted",
+        "Backup Policy",
+        "Backup Resilient",
+        "Auth Hardening",
+        "Auth Hardened",
+        "IDS Signatures",
+        "ST: Secured"
+      ],
+      "within_constraints": true,
+      "by_temperature": {
+        "0.0": {
+          "j_values": [
+            0.78,
+            0.78,
+            0.78
+          ],
+          "j_mean": 0.78,
+          "j_stdev": 0.0,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 3
+        },
+        "0.7": {
+          "j_values": [
+            0.7575,
+            0.7675,
+            0.775
+          ],
+          "j_mean": 0.7667,
+          "j_stdev": 0.0072,
+          "unresolved_criteria_seen": [],
+          "criteria_scores_by_run": [
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.7,
+              "resources": 0.8,
+              "legal": 0.8,
+              "consequences": 0.75,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.9,
+              "risk": 0.7,
+              "time": 0.75,
+              "resources": 0.8,
+              "legal": 0.7,
+              "consequences": 0.7,
+              "content_fit": 0.8
+            },
+            {
+              "technical_feasibility": 0.8,
+              "risk": 0.7,
+              "time": 0.8,
+              "resources": 0.8,
+              "legal": 0.75,
+              "consequences": 0.8,
+              "content_fit": 0.8
+            }
+          ],
+          "runs_with_valid_j": 3,
+          "runs_total": 3,
+          "rank": 5
+        }
+      }
+    }
+  ]
+}

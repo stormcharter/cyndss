@@ -1,0 +1,287 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "OpenAdmin",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/05/02/htb-openadmin.html",
+    "title": "HTB OpenAdmin writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 18.04-era Linux",
+    "deployment_role": "Apache/OpenNetAdmin plus internal management app"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "OpenAdmin host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.171",
+      "software_or_version": "Ubuntu 18.04.3 / Apache 2.4.29-era",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used after jimmy/joanna pivot"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache 2.4.29",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts OpenNetAdmin and web source"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "OpenNetAdmin",
+      "role": "Network management UI",
+      "binding_or_path": "/ona",
+      "software_or_version": "18.1.1",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Command injection RCE"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "internal management app",
+      "role": "Local-only PHP/SSH key service",
+      "binding_or_path": "127.0.0.1:52846",
+      "software_or_version": "custom PHP",
+      "runs_as": "jimmy",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Leaked joanna SSH key"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "sudo nano",
+      "role": "Local authorization",
+      "binding_or_path": "/etc/sudoers",
+      "software_or_version": "sudo + nano",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "joanna may run nano /opt/priv NOPASSWD"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/OpenNetAdmin worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "RCE shell; read app files",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "jimmy",
+      "principal_type": "local user",
+      "operational_role": "internal app owner",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "can reach localhost app and read its source",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "joanna",
+      "principal_type": "local user",
+      "operational_role": "SSH/admin intermediary",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "sudo nano NOPASSWD",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "final principal",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "inject OpenNetAdmin command",
+      "object": "C3",
+      "condition_or_scope": "public ONA 18.1.1",
+      "security_consequence": "www-data",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "read/connect localhost",
+      "object": "C4",
+      "condition_or_scope": "web shell can query 127.0.0.1",
+      "security_consequence": "joanna key/credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "jimmy",
+      "permission_or_action": "use leaked SSH key",
+      "object": "C1",
+      "condition_or_scope": "key for joanna",
+      "security_consequence": "joanna shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "joanna",
+      "permission_or_action": "sudo execute",
+      "object": "C5 nano",
+      "condition_or_scope": "NOPASSWD",
+      "security_consequence": "root shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "OpenNetAdmin source/config",
+      "hosted_on": "C3",
+      "purpose": "application credentials and execution paths",
+      "owner_or_authority": "www-data",
+      "read_access": "public/after RCE",
+      "write_or_execute_access": "app deployer writes",
+      "security_significance": "Bridge to local app",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "joanna SSH private key",
+      "hosted_on": "C4",
+      "purpose": "lateral login credential",
+      "owner_or_authority": "joanna",
+      "read_access": "jimmy can read via localhost app",
+      "write_or_execute_access": "joanna owns",
+      "security_significance": "Cross-user credential disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/opt/priv",
+      "hosted_on": "C5",
+      "purpose": "nano target file",
+      "owner_or_authority": "root",
+      "read_access": "joanna can open",
+      "write_or_execute_access": "root owns",
+      "security_significance": "Editor escape target",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "OpenNetAdmin 18.1.1",
+      "issue": "Command injection/RCE",
+      "preconditions": "ONA endpoint exposed",
+      "vulnerable_behavior": "Parameter reaches shell command",
+      "resulting_access": "www-data",
+      "reference": "CVE-2019-era ONA RCE / Exploit-DB 47691",
+      "failed_control": "No command validation",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "custom internal PHP app",
+      "issue": "Local-only endpoint leaks private key",
+      "preconditions": "Access from localhost",
+      "vulnerable_behavior": "App returns joanna key to jimmy",
+      "resulting_access": "joanna",
+      "reference": "Information disclosure",
+      "failed_control": "No authentication/secret isolation",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "sudo 1.8.x + nano",
+      "issue": "NOPASSWD editor escape",
+      "preconditions": "joanna account",
+      "vulnerable_behavior": "nano escape executes shell as root",
+      "resulting_access": "root",
+      "reference": "GTFOBins/configuration weakness",
+      "failed_control": "Unrestricted privileged editor",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "exploit OpenNetAdmin",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "HTTP reachable",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "network → service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "www-data",
+      "action": "query internal app",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "localhost access",
+      "resulting_principal_or_access": "joanna key",
+      "boundary_crossed": "service → credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "jimmy",
+      "action": "SSH as joanna",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "key recovered",
+      "resulting_principal_or_access": "joanna",
+      "boundary_crossed": "credential → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "joanna",
+      "action": "escape sudo nano",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "NOPASSWD",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

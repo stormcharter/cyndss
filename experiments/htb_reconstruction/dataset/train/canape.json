@@ -1,0 +1,236 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Canape",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/09/15/htb-canape.html",
+    "title": "HTB Canape writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Apache/Python app backed by CouchDB and root service supervisor"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Canape host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.70",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Single host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "Apache/Python web app",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache + Flask/Python",
+      "runs_as": "www-data",
+      "exposure": "Public; .git exposed",
+      "evidence": "Explicit",
+      "analysis_note": "Serializes user input into CouchDB documents"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "CouchDB",
+      "role": "Document database",
+      "binding_or_path": "127.0.0.1:5984,5986",
+      "software_or_version": "CouchDB 2.0.0",
+      "runs_as": "homer",
+      "exposure": "Local web/app access",
+      "evidence": "Explicit",
+      "analysis_note": "Erlang cookie and database data"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:65535/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used after password/key recovery"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Scheduled task",
+      "name": "runsrv/OS_Daemons",
+      "role": "Root service supervisor",
+      "binding_or_path": "/home/homer/etc",
+      "software_or_version": "custom shell scripts",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Executes files from homer-controlled directory on restart"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/Python request context",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web process; low filesystem rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "homer",
+      "principal_type": "local user",
+      "operational_role": "CouchDB/application account",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "pickle shell and home files",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "service supervisor",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "runs root maintenance and controls host",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "submit crafted serialized value",
+      "object": "C1/C2",
+      "condition_or_scope": "web endpoint stores/loads Python pickle",
+      "security_consequence": "homer command execution",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "homer",
+      "permission_or_action": "read/write home service files",
+      "object": "C4",
+      "condition_or_scope": "home directory ownership",
+      "security_consequence": "root supervisor loads attacker-controlled program",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root supervisor",
+      "permission_or_action": "execute",
+      "object": "C4",
+      "condition_or_scope": "service restart/cron",
+      "security_consequence": "root shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": ".git repository",
+      "hosted_on": "C1",
+      "purpose": "source/config history",
+      "owner_or_authority": "www-data/app deployer",
+      "read_access": "public read",
+      "write_or_execute_access": "developer writes",
+      "security_significance": "Reveals application serialization and paths",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "CouchDB Erlang cookie",
+      "hosted_on": "C2",
+      "purpose": "database cluster auth",
+      "owner_or_authority": "homer",
+      "read_access": "read by process/user",
+      "write_or_execute_access": "CouchDB owns",
+      "security_significance": "Enables local DB control",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/home/homer/etc/OS_Daemons",
+      "hosted_on": "C4",
+      "purpose": "startup command list",
+      "owner_or_authority": "root/homer",
+      "read_access": "homer can write",
+      "write_or_execute_access": "root executes",
+      "security_significance": "Root service trust input",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C2",
+      "affected_version": "Flask/Python",
+      "issue": "Python pickle deserialization",
+      "preconditions": "Endpoint reachable; serialized document accepted",
+      "vulnerable_behavior": "Pickle executes attacker-defined callables",
+      "resulting_access": "homer shell",
+      "reference": "Unsafe deserialization",
+      "failed_control": "Application treats untrusted object as trusted",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "custom root supervisor",
+      "issue": "Root executes files from user-writable home",
+      "preconditions": "homer can modify service directory",
+      "vulnerable_behavior": "Restart invokes homer-controlled script",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "Root service has no protected command directory",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote unauthenticated client",
+      "action": "send pickle payload",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "HTTP and document endpoint",
+      "resulting_principal_or_access": "homer",
+      "boundary_crossed": "network → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "homer",
+      "action": "place payload in service directory",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "home/service write access",
+      "resulting_principal_or_access": "root supervisor will execute",
+      "boundary_crossed": "user → privileged service input",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "root supervisor",
+      "action": "restart and execute",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "process restart",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "service → superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

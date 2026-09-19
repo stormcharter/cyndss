@@ -1,0 +1,249 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Nibbles",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/06/30/htb-nibbles.html",
+    "title": "HTB Nibbles writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Apache-hosted Nibbleblog CMS"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Nibbles VM",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.75",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote administration",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Not initial vector"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "Web application host",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache + PHP",
+      "runs_as": "nibbler/web identity",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts /nibbleblog"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Nibbleblog",
+      "role": "Blog/CMS and admin console",
+      "binding_or_path": "/nibbleblog/",
+      "software_or_version": "4.0.3 Coffee",
+      "runs_as": "nibbler",
+      "exposure": "Public; admin login",
+      "evidence": "Explicit",
+      "analysis_note": "README exposes exact version"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C3",
+      "layer_or_type": "Plugin",
+      "name": "My image/plugin upload",
+      "role": "Admin media function",
+      "binding_or_path": "admin plugin page",
+      "software_or_version": "Nibbleblog 4.0.3",
+      "runs_as": "nibbler",
+      "exposure": "Authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Accepts PHP as image"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Policy/artifact",
+      "name": "sudo monitor script",
+      "role": "Privileged monitoring automation",
+      "binding_or_path": "/home/nibbler/personal/stuff/monitor.sh",
+      "software_or_version": "shell script",
+      "runs_as": "root when sudo invoked",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "File writable by nibbler"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "admin",
+      "principal_type": "application account",
+      "operational_role": "Nibbleblog administrator",
+      "groups_or_nesting": "application admin",
+      "authentication_or_effective_access": "upload/configure plugins",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "nibbler",
+      "principal_type": "local user/web execution identity",
+      "operational_role": "initial OS user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "write own home; sudo exact monitor.sh as root",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "host administrator",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "admin",
+      "permission_or_action": "upload file",
+      "object": "C4",
+      "condition_or_scope": "weak/guessed admin credential",
+      "security_consequence": "PHP payload stored by application",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "C3/C2",
+      "permission_or_action": "execute uploaded PHP",
+      "object": "payload artifact",
+      "condition_or_scope": "HTTP request",
+      "security_consequence": "Code runs as nibbler",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "nibbler",
+      "permission_or_action": "modify then sudo execute",
+      "object": "C5 monitor.sh",
+      "condition_or_scope": "file writable and NOPASSWD rule",
+      "security_consequence": "root command execution",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "README",
+      "hosted_on": "C3",
+      "purpose": "version documentation",
+      "owner_or_authority": "application owner",
+      "read_access": "public read",
+      "write_or_execute_access": "server write",
+      "security_significance": "Exposes 4.0.3",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "content/private/users.xml",
+      "hosted_on": "C3",
+      "purpose": "admin metadata/failed-login state",
+      "owner_or_authority": "application",
+      "read_access": "web-accessible through directory discovery",
+      "write_or_execute_access": "application write",
+      "security_significance": "Leaks username and lockout behavior",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "monitor.sh",
+      "hosted_on": "C5",
+      "purpose": "sudo-approved automation script",
+      "owner_or_authority": "nibbler",
+      "read_access": "nibbler read",
+      "write_or_execute_access": "nibbler write; root execute",
+      "security_significance": "User controls code trusted by root",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C4",
+      "affected_version": "Nibbleblog 4.0.3",
+      "issue": "Authenticated arbitrary PHP upload",
+      "preconditions": "Admin login obtained",
+      "vulnerable_behavior": "Image plugin accepts executable PHP",
+      "resulting_access": "nibbler code execution",
+      "reference": "CVE-2015-6967",
+      "failed_control": "Upload type/content validation failure",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "sudoers + writable script",
+      "issue": "Passwordless execution of user-controlled file",
+      "preconditions": "Local nibbler shell",
+      "vulnerable_behavior": "Modified monitor.sh executes as root",
+      "resulting_access": "root",
+      "reference": "Configuration weakness",
+      "failed_control": "Privileged rule targets writable object",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "guess weak admin credential",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "admin username disclosed/known",
+      "resulting_principal_or_access": "admin",
+      "boundary_crossed": "network → app admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "admin",
+      "action": "upload and invoke PHP",
+      "target_component_or_artifact": "C4/C2",
+      "prerequisite": "CVE-2015-6967",
+      "resulting_principal_or_access": "nibbler",
+      "boundary_crossed": "app admin → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "nibbler",
+      "action": "edit and sudo monitor.sh",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "write + NOPASSWD execute",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "local user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

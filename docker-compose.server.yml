@@ -1,0 +1,112 @@
+# Docker Compose для РОЗГОРТАННЯ НА СЕРВЕРІ (Ubuntu, ВИДІЛЕНИЙ бокс з GPU RTX 4060 Ti).
+# Запуск:  docker compose -f docker-compose.server.yml up -d --build
+#
+# Особливості деплою:
+#   - Ollama пробрасується на GPU (deploy.resources.reservations.devices нижче) — на хості
+#     потрібні nvidia-driver + nvidia-container-toolkit (`sudo nvidia-ctk runtime configure
+#     --runtime=docker`), інакше `up` впаде на "could not select device driver nvidia";
+#   - Ollama тримає nomic-embed-text (ембеддер) + hermes3 (LLM) — ОБИДВІ на GPU; модель LLM
+#     задається через .env -> LLM_BASE_URL / LLM_MODEL (за замовч. локальний hermes3:8b),
+#     опційно можна відкотити LLM у хмару (OpenRouter) тими самими змінними;
+#   - named volume для моделей Ollama (не Windows-шлях, як у локальному docker-compose.yml);
+#   - ВСІ порти прокинуто ЛИШЕ на 127.0.0.1 (назовні нічого; доступ до UI — SSH-тунель або
+#     Apache reverse-proxy на хості);
+#   - Mongo на хост-порт 27018 (27017 зайнятий системним mongod — не чіпаємо);
+#   - mem_limit на кожному сервісі (перестраховка від OOM-killer).
+
+services:
+  mongo:
+    image: mongo:7
+    # --auth: без креденшелів у базу не пускаємо (бокс спільний, порт 27018 на loopback —
+    #   але loopback доступний КОЖНОМУ, хто має shell на машині).
+    # --keyFile: ОБОВʼЯЗКОВИЙ разом з --auth для replica set — це внутрішня автентифікація
+    #   між учасниками rs0. Навіть для одновузлового набору mongod без нього не стартує.
+    command: ["--replSet", "rs0", "--bind_ip_all", "--auth", "--keyFile", "/etc/mongo/keyfile"]
+    ports:
+      - "127.0.0.1:27018:27017"     # назовні не світимо; хост-скрипти йдуть на 27018
+    environment:
+      # Тільки для healthcheck (rs.status() під auth вимагає прав clusterMonitor).
+      - MONGO_HEALTH_USER=${MONGO_APP_USER}
+      - MONGO_HEALTH_PASSWORD=${MONGO_APP_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+      # Файл має бути 400 і належати uid 999 (mongo у контейнері), інакше mongod його відкине.
+      # Створення — див. DEPLOY_SERVER.md (розділ «Автентифікація Mongo»).
+      - ./secrets/mongo-keyfile:/etc/mongo/keyfile:ro
+    mem_limit: 4g
+    restart: unless-stopped         # без цього після ребуту боксу контейнер не встає сам
+    healthcheck:
+      # --host 127.0.0.1 (а не URI з replicaSet=rs0): на ЧИСТОМУ розгортанні набір ще не
+      # ініціалізований, і драйвер з replicaSet просто не знайшов би primary — гілка
+      # rs.initiate() нижче ніколи б не виконалась.
+      test: |
+        mongosh --quiet --host 127.0.0.1 \
+          --username "$$MONGO_HEALTH_USER" --password "$$MONGO_HEALTH_PASSWORD" \
+          --authenticationDatabase admin --eval "
+            try {
+              if (rs.status().ok) { quit(0); }
+            } catch(e) {
+              if (rs.initiate({_id:'rs0', members:[{_id:0, host:'mongo:27017'}]}).ok) { quit(0); }
+            }
+            quit(1);
+          "
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  manticore:
+    image: manticoresearch/manticore:latest
+    ports:
+      - "127.0.0.1:9998:9308"       # HTTP API
+      - "127.0.0.1:9999:9306"       # MySQL protocol (ui.py + відладка)
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - manticore-data:/var/lib/manticore
+    mem_limit: 8g
+    restart: unless-stopped         # без цього після ребуту боксу контейнер не встає сам
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama   # named volume (не Windows-шлях)
+    # 6g host-RAM: ваги моделей тепер живуть у VRAM (GPU) — тут лишається тільки оверхед
+    # процесу ollama + KV-cache. Стеля, а не резерв.
+    mem_limit: 6g
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  shipper:
+    build: .
+    depends_on:
+      mongo:
+        condition: service_healthy
+      manticore:
+        condition: service_started
+      ollama:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    mem_limit: 2g
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  manticore-data:
+  ollama-data:

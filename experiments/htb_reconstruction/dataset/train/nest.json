@@ -1,0 +1,335 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Nest",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/06/06/htb-nest.html",
+    "title": "HTB Nest writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows standalone SMB host",
+    "deployment_role": "Guest/Data/Secure$ shares plus HQK Reporting service"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Nest host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.178",
+      "software_or_version": "Windows",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone workgroup"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB server",
+      "role": "File shares/named pipes",
+      "binding_or_path": "445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Guest and credentialed",
+      "evidence": "Explicit",
+      "analysis_note": "Data, Users, Secure$ ACL differences"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Share",
+      "name": "Data share",
+      "role": "Department files",
+      "binding_or_path": "\\\\HTB-NEST\\Data",
+      "software_or_version": "SMB",
+      "runs_as": "share/service",
+      "exposure": "Guest read; TempUser more",
+      "evidence": "Explicit",
+      "analysis_note": "Configs and HR welcome file"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "HQK Reporting",
+      "role": "Custom query service",
+      "binding_or_path": "4386/tcp",
+      "software_or_version": "Reporting Service V1.2",
+      "runs_as": "C.Smith/user process",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Directory traversal, debug command and query engine"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C1",
+      "layer_or_type": "Binary",
+      "name": "AD Integration Module",
+      "role": ".NET helper",
+      "binding_or_path": "Users\\C.Smith\\HQK Reporting\\AD Integration Module",
+      "software_or_version": "VB.NET/.NET",
+      "runs_as": "C.Smith",
+      "exposure": "SMB read",
+      "evidence": "Explicit",
+      "analysis_note": "Decrypts C.Smith password"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C1",
+      "layer_or_type": "Service",
+      "name": "PSExec",
+      "role": "SMB service execution",
+      "binding_or_path": "ADMIN$ / Service Control",
+      "software_or_version": "Sysinternals/SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Authenticated admin",
+      "evidence": "Explicit",
+      "analysis_note": "Final shell path"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "SMB guest",
+      "operational_role": "initial share reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "read Data/Users selected files",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "TempUser",
+      "principal_type": "local user",
+      "operational_role": "temporary staff account",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "read Secure$/Data configs",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "C.Smith",
+      "principal_type": "local user",
+      "operational_role": "reporting service/user flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "read HQK files; debug service access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "local administrator",
+      "operational_role": "final principal",
+      "groups_or_nesting": "Administrators",
+      "authentication_or_effective_access": "SYSTEM via PSExec",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "service/kernel authority",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read",
+      "object": "C2 Data share",
+      "condition_or_scope": "guest ACL",
+      "security_consequence": "TempUser credential clue",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "TempUser",
+      "permission_or_action": "read",
+      "object": "C4/config files",
+      "condition_or_scope": "share ACL",
+      "security_consequence": "C.Smith encrypted password and decryptor",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "C.Smith",
+      "permission_or_action": "read ADS/debug/config",
+      "object": "C3",
+      "condition_or_scope": "authenticated SMB; ADS readable",
+      "security_consequence": "debug password and administrator artifact",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "C.Smith",
+      "permission_or_action": "debug/query",
+      "object": "C3",
+      "condition_or_scope": "debug password",
+      "security_consequence": "administrator credential memory disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Administrator",
+      "permission_or_action": "PSExec",
+      "object": "C1/C5",
+      "condition_or_scope": "SMB admin credential",
+      "security_consequence": "SYSTEM shell",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Shared/Templates/HR/Welcome Email.txt",
+      "hosted_on": "C2",
+      "purpose": "temporary account credential clue",
+      "owner_or_authority": "HR/share owner",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "HR writes",
+      "security_significance": "Guest-to-user transition",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "RU_config.xml",
+      "hosted_on": "C2/C4",
+      "purpose": "encrypted C.Smith password",
+      "owner_or_authority": "IT/admin",
+      "read_access": "TempUser read",
+      "write_or_execute_access": "IT writes",
+      "security_significance": "Encrypted secret plus .NET decryptor",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Debug Mode Password.txt:Password ADS",
+      "hosted_on": "C3/C1",
+      "purpose": "HQK debug secret",
+      "owner_or_authority": "C.Smith",
+      "read_access": "C.Smith ADS read",
+      "write_or_execute_access": "service writes ADS",
+      "security_significance": "Hidden alternate data stream",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "HqkLdap.exe",
+      "hosted_on": "C4",
+      "purpose": "password decryption logic",
+      "owner_or_authority": "C.Smith/IT",
+      "read_access": "C.Smith read",
+      "write_or_execute_access": "developers write",
+      "security_significance": "Reverse-engineering path",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "PSExec service request",
+      "hosted_on": "C5",
+      "purpose": "remote SYSTEM execution",
+      "owner_or_authority": "Administrator",
+      "read_access": "admin only",
+      "write_or_execute_access": "SCM creates service",
+      "security_significance": "Final boundary crossing",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C2",
+      "affected_version": "SMB share ACL",
+      "issue": "Guest/temporary accounts read sensitive config",
+      "preconditions": "SMB reachable",
+      "vulnerable_behavior": "Department share discloses credentials and paths",
+      "resulting_access": "TempUser/C.Smith",
+      "reference": "Configuration weakness",
+      "failed_control": "Inadequate share/file ACLs",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "HQK Reporting V1.2",
+      "issue": "Directory traversal and debug secret in ADS",
+      "preconditions": "4386 reachable; C.Smith share access",
+      "vulnerable_behavior": "SETDIR permits .. and ADS stores debug password",
+      "resulting_access": "debug/query access",
+      "reference": "Custom service flaw",
+      "failed_control": "No path confinement; secret hidden only by ADS",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C4",
+      "affected_version": "VB.NET AD Integration Module",
+      "issue": "Reversible/custom password encryption",
+      "preconditions": "Binary readable",
+      "vulnerable_behavior": "Decryption routine recovers C.Smith password",
+      "resulting_access": "C.Smith",
+      "reference": "Cryptographic design flaw",
+      "failed_control": "Key/algorithm shipped with binary",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V4",
+      "affected_component": "C5",
+      "affected_version": "PSExec/SMB",
+      "issue": "Administrator credential reused for service execution",
+      "preconditions": "Admin secret recovered",
+      "vulnerable_behavior": "SMB service control creates SYSTEM process",
+      "resulting_access": "SYSTEM",
+      "reference": "Configuration weakness",
+      "failed_control": "Admin credential reaches user-readable artifacts",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "read HR welcome file",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "guest share",
+      "resulting_principal_or_access": "TempUser",
+      "boundary_crossed": "network → local credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "TempUser",
+      "action": "read IT configs/decrypt C.Smith",
+      "target_component_or_artifact": "C2/C4",
+      "prerequisite": "share ACL and helper binary",
+      "resulting_principal_or_access": "C.Smith",
+      "boundary_crossed": "credential → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "C.Smith",
+      "action": "read ADS and enable HQK debug",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "SMB access",
+      "resulting_principal_or_access": "administrator artifact",
+      "boundary_crossed": "user → service data",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "C.Smith",
+      "action": "recover admin secret and PSExec",
+      "target_component_or_artifact": "C3/C5",
+      "prerequisite": "debug/decryption path",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "user → administrator → system",
+      "evidence": "Explicit"
+    }
+  ]
+}

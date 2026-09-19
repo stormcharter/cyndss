@@ -1,0 +1,275 @@
+{
+  "machine": "Cache",
+  "split": "train",
+  "input": {
+    "documents": 17,
+    "graph_nodes": 83,
+    "graph_edges": 769,
+    "entry_concepts": [
+      "apache",
+      "cache",
+      "host",
+      "openemr",
+      "openssh"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "cache:host:0",
+        "title": "Cache",
+        "summary": "Ubuntu 18.04 Linux Apache/OpenEMR vhost, Memcached and Docker-group privilege",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:component:H1",
+        "title": "Cache host",
+        "summary": "Host OS/security boundary 10.10.10.188 Ubuntu 18.04 Bionic-era Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22,2201/tcp OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 root daemon Public ash then luffy login Cache host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp Apache 2.4.29 www-data Public cache.htb and hms.htb vhosts Cache host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:component:C3",
+        "title": "OpenEMR",
+        "summary": "Application Medical app hms.htb OpenEMR 5.0.0-era www-data Public Unauthenticated info leaks/auth bypass and SQLi Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:component:C4",
+        "title": "Memcached",
+        "summary": "Database Local cache 127.0.0.1:11211/tcp Memcached 1.5.6 Ubuntu memcache Local Stores luffy password in cache Cache host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:component:C5",
+        "title": "Docker daemon",
+        "summary": "Service Container runtime /var/run/docker.sock Docker root Local luffy is docker group member Cache host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:component:C6",
+        "title": "Ubuntu image",
+        "summary": "Container Container artifact docker image ubuntu:latest Ubuntu latest root in container Local Can mount host / into container Docker daemon",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:permission:0",
+        "title": "remote client OpenEMR",
+        "summary": "bypass OpenEMR portal/read SQLi OpenEMR hms vhost discovered; vulnerable release app data/credentials",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:permission:1",
+        "title": "www-data OpenSSH",
+        "summary": "reuse OpenEMR credential OpenSSH credential disclosed by OpenEMR ash shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:permission:2",
+        "title": "ash Memcached",
+        "summary": "read Memcached key/value Memcached localhost cache access luffy password",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:permission:3",
+        "title": "ash OpenSSH",
+        "summary": "authenticate as luffy OpenSSH Memcached password reuse luffy shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:permission:4",
+        "title": "luffy C5/C6",
+        "summary": "control Docker daemon C5/C6 docker group container root with host filesystem mount",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:permission:5",
+        "title": "container root Cache host",
+        "summary": "read/write /mnt host root Cache host docker run -v /:/mnt host root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:vulnerability:V1",
+        "title": "Authentication bypass and SQL injection OpenEMR",
+        "summary": "OpenEMR OpenEMR 5.0.0-era hms vhost public Portal registration/session and SQLi expose data ash credential material Unauthenticated pages lack access control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:vulnerability:V2",
+        "title": "Unauthenticated local cache read Memcached",
+        "summary": "Memcached Memcached 1.5.6 ash local shell Cache protocol returns luffy password luffy credential Sensitive credential left in plaintext cache",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "cache:vulnerability:V3",
+        "title": "docker group grants daemon control Docker daemon",
+        "summary": "Docker daemon Docker luffy local session Container can mount host root root Socket ACL treated as admin boundary",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential"
+      ],
+      [
+        "openssh"
+      ],
+      [
+        "luffy"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "container",
+        "root"
+      ],
+      [
+        "daemon",
+        "root"
+      ],
+      [
+        "docker",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "group",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "openemr",
+        "control",
+        "root"
+      ],
+      [
+        "cache",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "openemr",
+        "control",
+        "root"
+      ],
+      [
+        "cache",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "cache",
+        "host",
+        "security",
+        "boundary",
+        "ubuntu",
+        "bionic-era",
+        "linux",
+        "root"
+      ],
+      [
+        "apache",
+        "front",
+        "www-data",
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "ubuntu0",
+        "root"
+      ],
+      [
+        "openemr",
+        "medical",
+        "www-data",
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "ubuntu0",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "ubuntu0",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

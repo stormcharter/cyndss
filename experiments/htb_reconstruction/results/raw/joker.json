@@ -1,0 +1,221 @@
+{
+  "machine": "Joker",
+  "split": "validation",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 83,
+    "graph_edges": 787,
+    "entry_concepts": [
+      "host",
+      "joker",
+      "squid",
+      "tftp"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "joker:host:0",
+        "title": "Joker",
+        "summary": "Ubuntu Linux TFTP/Squid proxy, localhost Flask console and wildcard tar cron",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:component:H1",
+        "title": "Joker host",
+        "summary": "Host OS/security boundary 10.10.10.21 Ubuntu Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:component:C1",
+        "title": "TFTP",
+        "summary": "Service UDP config transfer 69/udp TFTP root Public Downloads Squid configuration Joker host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:component:C2",
+        "title": "Squid",
+        "summary": "Service HTTP proxy 3128/tcp Squid proxy Public/authenticated Config contains proxy credentials and internal route Joker host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:component:C3",
+        "title": "Flask console",
+        "summary": "Application Python debug application 127.0.0.1:8080-ish Werkzeug/Python www-data Local via proxy Python console/debug execution Joker host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:component:C4",
+        "title": "sudo wildcard",
+        "summary": "Authorization Privileged command rule /etc/sudoers sudoedit/tar user Local Wildcard and sudoedit_follow permit command/file manipulation Joker host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:component:C5",
+        "title": "tar cron",
+        "summary": "Scheduled task Root archive job /opt/scripts/*.sh tar root Local scheduled Wildcard/checkpoint/symlink abuse Joker host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:permission:0",
+        "title": "anonymous TFTP",
+        "summary": "read TFTP config TFTP UDP 69 public Squid credentials",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:permission:1",
+        "title": "proxy client C2/C3",
+        "summary": "authenticate Squid/reach localhost C2/C3 credentials recovered Flask console",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:permission:2",
+        "title": "joker Flask console",
+        "summary": "escape Flask console to shell Flask console Python debug joker shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:permission:3",
+        "title": "joker sudo wildcard",
+        "summary": "abuse sudo wildcard/sudoedit sudo wildcard sudo rule write/execute privileged files",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:permission:4",
+        "title": "root cron tar cron",
+        "summary": "run tar with wildcard tar cron file names/symlinks controlled root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:vulnerability:V1",
+        "title": "Anonymous config disclosure TFTP",
+        "summary": "TFTP TFTP UDP 69 reachable TFTP GET returns Squid config proxy credentials Config file publicly downloadable",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:vulnerability:V2",
+        "title": "Local debug console exposed through Squid Flask console",
+        "summary": "Flask console Werkzeug/Python console Proxy auth and route Console evaluates Python and spawns commands joker/www-data Debug endpoint bound to reachable route",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "joker:vulnerability:V3",
+        "title": "Wildcard, sudoedit-follow and tar checkpoint/symlink abuse C4+C5",
+        "summary": "C4+C5 sudo/tar joker shell Privileged command interprets attacker-controlled file names root Root cron and sudo rules trust writable paths",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "credential",
+        "proxy"
+      ],
+      [
+        "python",
+        "shell"
+      ],
+      [
+        "control",
+        "privileged"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "checkpoint",
+        "root"
+      ],
+      [
+        "names",
+        "root"
+      ],
+      [
+        "symlink",
+        "root"
+      ],
+      [
+        "cron",
+        "root"
+      ],
+      [
+        "authenticate",
+        "localhost",
+        "cron",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "joker",
+        "root"
+      ],
+      [
+        "tftp",
+        "root"
+      ],
+      [
+        "squid",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "joker",
+        "root"
+      ],
+      [
+        "tftp",
+        "root"
+      ],
+      [
+        "squid",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "tftp",
+        "config",
+        "transfer",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

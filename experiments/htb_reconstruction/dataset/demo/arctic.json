@@ -1,0 +1,251 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Arctic",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/05/19/htb-arctic.html",
+    "title": "HTB Arctic writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2008 R2 build 7600",
+    "deployment_role": "ColdFusion/JRun application server"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Arctic server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.11",
+      "software_or_version": "Windows Server 2008 R2 6.1.7600",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Slow standalone VM"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "JRun Web Server",
+      "role": "HTTP connector/application front end",
+      "binding_or_path": "0.0.0.0:8500/tcp",
+      "software_or_version": "JRun / ColdFusion",
+      "runs_as": "ARCTIC\\tolis",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Exposes CFIDE"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Adobe ColdFusion Administrator",
+      "role": "Application administration",
+      "binding_or_path": "/CFIDE/administrator",
+      "software_or_version": "ColdFusion 8",
+      "runs_as": "tolis via service",
+      "exposure": "Public login",
+      "evidence": "Explicit",
+      "analysis_note": "Legacy admin surface"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Connector",
+      "name": "FCKeditor CFM upload connector",
+      "role": "File upload handler",
+      "binding_or_path": "/CFIDE/scripts/ajax/FCKeditor/.../upload.cfm",
+      "software_or_version": "ColdFusion 8.0.1-era",
+      "runs_as": "tolis",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Unauthenticated upload path"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "File",
+      "name": "password.properties",
+      "role": "ColdFusion admin hash store",
+      "binding_or_path": "ColdFusion lib path",
+      "software_or_version": "ColdFusion 8",
+      "runs_as": "tolis/SYSTEM",
+      "exposure": "Local; traversal-reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Alternate admin compromise path"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Kernel/service",
+      "name": "Windows tracing service path",
+      "role": "Local privilege boundary",
+      "binding_or_path": "local",
+      "software_or_version": "build 7600 unpatched",
+      "runs_as": "SYSTEM",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "MS10-059 target"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "ARCTIC\\tolis",
+      "principal_type": "local user/service identity",
+      "operational_role": "ColdFusion/JRun code identity",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "execute uploaded JSP/CFM; local user rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "ColdFusion administrator",
+      "principal_type": "application account",
+      "operational_role": "application admin",
+      "groups_or_nesting": "CF admin",
+      "authentication_or_effective_access": "schedule tasks/upload/manage CF",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "local system",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "upload file with crafted CurrentFolder/null termination",
+      "object": "C3",
+      "condition_or_scope": "connector exposed",
+      "security_consequence": "JSP written below /userfiles/file",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "traverse/read",
+      "object": "C4",
+      "condition_or_scope": "vulnerable CFIDE path",
+      "security_consequence": "Admin hash disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "tolis",
+      "permission_or_action": "exploit service tracing flaw",
+      "object": "C5",
+      "condition_or_scope": "unpatched build",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "uploaded JSP /userfiles/file/*.jsp",
+      "hosted_on": "C1/C3",
+      "purpose": "server-side payload",
+      "owner_or_authority": "tolis service",
+      "read_access": "public request",
+      "write_or_execute_access": "connector writes; JRun executes",
+      "security_significance": "Upload becomes code execution",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "password.properties",
+      "hosted_on": "C4",
+      "purpose": "ColdFusion administrator secret hash",
+      "owner_or_authority": "ColdFusion",
+      "read_access": "normally local",
+      "write_or_execute_access": "service writes",
+      "security_significance": "Traversal exposes management credential",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "ColdFusion 8.0.1",
+      "issue": "Unauthenticated arbitrary file upload/execution",
+      "preconditions": "Connector publicly reachable",
+      "vulnerable_behavior": "Null-terminated path places JSP in executable directory",
+      "resulting_access": "ARCTIC\\tolis",
+      "reference": "CVE-2009-2265",
+      "failed_control": "Upload validation/path handling failure",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "A1",
+      "affected_component": "C2/C4",
+      "affected_version": "ColdFusion 8",
+      "issue": "Directory traversal to admin hash",
+      "preconditions": "CFIDE reachable",
+      "vulnerable_behavior": "Traversal reads password.properties",
+      "resulting_access": "ColdFusion admin access",
+      "reference": "CVE-2010-2861",
+      "failed_control": "Sensitive file reachable through traversal",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "Windows Server 2008 R2 build 7600",
+      "issue": "Service-tracing token privilege escalation",
+      "preconditions": "Local shell",
+      "vulnerable_behavior": "Vulnerable tracing service yields privileged execution",
+      "resulting_access": "SYSTEM",
+      "reference": "MS10-059 / CVE-2010-2554",
+      "failed_control": "Missing security update",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "upload JSP",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "public connector",
+      "resulting_principal_or_access": "payload file",
+      "boundary_crossed": "network → server content",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "unauthenticated",
+      "action": "request uploaded JSP",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "file in executable path",
+      "resulting_principal_or_access": "tolis",
+      "boundary_crossed": "content → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "tolis",
+      "action": "run MS10-059 exploit",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "unpatched host",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "local user → system",
+      "evidence": "Explicit"
+    }
+  ]
+}

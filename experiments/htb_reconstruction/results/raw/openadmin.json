@@ -1,0 +1,276 @@
+{
+  "machine": "OpenAdmin",
+  "split": "train",
+  "input": {
+    "documents": 14,
+    "graph_nodes": 68,
+    "graph_edges": 536,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "openadmin",
+      "opennetadmin",
+      "openssh"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "openadmin:host:0",
+        "title": "OpenAdmin",
+        "summary": "Ubuntu 18.04-era Linux Apache/OpenNetAdmin plus internal management app",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:component:H1",
+        "title": "OpenAdmin host",
+        "summary": "Host OS/security boundary 10.10.10.171 Ubuntu 18.04.3 / Apache 2.4.29-era root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:22/tcp OpenSSH root daemon Public Used after jimmy/joanna pivot OpenAdmin host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:component:C2",
+        "title": "Apache",
+        "summary": "Service HTTP front end 0.0.0.0:80/tcp Apache 2.4.29 www-data Public Hosts OpenNetAdmin and web source OpenAdmin host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:component:C3",
+        "title": "OpenNetAdmin",
+        "summary": "Application Network management UI /ona 18.1.1 www-data Public Command injection RCE Apache",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:component:C4",
+        "title": "internal management app",
+        "summary": "Application Local-only PHP/SSH key service 127.0.0.1:52846 custom PHP jimmy Local Leaked joanna SSH key OpenAdmin host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:component:C5",
+        "title": "sudo nano",
+        "summary": "Authorization Local authorization /etc/sudoers sudo + nano root Local joanna may run nano /opt/priv NOPASSWD OpenAdmin host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:permission:0",
+        "title": "remote client OpenNetAdmin",
+        "summary": "inject OpenNetAdmin command OpenNetAdmin public ONA 18.1.1 www-data",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:permission:1",
+        "title": "www-data internal management app",
+        "summary": "read/connect localhost internal management app web shell can query 127.0.0.1 joanna key/credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:permission:2",
+        "title": "jimmy OpenSSH",
+        "summary": "use leaked SSH key OpenSSH key for joanna joanna shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:permission:3",
+        "title": "joanna C5 nano",
+        "summary": "sudo execute C5 nano NOPASSWD root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:vulnerability:V1",
+        "title": "Command injection/RCE OpenNetAdmin",
+        "summary": "OpenNetAdmin OpenNetAdmin 18.1.1 ONA endpoint exposed Parameter reaches shell command www-data No command validation",
+        "verified_cve_ids": "CVE-2019-ERA ONA RCE / EXPLOIT-DB 47691"
+      },
+      {
+        "mongo_id": "openadmin:vulnerability:V2",
+        "title": "Local-only endpoint leaks private key internal management app",
+        "summary": "internal management app custom internal PHP app Access from localhost App returns joanna key to jimmy joanna No authentication/secret isolation",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "openadmin:vulnerability:V3",
+        "title": "NOPASSWD editor escape sudo nano",
+        "summary": "sudo nano sudo 1.8.x + nano joanna account nano escape executes shell as root root Unrestricted privileged editor",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "www-data"
+      ],
+      [
+        "internal",
+        "joanna",
+        "management"
+      ],
+      [
+        "joanna",
+        "openssh"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2019-ERA ONA RCE / EXPLOIT-DB 47691",
+        "shell",
+        "root"
+      ],
+      [
+        "endpoint",
+        "CVE-2019-ERA ONA RCE / EXPLOIT-DB 47691",
+        "shell",
+        "root"
+      ],
+      [
+        "injection",
+        "CVE-2019-ERA ONA RCE / EXPLOIT-DB 47691",
+        "shell",
+        "root"
+      ],
+      [
+        "nano",
+        "root"
+      ],
+      [
+        "nopasswd",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openadmin",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "opennetadmin",
+        "ubuntu",
+        "root"
+      ],
+      [
+        "apache",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "host",
+        "root"
+      ],
+      [
+        "openadmin",
+        "root"
+      ],
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "opennetadmin",
+        "ubuntu",
+        "root"
+      ],
+      [
+        "apache",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "opennetadmin",
+        "network",
+        "management",
+        "command",
+        "injection",
+        "www-data",
+        "internal",
+        "local-only",
+        "service",
+        "custom",
+        "jimmy",
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ],
+      [
+        "apache",
+        "front",
+        "www-data",
+        "internal",
+        "management",
+        "local-only",
+        "service",
+        "custom",
+        "jimmy",
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ],
+      [
+        "opennetadmin",
+        "network",
+        "management",
+        "www-data",
+        "internal",
+        "local-only",
+        "service",
+        "custom",
+        "jimmy",
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

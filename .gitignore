@@ -1,0 +1,43 @@
+# Secrets and configs
+.env
+# keyFile replica set + пароль root-користувача Mongo (генеруються на сервері)
+secrets/
+
+# Локальні файли асистентів розробки (особистий контекст, не код проєкту)
+.agents/
+skills-lock.json
+
+# Telegram sessions (contain account authorization!)
+*.session
+*.session-journal
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Streamlit
+.streamlit/
+
+# Locally generated graphs (dynamic files)
+# NB: з переходом на pyvis generate_html() графи більше НЕ пишуться на диск —
+# HTML віддається рядком (див. ui._net_to_html). Правила лишені для старих
+# файлів, що могли лишитись у робочих копіях і на сервері.
+filtered_threat_graph.html
+threat_graph.html
+ai_threat_graph.html
+semantic_network.html
+ai_semantic_network.html
+hypothesis_network.html
+chat_*.html
+cti_graph.html
+
+# IDE
+.idea/
+.vscode/
+
+# Резервні копії .env — містять ключі; одне `git add .` і вони в історії
+.env.bak*
+.env.save
+.env.*.bak

@@ -1,0 +1,279 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Node",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2021/06/08/htb-node.html",
+    "title": "HTB Node writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Express app with exposed JWT/user hashes, MongoDB and local buffer overflow"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Node host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.58",
+      "software_or_version": "Ubuntu 16.04-era Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH 7.2p2 Ubuntu",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "mark login after hash recovery"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "Node.js Express",
+      "role": "MyPlace web app",
+      "binding_or_path": "3000/tcp",
+      "software_or_version": "Node.js/Express",
+      "runs_as": "node",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "API exposes serialized user data and JWT"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "MongoDB",
+      "role": "Scheduler database",
+      "binding_or_path": "127.0.0.1:27017/tcp",
+      "software_or_version": "MongoDB 3.2.16",
+      "runs_as": "mongodb",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Stores scheduler tasks/user data"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Binary",
+      "name": "backup binary",
+      "role": "Setuid/return-to-libc target",
+      "binding_or_path": "/usr/local/bin/backup",
+      "software_or_version": "custom ELF",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Buffer overflow/ret2libc"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C3",
+      "layer_or_type": "Artifact",
+      "name": "scheduler task data",
+      "role": "Command injection input",
+      "binding_or_path": "Mongo scheduler.tasks",
+      "software_or_version": "Node/mark",
+      "runs_as": "Local",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Task command is executed by backup binary"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "node",
+      "principal_type": "service identity",
+      "operational_role": "Express process",
+      "groups_or_nesting": "node",
+      "authentication_or_effective_access": "API data disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "mark",
+      "principal_type": "local user",
+      "operational_role": "Mongo/SSH user",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "SSH after cracking hash; can query scheduler",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "SUID owner",
+      "operational_role": "backup binary owner",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "enumerate Express API",
+      "object": "C2",
+      "condition_or_scope": "3000 public",
+      "security_consequence": "user hashes/JWT",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "crack hash and SSH",
+      "object": "C1",
+      "condition_or_scope": "credential recovered",
+      "security_consequence": "mark shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "mark",
+      "permission_or_action": "connect Mongo scheduler",
+      "object": "C3",
+      "condition_or_scope": "local DB access",
+      "security_consequence": "task command input",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "mark",
+      "permission_or_action": "overflow backup/ret2libc",
+      "object": "C4/C5",
+      "condition_or_scope": "binary reachable; controlled task",
+      "security_consequence": "root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Express API response/JWT",
+      "hosted_on": "C2",
+      "purpose": "user credentials/session",
+      "owner_or_authority": "node",
+      "read_access": "public read",
+      "write_or_execute_access": "app writes",
+      "security_significance": "Authentication disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Mongo scheduler.tasks",
+      "hosted_on": "C3/C5",
+      "purpose": "scheduled command document",
+      "owner_or_authority": "mark/node",
+      "read_access": "mark can query/write",
+      "write_or_execute_access": "scheduler writes",
+      "security_significance": "Command injection/data source",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/usr/local/bin/backup",
+      "hosted_on": "C4",
+      "purpose": "root backup executable",
+      "owner_or_authority": "root",
+      "read_access": "mark can execute",
+      "write_or_execute_access": "root owns",
+      "security_significance": "Buffer overflow target",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "Node.js/Express",
+      "issue": "API overexposes user hashes/JWT",
+      "preconditions": "API public",
+      "vulnerable_behavior": "Endpoint returns credentials without authorization",
+      "resulting_access": "mark credential",
+      "reference": "Information disclosure",
+      "failed_control": "Sensitive API fields unauthenticated",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3+C5",
+      "affected_version": "MongoDB scheduler",
+      "issue": "Writable command/task data reaches backup",
+      "preconditions": "mark local DB access",
+      "vulnerable_behavior": "Task command is consumed by privileged binary",
+      "resulting_access": "root command input",
+      "reference": "Command injection",
+      "failed_control": "No ownership/command allowlist",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C4",
+      "affected_version": "custom backup ELF",
+      "issue": "Return-to-libc buffer overflow",
+      "preconditions": "Local user can execute binary; ASLR constraints known",
+      "vulnerable_behavior": "Oversized input controls return address and calls libc",
+      "resulting_access": "root",
+      "reference": "Custom buffer overflow",
+      "failed_control": "No bounds checking; setuid root binary",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "enumerate API and crack hashes",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "3000 public",
+      "resulting_principal_or_access": "mark credential",
+      "boundary_crossed": "network → credential",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "SSH as mark",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "hash cracked",
+      "resulting_principal_or_access": "mark",
+      "boundary_crossed": "credential → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "mark",
+      "action": "write/query scheduler and run backup",
+      "target_component_or_artifact": "C3/C4/C5",
+      "prerequisite": "local access",
+      "resulting_principal_or_access": "controlled overflow/task",
+      "boundary_crossed": "user → privileged binary",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "backup binary",
+      "action": "return-to-libc/execute",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "crafted input",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "binary → superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

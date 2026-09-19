@@ -1,0 +1,285 @@
+{
+  "machine": "Irked",
+  "split": "validation",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 73,
+    "graph_edges": 585,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "irked",
+      "openssh",
+      "rpcbind",
+      "unrealircd"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "irked:host:0",
+        "title": "Irked",
+        "summary": "Debian Linux UnrealIRCd service plus steganographic user credential and SUID helper",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:component:H1",
+        "title": "Irked host",
+        "summary": "Host OS/security boundary 10.10.10.117 Debian Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH root daemon Public Used after stego password Irked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:component:C2",
+        "title": "Apache",
+        "summary": "Service HTTP front end 80/tcp Apache www-data Public Hosts irked.jpg clue image Irked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:component:C3",
+        "title": "rpcbind",
+        "summary": "Service RPC discovery 111/tcp rpcbind root Public Recon only Irked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:component:C4",
+        "title": "UnrealIRCd",
+        "summary": "Service IRC daemon 6697,8067/tcp UnrealIRCd 3.2.8.1 ircd Public Backdoored command handler Irked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:component:C5",
+        "title": "viewuser",
+        "summary": "Binary SUID helper /usr/bin/viewuser custom ELF root Local; setuid root Executes /tmp/listusers via shell Irked host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:permission:0",
+        "title": "IRC client UnrealIRCd",
+        "summary": "send crafted command UnrealIRCd IRC port reachable command execution as ircd/service",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:permission:1",
+        "title": "remote client Apache",
+        "summary": "download image Apache HTTP public stego password clue",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:permission:2",
+        "title": "djmardov OpenSSH",
+        "summary": "SSH login OpenSSH password extracted from image user shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:permission:3",
+        "title": "djmardov viewuser",
+        "summary": "execute viewuser viewuser SUID bit root runs /tmp/listusers",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:permission:4",
+        "title": "djmardov viewuser",
+        "summary": "create /tmp/listusers viewuser script path missing and /tmp writable root shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:vulnerability:V1",
+        "title": "Backdoor command injection UnrealIRCd",
+        "summary": "UnrealIRCd UnrealIRCd 3.2.8.1 IRC service public Special command executes shell command ircd/service shell Backdoored release deployed",
+        "verified_cve_ids": "CVE-2010-2075"
+      },
+      {
+        "mongo_id": "irked:vulnerability:V2",
+        "title": "SUID helper calls /tmp/listusers viewuser",
+        "summary": "viewuser custom viewuser djmardov local shell Shell follows predictable writable script path root Root helper does not use protected path",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "irked:vulnerability:V3",
+        "title": "Credential hidden in public image Apache",
+        "summary": "Apache stego image Image public Steghide data yields SSH password djmardov Secret embedded in web content",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "service",
+        "shell",
+        "unrealircd"
+      ],
+      [
+        "apache",
+        "djmardov",
+        "password"
+      ],
+      [
+        "djmardov",
+        "openssh"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2010-2075",
+        "shell",
+        "root"
+      ],
+      [
+        "listusers",
+        "root"
+      ],
+      [
+        "viewuser",
+        "root"
+      ],
+      [
+        "plus",
+        "suid",
+        "root"
+      ],
+      [
+        "steganographic",
+        "suid",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "rpcbind",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "rpcbind",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "remote",
+        "root"
+      ],
+      [
+        "irked",
+        "root"
+      ],
+      [
+        "unrealircd",
+        "helper",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "rpcbind",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ],
+      [
+        "apache",
+        "remote",
+        "root"
+      ],
+      [
+        "irked",
+        "root"
+      ],
+      [
+        "unrealircd",
+        "helper",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "apache",
+        "front",
+        "credential",
+        "hidden",
+        "public",
+        "stego",
+        "djmardov",
+        "viewuser",
+        "suid",
+        "helper",
+        "custom",
+        "listusers",
+        "root"
+      ],
+      [
+        "apache",
+        "front",
+        "credential",
+        "hidden",
+        "public",
+        "stego",
+        "djmardov",
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ],
+      [
+        "apache",
+        "front",
+        "credential",
+        "hidden",
+        "public",
+        "stego",
+        "djmardov",
+        "viewuser",
+        "suid",
+        "helper",
+        "custom",
+        "root"
+      ],
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "root"
+      ],
+      [
+        "rpcbind",
+        "discovery",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.3333333333333333,
+    "a_ordered": 0.3333333333333333,
+    "a_precision": 0.3333333333333333,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.6666666666666666
+  }
+}

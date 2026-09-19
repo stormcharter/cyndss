@@ -1,0 +1,216 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "SwagShop",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/09/28/htb-swagshop.html",
+    "title": "HTB SwagShop writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Magento 1.9.2.1 storefront with permissive sudo"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "SwagShop host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.140",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone web host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used after web compromise"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "HTTP storefront",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache + PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Magento front end/admin"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Magento",
+      "role": "E-commerce CMS",
+      "binding_or_path": "/magento",
+      "software_or_version": "1.9.2.1",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Admin API/SQL injection exploit"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "sudo vi rule",
+      "role": "Local authorization",
+      "binding_or_path": "/etc/sudoers",
+      "software_or_version": "sudo + vi",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "www-data may run vi on /var/www/html/*"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Magento/PHP worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web shell; sudo vi NOPASSWD",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "admin",
+      "principal_type": "Magento administrator",
+      "operational_role": "CMS admin",
+      "groups_or_nesting": "Magento admin role",
+      "authentication_or_effective_access": "can alter store/configuration",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "final principal",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "exploit Magento admin/API",
+      "object": "C3",
+      "condition_or_scope": "HTTP reachable; vulnerable release",
+      "security_consequence": "admin/www-data application control",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "sudo execute",
+      "object": "C4 vi",
+      "condition_or_scope": "NOPASSWD rule matches webroot glob",
+      "security_consequence": "vi escape yields root shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root",
+      "permission_or_action": "read/write",
+      "object": "H1",
+      "condition_or_scope": "vi shell",
+      "security_consequence": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Magento database/admin records",
+      "hosted_on": "C3",
+      "purpose": "store and admin authorization data",
+      "owner_or_authority": "www-data",
+      "read_access": "app/admin roles",
+      "write_or_execute_access": "Magento writes",
+      "security_significance": "SQL/API exploit material",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/etc/sudoers glob",
+      "hosted_on": "C4",
+      "purpose": "local command authorization",
+      "owner_or_authority": "root",
+      "read_access": "www-data readable",
+      "write_or_execute_access": "root writes; www-data executes vi",
+      "security_significance": "Direct least-privilege failure",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Magento CE 1.9.2.1",
+      "issue": "Unauthenticated SQL/admin account creation path",
+      "preconditions": "Magento exposed",
+      "vulnerable_behavior": "Crafted request creates/uses admin or web execution",
+      "resulting_access": "www-data/admin",
+      "reference": "Magento exploit family / CVE-2015-1397",
+      "failed_control": "Legacy CMS and unsafe query handling",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "sudo + vi",
+      "issue": "NOPASSWD editor escape via wildcard",
+      "preconditions": "www-data shell",
+      "vulnerable_behavior": "vi can execute arbitrary commands as root",
+      "resulting_access": "root",
+      "reference": "GTFOBins/configuration weakness",
+      "failed_control": "Web user granted unrestricted editor",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote unauthenticated client",
+      "action": "create Magento admin/use exploit",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "HTTP and vulnerable release",
+      "resulting_principal_or_access": "www-data/admin",
+      "boundary_crossed": "network → app/service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "www-data",
+      "action": "run sudo vi on matching path",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "NOPASSWD sudo rule",
+      "resulting_principal_or_access": "root shell",
+      "boundary_crossed": "service user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

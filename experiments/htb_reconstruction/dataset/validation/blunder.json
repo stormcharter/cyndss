@@ -1,0 +1,266 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Blunder",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/10/17/htb-blunder.html",
+    "title": "HTB Blunder writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "Bludit CMS with brute-force bypass/upload and sudo uid parsing flaw"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Blunder host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.191",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "HTTP front end",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "Apache 2.4.x + PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Bludit blog/admin"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Bludit",
+      "role": "CMS",
+      "binding_or_path": "/admin",
+      "software_or_version": "3.9.2",
+      "runs_as": "www-data",
+      "exposure": "Public login",
+      "evidence": "Explicit",
+      "analysis_note": "Brute-force protection bypass and upload traversal"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Directory",
+      "name": "uploads",
+      "role": "PHP upload directory",
+      "binding_or_path": "/bl-content/tmp",
+      "software_or_version": "PHP",
+      "runs_as": "www-data",
+      "exposure": "Public after upload",
+      "evidence": "Explicit",
+      "analysis_note": "Uploaded PHP executes"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "sudo",
+      "role": "Local authorization",
+      "binding_or_path": "/etc/sudoers",
+      "software_or_version": "sudo 1.8.25p1",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "hugo can run bash as non-root uid; -1 bypass"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/Bludit worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "webshell",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "hugo",
+      "principal_type": "local user",
+      "operational_role": "second-stage/flag user",
+      "groups_or_nesting": "sudo policy",
+      "authentication_or_effective_access": "can use sudo -u#-1",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "final principal",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "bypass Bludit login rate limit",
+      "object": "C2",
+      "condition_or_scope": "X-Forwarded-For/user-agent rotation",
+      "security_consequence": "admin session",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "admin",
+      "permission_or_action": "upload PHP payload",
+      "object": "C2/C3",
+      "condition_or_scope": "Bludit 3.9.2 upload traversal",
+      "security_consequence": "www-data shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "read config/reuse Hugo password",
+      "object": "C1/C2",
+      "condition_or_scope": "app files",
+      "security_consequence": "hugo shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "hugo",
+      "permission_or_action": "sudo -u#-1 bash",
+      "object": "C4",
+      "condition_or_scope": "sudo <1.8.28",
+      "security_consequence": "root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Bludit login request",
+      "hosted_on": "C2",
+      "purpose": "authentication attempt",
+      "owner_or_authority": "remote client",
+      "read_access": "public write",
+      "write_or_execute_access": "Bludit processes",
+      "security_significance": "Rate-limit bypass input",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "uploaded PHP file",
+      "hosted_on": "C3",
+      "purpose": "webshell",
+      "owner_or_authority": "www-data",
+      "read_access": "public HTTP request",
+      "write_or_execute_access": "attacker upload",
+      "security_significance": "Code execution",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "sudoers rule",
+      "hosted_on": "C4",
+      "purpose": "UID target authorization",
+      "owner_or_authority": "root",
+      "read_access": "hugo can query",
+      "write_or_execute_access": "root writes",
+      "security_significance": "Numeric uid parsing sink",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "Bludit 3.9.2",
+      "issue": "Brute-force protection bypass",
+      "preconditions": "Login public",
+      "vulnerable_behavior": "X-Forwarded-For or rotating header bypasses per-IP control",
+      "resulting_access": "admin session",
+      "reference": "Bludit auth bypass",
+      "failed_control": "Rate limit trusts client header",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C2+C3",
+      "affected_version": "Bludit 3.9.2",
+      "issue": "Directory traversal/upload filter bypass",
+      "preconditions": "Admin session",
+      "vulnerable_behavior": "Path traversal places PHP in executable directory",
+      "resulting_access": "www-data",
+      "reference": "Bludit upload/traversal",
+      "failed_control": "No canonical path or safe extension policy",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C4",
+      "affected_version": "sudo 1.8.25p1",
+      "issue": "CVE-2019-14287 negative UID bypass",
+      "preconditions": "hugo shell and sudo rule",
+      "vulnerable_behavior": "-u#-1 resolves to uid 0",
+      "resulting_access": "root",
+      "reference": "CVE-2019-14287",
+      "failed_control": "Sudo parser mishandles negative uid",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "bypass login protection",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "public Bludit",
+      "resulting_principal_or_access": "admin session",
+      "boundary_crossed": "network → app admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "admin",
+      "action": "upload/traverse PHP",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "vulnerable version",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "app → service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "www-data",
+      "action": "reuse credential as hugo",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "config secret",
+      "resulting_principal_or_access": "hugo",
+      "boundary_crossed": "service → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "hugo",
+      "action": "invoke negative uid sudo",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "sudo 1.8.25",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

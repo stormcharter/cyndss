@@ -1,0 +1,266 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "DevOops",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/10/13/htb-devoops.html",
+    "title": "HTB DevOops writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 16.04.4 LTS i686 kernel 4.13",
+    "deployment_role": "Flask XML feed service with exposed Git deployment history"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "gitter host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.91",
+      "software_or_version": "Ubuntu 16.04.4 LTS i686; kernel 4.13.0-37",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Single Linux host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH 7.2p2 Ubuntu",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SSH key reuse is the pivot"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "Flask XML service",
+      "role": "Feed upload/parser",
+      "binding_or_path": "0.0.0.0:5000/tcp",
+      "software_or_version": "Gunicorn 19.7.1 / Flask",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "XML parser accepts external entities"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "Git repository",
+      "role": "Deployment/source history",
+      "binding_or_path": "/home/roosa/work/blogfeed/.git",
+      "software_or_version": "Git",
+      "runs_as": "roosa",
+      "exposure": "Local after roosa shell",
+      "evidence": "Explicit",
+      "analysis_note": "Old commit contains root private key"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "Python pickle endpoint",
+      "role": "Serialized request handler",
+      "binding_or_path": "/newpost",
+      "software_or_version": "Flask/Python 2.7",
+      "runs_as": "roosa",
+      "exposure": "Public through C2",
+      "evidence": "Explicit",
+      "analysis_note": "Alternate deserialization foothold"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Flask request context",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "read app files; low local rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "roosa",
+      "principal_type": "local user",
+      "operational_role": "application/deployment owner",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "SSH key from XXE; read Git history",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "final privileged principal",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "SSH key from old commit grants uid 0",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "submit XML with external entity",
+      "object": "C2",
+      "condition_or_scope": "feed endpoint reachable",
+      "security_consequence": "read local files such as SSH key",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "send crafted pickle",
+      "object": "C4",
+      "condition_or_scope": "Flask unpickles request data",
+      "security_consequence": "roosa command execution",
+      "evidence": "Inferred alternate path"
+    },
+    {
+      "subject": "roosa",
+      "permission_or_action": "read old Git commit",
+      "object": "C3",
+      "condition_or_scope": "repository exposed/readable",
+      "security_consequence": "root private key recovered",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root key holder",
+      "permission_or_action": "SSH login",
+      "object": "C1",
+      "condition_or_scope": "key accepted for root",
+      "security_consequence": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "XML feed request",
+      "hosted_on": "C2",
+      "purpose": "untrusted parser input",
+      "owner_or_authority": "remote client",
+      "read_access": "public write",
+      "write_or_execute_access": "Flask parses",
+      "security_significance": "XXE file-read source",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": ".git/objects and old commit",
+      "hosted_on": "C3",
+      "purpose": "deployment history",
+      "owner_or_authority": "roosa",
+      "read_access": "HTTP/readable",
+      "write_or_execute_access": "Git deployer writes",
+      "security_significance": "Contains SSH private key material",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "root RSA private key",
+      "hosted_on": "C3",
+      "purpose": "SSH credential",
+      "owner_or_authority": "root",
+      "read_access": "read via Git history",
+      "write_or_execute_access": "root owns",
+      "security_significance": "Direct privilege boundary crossing",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "Flask XML parser",
+      "issue": "External entity expansion (XXE)",
+      "preconditions": "Feed endpoint accepts XML",
+      "vulnerable_behavior": "Parser resolves file:// entity supplied by client",
+      "resulting_access": "read as web/service user; SSH key disclosure",
+      "reference": "XXE",
+      "failed_control": "DOCTYPE/external entities not disabled",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Python pickle",
+      "issue": "Unsafe deserialization",
+      "preconditions": "Serialized endpoint reachable",
+      "vulnerable_behavior": "Pickle opcodes invoke attacker functions",
+      "resulting_access": "roosa shell",
+      "reference": "Python deserialization",
+      "failed_control": "Untrusted pickle loaded",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C3",
+      "affected_version": "Git deployment",
+      "issue": "Sensitive secret retained in repository history",
+      "preconditions": ".git publicly reachable",
+      "vulnerable_behavior": "Old commit is retrievable even after file deletion",
+      "resulting_access": "root SSH credential",
+      "reference": "Secret management failure",
+      "failed_control": "No history scrubbing or access control",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote unauthenticated client",
+      "action": "send XXE feed",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "HTTP 5000 reachable",
+      "resulting_principal_or_access": "SSH private key file",
+      "boundary_crossed": "network → file disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "use leaked key over SSH",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "key belongs to roosa",
+      "resulting_principal_or_access": "roosa shell",
+      "boundary_crossed": "file disclosure → user session",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "roosa",
+      "action": "inspect Git history",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "repository readable",
+      "resulting_principal_or_access": "root private key",
+      "boundary_crossed": "user → credential artifact",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "key holder",
+      "action": "SSH as root",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "root key accepted",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "credential → superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

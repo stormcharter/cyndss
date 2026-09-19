@@ -1,0 +1,229 @@
+{
+  "machine": "Forest",
+  "split": "demo",
+  "input": {
+    "documents": 16,
+    "graph_nodes": 100,
+    "graph_edges": 894,
+    "entry_concepts": [
+      "core",
+      "forest",
+      "samr",
+      "winrm"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "forest:host:0",
+        "title": "Forest",
+        "summary": "Windows Server 2016 Active Directory DC HTB.LOCAL DC with Exchange-created ACL groups",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:H1",
+        "title": "Forest DC",
+        "summary": "Domain controller Domain/OS boundary 10.10.10.161 Windows Server 2016 SYSTEM/Domain Admins VPN reachable HTB.LOCAL",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:C1",
+        "title": "AD DS core",
+        "summary": "Service stack DNS/Kerberos/LDAP/GC 53,88,389/636,3268/3269 AD DS SYSTEM Public SMB/RPC also exposed Forest DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:C2",
+        "title": "RPC/SAMR",
+        "summary": "Service Account enumeration 135 + high RPC ports Windows RPC SYSTEM Unauthenticated enumeration Reveals users Forest DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:C3",
+        "title": "SMB",
+        "summary": "Service File and named-pipe transport 139,445/tcp Windows SMB SYSTEM Public Supports RPC Forest DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:C4",
+        "title": "WinRM",
+        "summary": "Service Remote PowerShell management 5985/tcp WinRM authenticated user Public/authenticated svc-alfresco may log in Forest DC",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:C5",
+        "title": "Nested service/privileged groups",
+        "summary": "Directory objects Authorization graph AD groups AD DS directory ACL controlled Authenticated-readable Service Accounts → Privileged IT Accounts → Account Operators AD DS core",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:C6",
+        "title": "Exchange Windows Permissions",
+        "summary": "Directory object Exchange delegation group CN=Users AD group AD DS ACL target/member-controlled Account Operators has GenericAll over it AD DS core",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:component:C7",
+        "title": "HTB.LOCAL domain root",
+        "summary": "Directory object Domain security descriptor DC=HTB,DC=LOCAL AD object Domain Admins Directory Exchange Windows Permissions has WriteDACL AD DS core",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:permission:0",
+        "title": "unauthenticated C2 RPC/SAMR",
+        "summary": "enumerate users C2 RPC/SAMR RPC reachable svc-alfresco identity discovered",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:permission:1",
+        "title": "unauthenticated Kerberos client svc-alfresco",
+        "summary": "request AS-REP svc-alfresco DONT_REQ_PREAUTH Offline crack material",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:permission:2",
+        "title": "svc-alfresco via nested groups C6 Exchange Windows Permissions",
+        "summary": "GenericAll C6 Exchange Windows Permissions effective Account Operators membership Can add self to group",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:permission:3",
+        "title": "Exchange Windows Permissions member C7 domain root",
+        "summary": "WriteDACL C7 domain root group membership Can grant DCSync rights",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:permission:4",
+        "title": "svc-alfresco C7 directory",
+        "summary": "DCSync C7 directory GetChanges/GetChangesAll granted Administrator hash/secret replication",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:vulnerability:V1",
+        "title": "Preauthentication disabled plus weak password AD DS core",
+        "summary": "AD DS core Kerberos account svc-alfresco Username known KDC returns crackable AS-REP svc-alfresco credential DONT_REQ_PREAUTH on service account",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "forest:vulnerability:V2",
+        "title": "Nested groups and excessive GenericAll/WriteDACL C5+C6+C7",
+        "summary": "C5+C6+C7 AD ACL graph svc-alfresco authentication Self-membership then domain ACL modification DCSync / Administrator secret Privilege graph violates tiering/least privilege",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "secret",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "svc-alfresco"
+      ],
+      [
+        "interactive",
+        "service",
+        "winrm"
+      ],
+      [
+        "exchange",
+        "member",
+        "permissions",
+        "windows"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "administrator",
+        "secret"
+      ],
+      [
+        "dcsync",
+        "secret"
+      ],
+      [
+        "authentication",
+        "secret"
+      ],
+      [
+        "excessive",
+        "secret"
+      ],
+      [
+        "getchanges",
+        "secret"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "winrm",
+        "svc-alfresco",
+        "secret"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "winrm",
+        "svc-alfresco",
+        "secret"
+      ],
+      [
+        "core",
+        "graph",
+        "secret"
+      ],
+      [
+        "samr",
+        "svc-alfresco",
+        "secret"
+      ],
+      [
+        "forest",
+        "domain",
+        "secret"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "winrm",
+        "svc-alfresco",
+        "secret"
+      ],
+      [
+        "core",
+        "graph",
+        "secret"
+      ],
+      [
+        "samr",
+        "svc-alfresco",
+        "secret"
+      ],
+      [
+        "forest",
+        "domain",
+        "secret"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 2,
+    "b_coverage": 0.6666666666666666,
+    "b_ordered": 0.3333333333333333,
+    "b_precision": 0.6666666666666666,
+    "c_chains": 4,
+    "c_hops": 2,
+    "c_coverage": 0.6666666666666666,
+    "c_ordered": 0.3333333333333333,
+    "c_precision": 0.6666666666666666,
+    "c_coverage_topk": 0.6666666666666666
+  }
+}

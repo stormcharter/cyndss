@@ -1,0 +1,320 @@
+{
+  "machine": "Jarvis",
+  "split": "validation",
+  "input": {
+    "documents": 13,
+    "graph_nodes": 79,
+    "graph_edges": 715,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "jarvis",
+      "openssh",
+      "phpmyadmin"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "jarvis:host:0",
+        "title": "Jarvis",
+        "summary": "Debian Linux Stark Hotel PHP SQLi, sudo Python helper and systemctl root path",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:component:H1",
+        "title": "Jarvis host",
+        "summary": "Host OS/security boundary 10.10.10.143 Debian 9-era Linux root VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:component:C1",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 22/tcp OpenSSH 7.4p1 Debian root daemon Public pepper SSH login Jarvis host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:component:C2",
+        "title": "Apache/PHP",
+        "summary": "Service Hotel front end 80/tcp Apache 2.4.25 / PHP www-data Public room.php cod parameter SQLi Jarvis host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:component:C3",
+        "title": "phpMyAdmin",
+        "summary": "Application Database administration 64999/tcp phpMyAdmin www-data Public/filtered by WAF CVE-2018-12613 file inclusion/RCE Jarvis host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:component:C4",
+        "title": "simpler.py",
+        "summary": "Binary Admin utility /var/www/Admin-Utilities/simpler.py Python pepper via sudo Local www-data may run as pepper; command filter bypass Jarvis host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:component:C5",
+        "title": "systemctl",
+        "summary": "Authorization Service manager /bin/systemctl systemd root Local pepper can link/start arbitrary service Jarvis host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:permission:0",
+        "title": "remote client Apache/PHP",
+        "summary": "inject room.php SQL Apache/PHP HTTP public; WAF bypass DB/file write or web shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:permission:1",
+        "title": "www-data simpler.py",
+        "summary": "sudo run simpler.py as pepper simpler.py sudo rule pepper shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:permission:2",
+        "title": "pepper systemctl",
+        "summary": "link/start malicious service systemctl systemctl permitted root service shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:vulnerability:V1",
+        "title": "SQL injection and phpMyAdmin file inclusion C2+C3",
+        "summary": "C2+C3 PHP/MySQL/phpMyAdmin Web ports public WAF bypass reveals DB and permits file/webshell write www-data No parameterization and outdated phpMyAdmin",
+        "verified_cve_ids": "CVE-2018-12613 / SQLI"
+      },
+      {
+        "mongo_id": "jarvis:vulnerability:V2",
+        "title": "Command filter bypass in privileged Python helper simpler.py",
+        "summary": "simpler.py sudo simpler.py www-data shell Allowed helper can be coerced to shell as pepper pepper Sudo target not constrained safely",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jarvis:vulnerability:V3",
+        "title": "Arbitrary service link/start as root systemctl",
+        "summary": "systemctl systemctl pepper shell systemctl loads attacker unit with ExecStart root NOPASSWD service-manager permission",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "www-data"
+      ],
+      [
+        "pepper",
+        "simpler"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2018-12613 / SQLI",
+        "public",
+        "root"
+      ],
+      [
+        "systemctl",
+        "root"
+      ],
+      [
+        "debian",
+        "root"
+      ],
+      [
+        "link",
+        "root"
+      ],
+      [
+        "start",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "jarvis",
+        "root"
+      ],
+      [
+        "phpmyadmin",
+        "jarvis",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "apache",
+        "service",
+        "root"
+      ],
+      [
+        "jarvis",
+        "root"
+      ],
+      [
+        "phpmyadmin",
+        "jarvis",
+        "root"
+      ],
+      [
+        "host",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "apache",
+        "hotel",
+        "front",
+        "www-data",
+        "simpler",
+        "admin",
+        "utility",
+        "python",
+        "command",
+        "filter",
+        "bypass",
+        "privileged",
+        "helper",
+        "sudo",
+        "pepper",
+        "systemctl",
+        "service",
+        "manager",
+        "systemd",
+        "arbitrary",
+        "link",
+        "start",
+        "root"
+      ],
+      [
+        "phpmyadmin",
+        "database",
+        "administration",
+        "www-data",
+        "simpler",
+        "admin",
+        "utility",
+        "python",
+        "command",
+        "filter",
+        "bypass",
+        "privileged",
+        "helper",
+        "sudo",
+        "pepper",
+        "systemctl",
+        "service",
+        "manager",
+        "systemd",
+        "arbitrary",
+        "link",
+        "start",
+        "root"
+      ],
+      [
+        "apache",
+        "hotel",
+        "front",
+        "www-data",
+        "simpler",
+        "admin",
+        "utility",
+        "python",
+        "pepper",
+        "systemctl",
+        "service",
+        "manager",
+        "systemd",
+        "arbitrary",
+        "link",
+        "start",
+        "root"
+      ],
+      [
+        "apache",
+        "hotel",
+        "front",
+        "www-data",
+        "simpler",
+        "admin",
+        "utility",
+        "python",
+        "command",
+        "filter",
+        "bypass",
+        "privileged",
+        "helper",
+        "sudo",
+        "pepper",
+        "systemctl",
+        "service",
+        "manager",
+        "systemd",
+        "root"
+      ],
+      [
+        "phpmyadmin",
+        "database",
+        "administration",
+        "www-data",
+        "simpler",
+        "admin",
+        "utility",
+        "python",
+        "pepper",
+        "systemctl",
+        "service",
+        "manager",
+        "systemd",
+        "arbitrary",
+        "link",
+        "start",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

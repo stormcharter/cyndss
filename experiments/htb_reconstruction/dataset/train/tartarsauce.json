@@ -1,0 +1,267 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "TartarSauce",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/10/20/htb-tartarsauce.html",
+    "title": "HTB TartarSauce writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu Linux",
+    "deployment_role": "WordPress host with vulnerable guestbook and root backup job"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "TartarSauce host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.88",
+      "software_or_version": "Ubuntu Linux",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone web host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache + PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "WordPress under /webservices/wp"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "WordPress",
+      "role": "CMS",
+      "binding_or_path": "/webservices/wp",
+      "software_or_version": "WordPress",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Plugins and uploads are served by Apache"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Module",
+      "name": "Gwolle Guestbook",
+      "role": "WordPress plugin",
+      "binding_or_path": "wp-content/plugins/gwolle-gb",
+      "software_or_version": "1.5.3",
+      "runs_as": "www-data",
+      "exposure": "Public plugin endpoint",
+      "evidence": "Explicit",
+      "analysis_note": "RFI includes remote PHP"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Scheduled task",
+      "name": "backuperer",
+      "role": "Root backup script",
+      "binding_or_path": "/usr/sbin/backuperer",
+      "software_or_version": "1.0.2 custom",
+      "runs_as": "root via cron",
+      "exposure": "Local every 5 minutes",
+      "evidence": "Explicit",
+      "analysis_note": "Runs tar as onuma and compares attacker-influenced tree"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Identity",
+      "name": "onuma",
+      "role": "Local backup account",
+      "binding_or_path": "/home/onuma",
+      "software_or_version": "Linux account",
+      "runs_as": "onuma",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "tar is intentionally run as this user"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP context",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "RFI shell; cannot read onuma home",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "onuma",
+      "principal_type": "local user",
+      "operational_role": "backup/web owner",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "can run user-scoped tar and read home",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "scheduled-task identity",
+      "operational_role": "backup executor",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "runs backuperer every five minutes",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "supply remote abspath",
+      "object": "C3",
+      "condition_or_scope": "plugin endpoint accepts abspath",
+      "security_consequence": "PHP is included as www-data",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "invoke local tar as onuma",
+      "object": "C4/C5",
+      "condition_or_scope": "script calls sudo -u onuma tar",
+      "security_consequence": "onuma shell via tar checkpoint",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "onuma",
+      "permission_or_action": "race tar/check files",
+      "object": "C4",
+      "condition_or_scope": "backup temp tree and symlink/hardlink behavior",
+      "security_consequence": "write/read root-owned target; root script compromise",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root cron",
+      "permission_or_action": "execute",
+      "object": "C4",
+      "condition_or_scope": "five-minute schedule",
+      "security_consequence": "root-controlled result",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Gwolle ajaxresponse.php",
+      "hosted_on": "C3",
+      "purpose": "RFI sink",
+      "owner_or_authority": "www-data",
+      "read_access": "public request",
+      "write_or_execute_access": "plugin code reads remote file",
+      "security_significance": "Initial shell",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/usr/sbin/backuperer",
+      "hosted_on": "C4",
+      "purpose": "root backup logic",
+      "owner_or_authority": "root",
+      "read_access": "www-data/onuma can read",
+      "write_or_execute_access": "root writes",
+      "security_significance": "Contains unsafe tar/test-file operations",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "backup temp/check tree",
+      "hosted_on": "C4",
+      "purpose": "tar staging area",
+      "owner_or_authority": "root",
+      "read_access": "onuma interaction",
+      "write_or_execute_access": "root tar creates",
+      "security_significance": "Race primitive for privileged file write",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Gwolle Guestbook 1.5.3",
+      "issue": "Remote file inclusion",
+      "preconditions": "Plugin endpoint public",
+      "vulnerable_behavior": "abspath points to attacker PHP",
+      "resulting_access": "www-data web shell",
+      "reference": "Gwolle RFI",
+      "failed_control": "No local path allowlist",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "backuperer 1.0.2",
+      "issue": "Tar race / unsafe privileged backup",
+      "preconditions": "www-data or onuma foothold",
+      "vulnerable_behavior": "User-controlled files influence root tar/diff flow",
+      "resulting_access": "root file write or shell",
+      "reference": "Configuration/programming flaw",
+      "failed_control": "Root cron trusts web-controlled tree",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote unauthenticated client",
+      "action": "trigger Gwolle RFI",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "WordPress plugin reachable",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "network → web service",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "www-data",
+      "action": "invoke backup tar as onuma",
+      "target_component_or_artifact": "C4/C5",
+      "prerequisite": "script callable/local access",
+      "resulting_principal_or_access": "onuma",
+      "boundary_crossed": "service → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "onuma",
+      "action": "plant tar race payload",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "backup job runs every five minutes",
+      "resulting_principal_or_access": "root-owned target altered",
+      "boundary_crossed": "user → root job input",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "root",
+      "action": "run compromised backup",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "scheduled execution",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "cron → superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

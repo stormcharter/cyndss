@@ -1,0 +1,187 @@
+{
+  "machine": "Shocker",
+  "split": "demo",
+  "input": {
+    "documents": 10,
+    "graph_nodes": 68,
+    "graph_edges": 539,
+    "entry_concepts": [
+      "apache",
+      "openssh",
+      "server",
+      "shocker"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "shocker:host:0",
+        "title": "Shocker",
+        "summary": "Ubuntu 16.04 Linux Apache CGI host with nonstandard SSH",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:component:H1",
+        "title": "Shocker VM",
+        "summary": "Host OS boundary 10.10.10.56 Ubuntu 16.04 root VPN reachable Standalone Linux host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:component:C1",
+        "title": "Apache HTTP Server",
+        "summary": "Service Web/CGI front end 0.0.0.0:80/tcp Apache 2.4.18 Ubuntu www-data/CGI user Public CGI enabled Shocker VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:component:C2",
+        "title": "user.sh",
+        "summary": "CGI script System-info CGI endpoint /cgi-bin/user.sh Bash CGI shelly Public Request headers become Bash environment variables Apache HTTP Server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:component:C3",
+        "title": "OpenSSH",
+        "summary": "Service Remote shell 0.0.0.0:2222/tcp OpenSSH 7.2p2 Ubuntu 4ubuntu2.2 root daemon Public Nonstandard port Shocker VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:component:C4",
+        "title": "sudoers rule for shelly",
+        "summary": "Policy Privilege delegation local sudo root Local NOPASSWD /usr/bin/perl Shocker VM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:permission:0",
+        "title": "remote client C2 Bash CGI",
+        "summary": "supply crafted HTTP header C2 Bash CGI CGI reachable Commands execute as shelly",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:permission:1",
+        "title": "shelly /usr/bin/perl",
+        "summary": "sudo NOPASSWD execute /usr/bin/perl exact sudoers rule Arbitrary Perl code as root",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "shocker:vulnerability:V1",
+        "title": "Shellshock command injection user.sh",
+        "summary": "user.sh vulnerable Bash CGI CGI invokes vulnerable Bash Function-style header suffix is executed shelly shell CGI exposes vulnerable shell parser",
+        "verified_cve_ids": "CVE-2014-6271"
+      },
+      {
+        "mongo_id": "shocker:vulnerability:V2",
+        "title": "Passwordless root Perl sudoers rule for shelly",
+        "summary": "sudoers rule for shelly sudoers Local shelly shell Perl supports arbitrary OS command execution root Dangerous interpreter delegated as root",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "root",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "shelly"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "CVE-2014-6271",
+        "shell",
+        "root"
+      ],
+      [
+        "perl",
+        "root"
+      ],
+      [
+        "rule",
+        "root"
+      ],
+      [
+        "sudoers",
+        "root"
+      ],
+      [
+        "arbitrary",
+        "root"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "openssh",
+        "root"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "server",
+        "service",
+        "root"
+      ],
+      [
+        "apache",
+        "shocker",
+        "root"
+      ],
+      [
+        "shocker",
+        "root"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "openssh",
+        "root"
+      ],
+      [
+        "server",
+        "service",
+        "root"
+      ],
+      [
+        "apache",
+        "shocker",
+        "root"
+      ],
+      [
+        "shocker",
+        "root"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "openssh",
+        "remote",
+        "shell",
+        "ubuntu",
+        "ubuntu2",
+        "root"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 2,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

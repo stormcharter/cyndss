@@ -1,0 +1,198 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Lame",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/04/07/htb-lame.html",
+    "title": "HTB Lame writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 8.04-era Linux",
+    "deployment_role": "Standalone file-transfer host"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Lame VM",
+      "role": "Operating-system boundary",
+      "binding_or_path": "10.10.10.3",
+      "software_or_version": "Ubuntu 8.04-era",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Inferred",
+      "analysis_note": "Single-host challenge"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "vsftpd",
+      "role": "FTP file service",
+      "binding_or_path": "0.0.0.0:21/tcp",
+      "software_or_version": "2.3.4",
+      "runs_as": "root",
+      "exposure": "Public; anonymous login",
+      "evidence": "Explicit",
+      "analysis_note": "Known backdoor probe fails; retain as decoy"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote administration",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "4.7p1 Debian 8ubuntu1.1",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "No successful path"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Samba smbd",
+      "role": "SMB file service",
+      "binding_or_path": "0.0.0.0:139,445/tcp",
+      "software_or_version": "3.0.20-Debian",
+      "runs_as": "root",
+      "exposure": "Public; guest-accessible IPC",
+      "evidence": "Explicit",
+      "analysis_note": "Username-map hook executes before authentication"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "distccd",
+      "role": "Distributed compiler daemon",
+      "binding_or_path": "0.0.0.0:3632/tcp",
+      "software_or_version": "v1 protocol",
+      "runs_as": "daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Alternate foothold can yield daemon, not needed"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "root",
+      "principal_type": "local account/service identity",
+      "operational_role": "superuser and smbd execution context",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "uid 0; all files/processes",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "makis",
+      "principal_type": "local user",
+      "operational_role": "home/flag owner",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "ordinary local access; bypassed",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "anonymous",
+      "principal_type": "FTP guest",
+      "operational_role": "unauthenticated file reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "FTP login succeeds",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read/list",
+      "object": "FTP root",
+      "condition_or_scope": "anonymous login",
+      "security_consequence": "Information exposure only; exploit path does not rely on it",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "supply crafted username",
+      "object": "Samba username-map command",
+      "condition_or_scope": "SMB negotiation reaches map script pre-auth",
+      "security_consequence": "Shell command runs as smbd/root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "FTP directory listing",
+      "hosted_on": "vsftpd C1",
+      "purpose": "shared files",
+      "owner_or_authority": "root",
+      "read_access": "anonymous",
+      "write_or_execute_access": "none shown",
+      "security_significance": "Recon only",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Samba username field",
+      "hosted_on": "smbd C3",
+      "purpose": "identity mapping input",
+      "owner_or_authority": "remote client",
+      "read_access": "remote client",
+      "write_or_execute_access": "interpreted by shell hook",
+      "security_significance": "Untrusted identity data reaches command interpreter",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Samba 3.0.20",
+      "issue": "Username-map script command injection",
+      "preconditions": "Reach SMB; no valid account required",
+      "vulnerable_behavior": "Metacharacters in username reach shell command",
+      "resulting_access": "root command execution",
+      "reference": "CVE-2007-2447",
+      "failed_control": "Untrusted authentication input is executed",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "D1",
+      "affected_component": "C1",
+      "affected_version": "vsftpd 2.3.4",
+      "issue": "Backdoored-version signature is a non-working decoy",
+      "preconditions": "Reach FTP",
+      "vulnerable_behavior": "Expected 6200/tcp bind shell never appears",
+      "resulting_access": "No compromise",
+      "reference": "CVE-2011-2523 (not exploitable here)",
+      "failed_control": "Version fingerprint alone is insufficient",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "send crafted SMB username",
+      "target_component_or_artifact": "C3 Samba",
+      "prerequisite": "SMB reachable",
+      "resulting_principal_or_access": "root shell",
+      "boundary_crossed": "network → host superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

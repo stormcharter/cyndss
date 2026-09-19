@@ -1,0 +1,214 @@
+{
+  "machine": "Heist",
+  "split": "validation",
+  "input": {
+    "documents": 15,
+    "graph_nodes": 84,
+    "graph_edges": 809,
+    "entry_concepts": [
+      "config",
+      "heist",
+      "host",
+      "winrm"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "heist:host:0",
+        "title": "Heist",
+        "summary": "Windows workgroup host IIS support portal, Cisco secrets, RPC enumeration and WinRM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:component:H1",
+        "title": "Heist host",
+        "summary": "Host OS/security boundary 10.10.10.149 Windows workgroup Administrator VPN reachable Standalone host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:component:C1",
+        "title": "IIS",
+        "summary": "Service Support portal 80/tcp IIS web worker Public Issues page exposes Cisco config attachment Heist host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:component:C2",
+        "title": "SMB/RPC",
+        "summary": "Service Account/share enumeration 135,139,445/tcp Windows RPC/SMB SYSTEM Public/authenticated RID and IPC enumeration Heist host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:component:C3",
+        "title": "WinRM",
+        "summary": "Service Remote PowerShell 5985/tcp WinRM authenticated user Public/authenticated Chase login path Heist host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:component:C4",
+        "title": "config.txt",
+        "summary": "Artifact Cisco configuration IIS attachment Cisco IOS/type-7 rout3r/admin Public download Contains reversible type-7 secrets IIS",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:component:C5",
+        "title": "Firefox",
+        "summary": "Process Interactive browser process Administrator desktop Firefox Administrator Local Process memory contains credentials Heist host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:permission:0",
+        "title": "anonymous IIS",
+        "summary": "download config attachment IIS support portal public Cisco usernames/password hashes",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:permission:1",
+        "title": "rout3r/admin SMB/RPC",
+        "summary": "RPC enumerate SIDs SMB/RPC valid account Chase identity discovered",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:permission:2",
+        "title": "Chase WinRM",
+        "summary": "WinRM login WinRM password spray/reuse local PowerShell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:permission:3",
+        "title": "Chase Firefox",
+        "summary": "dump Firefox process memory Firefox local process access Administrator credential",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:permission:4",
+        "title": "Administrator C2/C3",
+        "summary": "WinRM/SMB admin C2/C3 recovered secret full host control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:vulnerability:V1",
+        "title": "Public attachment exposes reversible Cisco type-7 passwords C1+C4",
+        "summary": "C1+C4 IIS support portal Issues page public Configuration contains decryptable secrets rout3r/admin candidates Sensitive attachment not access-controlled",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:vulnerability:V2",
+        "title": "Password reuse across Cisco/application and Windows users C2+C3",
+        "summary": "C2+C3 RPC/WinRM User names enumerated Recovered secret authenticates Chase over WinRM Chase No password uniqueness/tiering",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "heist:vulnerability:V3",
+        "title": "Administrator secret remains in readable process memory Firefox",
+        "summary": "Firefox Firefox process Chase interactive session Memory dump reveals saved password Administrator Privileged browser session not isolated",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "admin",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "candidate",
+        "credentials"
+      ],
+      [
+        "chase"
+      ],
+      [
+        "administrator",
+        "credential"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "rout3r",
+        "admin"
+      ],
+      [
+        "configuration",
+        "admin"
+      ],
+      [
+        "reversible",
+        "admin"
+      ],
+      [
+        "type-7",
+        "admin"
+      ],
+      [
+        "credentials",
+        "contains",
+        "admin"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "config",
+        "admin"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "heist",
+        "account",
+        "admin"
+      ],
+      [
+        "config",
+        "admin"
+      ],
+      [
+        "winrm",
+        "admin"
+      ],
+      [
+        "host",
+        "admin"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "heist",
+        "account",
+        "admin"
+      ],
+      [
+        "config",
+        "admin"
+      ],
+      [
+        "winrm",
+        "admin"
+      ],
+      [
+        "host",
+        "admin"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.3333333333333333,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 4,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.0
+  }
+}

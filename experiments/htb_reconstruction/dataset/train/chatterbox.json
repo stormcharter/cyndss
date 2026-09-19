@@ -1,0 +1,219 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Chatterbox",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/06/18/htb-chatterbox.html",
+    "title": "HTB Chatterbox writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows 7 SP1 x64-era standalone host",
+    "deployment_role": "AChat service and permissive Administrator desktop ACL"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Chatterbox host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.74",
+      "software_or_version": "Windows 7 SP1 build 6.1.7601",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "AChat ports are nonstandard"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "AChat",
+      "role": "Chat service",
+      "binding_or_path": "9255,9256/tcp/udp",
+      "software_or_version": "AChat beta v0.150",
+      "runs_as": "Alfred user context",
+      "exposure": "Network reachable",
+      "evidence": "Explicit",
+      "analysis_note": "SEH stack overflow in message handling"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "PowerShell shell",
+      "role": "AChat payload process",
+      "binding_or_path": "AChat message protocol",
+      "software_or_version": "PowerShell",
+      "runs_as": "Alfred",
+      "exposure": "Indirect",
+      "evidence": "Explicit",
+      "analysis_note": "Exploit shell migrates out of crashing AChat process"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "Administrator Desktop ACL",
+      "role": "File authorization",
+      "binding_or_path": "C:\\Users\\Administrator\\Desktop",
+      "software_or_version": "NTFS",
+      "runs_as": "Alfred/Administrator",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Alfred has full control on directory but root.txt ACL is restrictive"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "remote chat client",
+      "principal_type": "network principal",
+      "operational_role": "AChat message sender",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "can reach 9255/9256",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Alfred",
+      "principal_type": "local user",
+      "operational_role": "AChat process/flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "user shell; full control of Administrator Desktop directory",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "local administrator",
+      "operational_role": "root flag owner",
+      "groups_or_nesting": "Administrators",
+      "authentication_or_effective_access": "owns root.txt; directory ACL grants Alfred modification",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote chat client",
+      "permission_or_action": "send oversized message",
+      "object": "C1",
+      "condition_or_scope": "AChat ports reachable",
+      "security_consequence": "memory corruption and Alfred shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "AChat",
+      "permission_or_action": "spawn PowerShell payload",
+      "object": "C2",
+      "condition_or_scope": "SEH exploit",
+      "security_consequence": "Alfred code execution",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Alfred",
+      "permission_or_action": "change root.txt ACL",
+      "object": "C3",
+      "condition_or_scope": "directory grants full control",
+      "security_consequence": "read Administrator root flag",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Administrator",
+      "permission_or_action": "own root.txt",
+      "object": "C3",
+      "condition_or_scope": "file ACL can be changed by Alfred",
+      "security_consequence": "root flag disclosure",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "AChat message buffer",
+      "hosted_on": "C1/C2",
+      "purpose": "untrusted chat payload",
+      "owner_or_authority": "remote client",
+      "read_access": "network input",
+      "write_or_execute_access": "service parses/evaluates",
+      "security_significance": "Overflow/command sink",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "C:\\Users\\Administrator\\Desktop\\root.txt",
+      "hosted_on": "C3",
+      "purpose": "root flag file",
+      "owner_or_authority": "Administrator",
+      "read_access": "Administrator only initially",
+      "write_or_execute_access": "Alfred can modify ACL on parent and grant self",
+      "security_significance": "Directory/file ACL mismatch",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "AChat beta v0.150",
+      "issue": "SEH stack buffer overflow",
+      "preconditions": "AChat service reachable",
+      "vulnerable_behavior": "Oversized message overwrites handler state",
+      "resulting_access": "Alfred shell",
+      "reference": "Exploit-DB AChat SEH overflow",
+      "failed_control": "No bounds checking",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3",
+      "affected_version": "NTFS ACL",
+      "issue": "Alfred has full control of Administrator Desktop directory",
+      "preconditions": "Alfred local shell",
+      "vulnerable_behavior": "Directory permission lets Alfred grant read/full control on root.txt",
+      "resulting_access": "root flag disclosure",
+      "reference": "Authorization misconfiguration",
+      "failed_control": "Parent directory ACL too broad",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote chat client",
+      "action": "exploit AChat message parser",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "9255/9256 reachable",
+      "resulting_principal_or_access": "Alfred shell",
+      "boundary_crossed": "network → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "Alfred",
+      "action": "grant self access to root.txt",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "full control on parent directory",
+      "resulting_principal_or_access": "root flag read",
+      "boundary_crossed": "user → protected artifact",
+      "evidence": "Explicit"
+    }
+  ]
+}

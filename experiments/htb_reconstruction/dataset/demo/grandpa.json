@@ -1,0 +1,206 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Grandpa",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/05/28/htb-grandpa.html",
+    "title": "HTB Grandpa writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2003 build 3790",
+    "deployment_role": "Legacy IIS/WebDAV server"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Grandpa server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.14",
+      "software_or_version": "Windows Server 2003 5.2.3790",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "EOL host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft IIS",
+      "role": "HTTP/WebDAV application server",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 6.0 / ASP.NET",
+      "runs_as": "NT AUTHORITY\\NETWORK SERVICE",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "WebDAV methods exposed"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Protocol module",
+      "name": "WebDAV",
+      "role": "Remote authoring/RPC path parser",
+      "binding_or_path": "HTTP methods including PROPFIND/SEARCH/LOCK",
+      "software_or_version": "IIS 6.0 WebDAV",
+      "runs_as": "NETWORK SERVICE",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Direct PUT not available in chosen path"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Directory",
+      "name": "C:\\wmpub",
+      "role": "Writable public media directory",
+      "binding_or_path": "local filesystem",
+      "software_or_version": "NTFS",
+      "runs_as": "NETWORK SERVICE",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Staging location"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Token boundary",
+      "name": "Windows service token",
+      "role": "Privilege-escalation surface",
+      "binding_or_path": "local",
+      "software_or_version": "Server 2003 token model",
+      "runs_as": "NETWORK SERVICE",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Impersonation/churrasco path"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "NT AUTHORITY\\NETWORK SERVICE",
+      "principal_type": "service identity",
+      "operational_role": "IIS worker",
+      "groups_or_nesting": "service principals",
+      "authentication_or_effective_access": "limited host rights; impersonation-capable path",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Harry",
+      "principal_type": "local user",
+      "operational_role": "profile/flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "profile initially inaccessible to Network Service",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "local system",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "send overflow request",
+      "object": "C2",
+      "condition_or_scope": "WebDAV reachable",
+      "security_consequence": "Code as NETWORK SERVICE",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "NETWORK SERVICE",
+      "permission_or_action": "write/stage",
+      "object": "C3",
+      "condition_or_scope": "directory ACL permits",
+      "security_consequence": "Local exploit payload available",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "NETWORK SERVICE",
+      "permission_or_action": "impersonate privileged token",
+      "object": "C4",
+      "condition_or_scope": "vulnerable token/service behavior",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "C:\\wmpub",
+      "hosted_on": "H1",
+      "purpose": "writable staging directory",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "NETWORK SERVICE read",
+      "write_or_execute_access": "NETWORK SERVICE write/execute",
+      "security_significance": "Permits exploit staging despite restricted profile access",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "IIS 6.0 WebDAV",
+      "issue": "ScStoragePathFromUrl buffer overflow",
+      "preconditions": "HTTP/WebDAV reachable",
+      "vulnerable_behavior": "Crafted path overflows process memory",
+      "resulting_access": "NETWORK SERVICE code execution",
+      "reference": "CVE-2017-7269",
+      "failed_control": "EOL WebDAV parser exposed",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Windows Server 2003 service token",
+      "issue": "Token impersonation via Churrasco-style path",
+      "preconditions": "Network Service shell",
+      "vulnerable_behavior": "Service token can capture privileged token",
+      "resulting_access": "SYSTEM",
+      "reference": "MS09-012 family",
+      "failed_control": "Legacy token/service isolation",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "send WebDAV overflow",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "TCP 80",
+      "resulting_principal_or_access": "NETWORK SERVICE",
+      "boundary_crossed": "network → service identity",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "NETWORK SERVICE",
+      "action": "stage in C:\\wmpub and abuse token",
+      "target_component_or_artifact": "C3/C4",
+      "prerequisite": "write permission + vulnerable token path",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "service identity → system",
+      "evidence": "Explicit"
+    }
+  ]
+}

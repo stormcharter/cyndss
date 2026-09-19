@@ -1,0 +1,262 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "ServMon",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/06/20/htb-servmon.html",
+    "title": "HTB ServMon writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server",
+    "deployment_role": "FTP/NVMS-1000/NSClient++ monitoring host"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "ServMon host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.184",
+      "software_or_version": "Windows Server",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone monitoring host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft FTP",
+      "role": "File transfer",
+      "binding_or_path": "21/tcp",
+      "software_or_version": "Microsoft FTP",
+      "runs_as": "SYSTEM",
+      "exposure": "Anonymous read",
+      "evidence": "Explicit",
+      "analysis_note": "Hints at password list location"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "NVMS-1000",
+      "role": "Video management web app",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "NVMS-1000",
+      "runs_as": "SYSTEM/web service",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Directory traversal reads local files"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH for Windows",
+      "runs_as": "user",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Credential recovered through traversal"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "NSClient++",
+      "role": "Monitoring agent",
+      "binding_or_path": "8443/tcp",
+      "software_or_version": "NSClient++",
+      "runs_as": "SYSTEM",
+      "exposure": "Public HTTPS/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "External scripts can be configured/executed"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "FTP guest",
+      "operational_role": "initial recon reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "read FTP hint files",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "nadine",
+      "principal_type": "local user",
+      "operational_role": "initial SSH/flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "SSH with password recovered from NVMS files",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "NSClient++ admin",
+      "principal_type": "service account",
+      "operational_role": "monitoring agent admin",
+      "groups_or_nesting": "NSCP allowed hosts",
+      "authentication_or_effective_access": "can configure external scripts",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "NSClient++ service/host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read",
+      "object": "C1 FTP files",
+      "condition_or_scope": "anonymous enabled",
+      "security_consequence": "password-list path disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "traverse NVMS path",
+      "object": "C2",
+      "condition_or_scope": "public NVMS-1000 endpoint",
+      "security_consequence": "read local password files",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "nadine",
+      "permission_or_action": "authenticate SSH",
+      "object": "C3",
+      "condition_or_scope": "password from traversal",
+      "security_consequence": "local user shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "NSClient++ admin",
+      "permission_or_action": "write/execute external script",
+      "object": "C4",
+      "condition_or_scope": "agent credentials and API access",
+      "security_consequence": "SYSTEM command",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "FTP hint/password list",
+      "hosted_on": "C1",
+      "purpose": "credential-search location",
+      "owner_or_authority": "anonymous",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "admin writes",
+      "security_significance": "Guides local file disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "NVMS traversal response",
+      "hosted_on": "C2",
+      "purpose": "Windows file contents",
+      "owner_or_authority": "SYSTEM/web service",
+      "read_access": "remote read",
+      "write_or_execute_access": "system writes",
+      "security_significance": "Contains SSH credential",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "NSClient++ config",
+      "hosted_on": "C4",
+      "purpose": "agent password/allowed script settings",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "nadine can read locally",
+      "write_or_execute_access": "SYSTEM writes",
+      "security_significance": "EoP control artifact",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C2",
+      "affected_version": "NVMS-1000",
+      "issue": "Directory traversal/local file disclosure",
+      "preconditions": "HTTP 80 reachable",
+      "vulnerable_behavior": "Path escapes web root and reads arbitrary Windows files",
+      "resulting_access": "nadine credential",
+      "reference": "NVMS-1000 traversal",
+      "failed_control": "No path canonicalization",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "NSClient++",
+      "issue": "Authenticated external-script command execution",
+      "preconditions": "NSClient++ 8443 reachable; config credential recovered",
+      "vulnerable_behavior": "API accepts attacker script/command and service runs SYSTEM",
+      "resulting_access": "SYSTEM",
+      "reference": "NSClient++ external scripts",
+      "failed_control": "Management API over-privileged",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "read FTP hint",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "FTP guest",
+      "resulting_principal_or_access": "password-list path",
+      "boundary_crossed": "network → recon",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "exploit NVMS traversal",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "80/tcp and path bug",
+      "resulting_principal_or_access": "nadine credential",
+      "boundary_crossed": "network → secret",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "nadine",
+      "action": "SSH login",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "recovered password",
+      "resulting_principal_or_access": "nadine",
+      "boundary_crossed": "credential → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "nadine",
+      "action": "use NSClient++ config/external script",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "local file and agent auth",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "user → monitoring service root",
+      "evidence": "Explicit"
+    }
+  ]
+}

@@ -1,0 +1,262 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Poison",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2018/09/08/htb-poison.html",
+    "title": "HTB Poison writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "FreeBSD 11.1-era",
+    "deployment_role": "Apache/PHP host with loopback-only root VNC"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Poison server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.84",
+      "software_or_version": "FreeBSD 11.1-era",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell/tunneling",
+      "binding_or_path": "0.0.0.0:22/tcp",
+      "software_or_version": "OpenSSH 7.2 FreeBSD",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Used after credential recovery"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "File-browsing web app",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "Apache 2.4 + PHP",
+      "runs_as": "www/apache identity",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "browse.php accepts file parameter"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "browse.php / listfiles.php",
+      "role": "Local file display/listing",
+      "binding_or_path": "HTTP query",
+      "software_or_version": "custom PHP",
+      "runs_as": "web identity",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Unsanitized local include/read"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "TightVNC/Xvnc :1",
+      "role": "Root GUI session",
+      "binding_or_path": "127.0.0.1:5801,5901/tcp",
+      "software_or_version": "RFB 3.8 / TightVNC",
+      "runs_as": "root",
+      "exposure": "Loopback only",
+      "evidence": "Explicit",
+      "analysis_note": "Uses /root/.vnc/passwd"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMTP",
+      "role": "Local mail",
+      "binding_or_path": "127.0.0.1:25/tcp",
+      "software_or_version": "SMTP",
+      "runs_as": "mail",
+      "exposure": "Loopback only",
+      "evidence": "Explicit",
+      "analysis_note": "Not used"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "secret.zip",
+      "role": "Copied VNC credential material",
+      "binding_or_path": "charix home",
+      "software_or_version": "ZIP archive",
+      "runs_as": "charix",
+      "exposure": "Local after SSH",
+      "evidence": "Explicit",
+      "analysis_note": "Extracted value matches root VNC password file"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "web identity",
+      "principal_type": "service identity",
+      "operational_role": "PHP file reader",
+      "groups_or_nesting": "www",
+      "authentication_or_effective_access": "read files allowed by PHP process",
+      "evidence": "Inferred"
+    },
+    {
+      "principal": "charix",
+      "principal_type": "local user",
+      "operational_role": "SSH user and tunnel endpoint",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "SSH; read own secret.zip; local port forwarding",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "superuser/VNC owner",
+      "operational_role": "active desktop session",
+      "groups_or_nesting": "wheel",
+      "authentication_or_effective_access": "full host GUI/control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "choose arbitrary file path",
+      "object": "C3",
+      "condition_or_scope": "HTTP reachable",
+      "security_consequence": "PHP returns local credential material",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "charix",
+      "permission_or_action": "create SSH local port forward",
+      "object": "C1 → C4",
+      "condition_or_scope": "valid SSH login",
+      "security_consequence": "Loopback-only VNC becomes attacker-reachable",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "charix/attacker",
+      "permission_or_action": "authenticate with recovered VNC secret",
+      "object": "C4",
+      "condition_or_scope": "secret extracted from C6",
+      "security_consequence": "Root desktop session",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "password/list files",
+      "hosted_on": "C3",
+      "purpose": "credential material",
+      "owner_or_authority": "local users",
+      "read_access": "web-readable through flaw",
+      "write_or_execute_access": "local owners",
+      "security_significance": "Enables charix authentication",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "secret.zip",
+      "hosted_on": "C6",
+      "purpose": "VNC password copy",
+      "owner_or_authority": "charix",
+      "read_access": "charix read",
+      "write_or_execute_access": "charix write",
+      "security_significance": "Weak/recoverable VNC secret bridge",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/root/.vnc/passwd",
+      "hosted_on": "C4",
+      "purpose": "VNC authentication file",
+      "owner_or_authority": "root",
+      "read_access": "Xvnc read",
+      "write_or_execute_access": "root write",
+      "security_significance": "Equivalent secret recovered from C6",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "custom PHP",
+      "issue": "Arbitrary local file inclusion/read",
+      "preconditions": "HTTP access",
+      "vulnerable_behavior": "Unsanitized file parameter reads server files",
+      "resulting_access": "charix credential disclosure",
+      "reference": "Application flaw",
+      "failed_control": "No allowlist/path confinement",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4+C6",
+      "affected_version": "TightVNC root session",
+      "issue": "Recoverable/copied VNC credential plus tunnel",
+      "preconditions": "charix SSH + secret.zip",
+      "vulnerable_behavior": "Attacker forwards loopback service and reuses secret",
+      "resulting_access": "root GUI access",
+      "reference": "Configuration/design weakness",
+      "failed_control": "Root remote desktop protected by recoverable shared secret",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "read credential files via PHP",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "HTTP",
+      "resulting_principal_or_access": "charix credential",
+      "boundary_crossed": "network → secret",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "attacker",
+      "action": "SSH as charix",
+      "target_component_or_artifact": "C1",
+      "prerequisite": "recovered credential",
+      "resulting_principal_or_access": "charix",
+      "boundary_crossed": "network → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "charix",
+      "action": "tunnel and authenticate to VNC",
+      "target_component_or_artifact": "C4/C6",
+      "prerequisite": "SSH + recovered VNC secret",
+      "resulting_principal_or_access": "root GUI",
+      "boundary_crossed": "local user → root session",
+      "evidence": "Explicit"
+    }
+  ]
+}

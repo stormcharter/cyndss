@@ -1,0 +1,216 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "train",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Netmon",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/06/29/htb-netmon.html",
+    "title": "HTB Netmon writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2016-era",
+    "deployment_role": "FTP-exposed filesystem plus PRTG monitoring web service"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Netmon host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.152",
+      "software_or_version": "Windows Server 2016-era",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone monitoring host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft FTP",
+      "role": "File transfer service",
+      "binding_or_path": "21/tcp",
+      "software_or_version": "Microsoft FTP",
+      "runs_as": "SYSTEM",
+      "exposure": "Anonymous read",
+      "evidence": "Explicit",
+      "analysis_note": "FTP root exposes PRTG files"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Application",
+      "name": "PRTG Network Monitor",
+      "role": "HTTP monitoring console",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "PRTG 18.1.37.13946",
+      "runs_as": "SYSTEM/PRTG service",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Web console and backups"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C1",
+      "layer_or_type": "Artifact",
+      "name": "PRTG backup archive",
+      "role": "Configuration/credential artifact",
+      "binding_or_path": "PRTG program data",
+      "software_or_version": "PRTG 18.1.37",
+      "runs_as": "SYSTEM",
+      "exposure": "Readable via anonymous FTP",
+      "evidence": "Explicit",
+      "analysis_note": "Contains recoverable web credentials"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C2",
+      "layer_or_type": "Application",
+      "name": "PRTG notification endpoint",
+      "role": "Command execution feature",
+      "binding_or_path": "HTTP authenticated endpoint",
+      "software_or_version": "PRTG 18.1.37",
+      "runs_as": "SYSTEM",
+      "exposure": "Authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Notification command injection"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "FTP guest",
+      "operational_role": "initial filesystem reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "list/download FTP root",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "prtgadmin",
+      "principal_type": "application account",
+      "operational_role": "monitoring administrator",
+      "groups_or_nesting": "PRTG admins",
+      "authentication_or_effective_access": "web-console administrative access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "service/kernel superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read/download",
+      "object": "C1/C3 FTP files",
+      "condition_or_scope": "anonymous FTP enabled",
+      "security_consequence": "backup credential disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "prtgadmin",
+      "permission_or_action": "configure notification",
+      "object": "C4",
+      "condition_or_scope": "authenticated PRTG admin",
+      "security_consequence": "attacker command runs as SYSTEM service",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "PRTG service",
+      "permission_or_action": "execute",
+      "object": "H1",
+      "condition_or_scope": "service runs with SYSTEM token",
+      "security_consequence": "full host compromise",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "PRTG configuration backup",
+      "hosted_on": "C3",
+      "purpose": "saved monitoring credentials",
+      "owner_or_authority": "PRTG service",
+      "read_access": "anonymous FTP read",
+      "write_or_execute_access": "PRTG writes periodically",
+      "security_significance": "Secret crosses FTP boundary",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "notification command",
+      "hosted_on": "C4",
+      "purpose": "admin-triggered command",
+      "owner_or_authority": "prtgadmin",
+      "read_access": "admin can edit",
+      "write_or_execute_access": "PRTG executes",
+      "security_significance": "Direct code-execution sink",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C3",
+      "affected_version": "Microsoft FTP",
+      "issue": "Anonymous read exposes PRTG backup",
+      "preconditions": "FTP reachable",
+      "vulnerable_behavior": "Unauthenticated client downloads config containing admin secret",
+      "resulting_access": "prtgadmin web session",
+      "reference": "Configuration weakness",
+      "failed_control": "Sensitive backup stored in anonymous root",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "PRTG 18.1.37.13946",
+      "issue": "Authenticated command injection in notification handling",
+      "preconditions": "PRTG admin session",
+      "vulnerable_behavior": "Notification command field reaches OS shell",
+      "resulting_access": "SYSTEM",
+      "reference": "PRTG command injection",
+      "failed_control": "No command allowlist; service over-privileged",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "download PRTG backup",
+      "target_component_or_artifact": "C1/C3",
+      "prerequisite": "FTP anonymous read",
+      "resulting_principal_or_access": "prtgadmin credential",
+      "boundary_crossed": "network → application admin",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "prtgadmin",
+      "action": "create malicious notification",
+      "target_component_or_artifact": "C2/C4",
+      "prerequisite": "web admin access",
+      "resulting_principal_or_access": "SYSTEM command execution",
+      "boundary_crossed": "application admin → host superuser",
+      "evidence": "Explicit"
+    }
+  ]
+}

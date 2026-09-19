@@ -1,0 +1,246 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Devel",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/03/05/htb-devel.html",
+    "title": "HTB Devel writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows 7 Enterprise build 7600 x86",
+    "deployment_role": "FTP and IIS share one content root"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Devel workstation",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.5",
+      "software_or_version": "Windows 7 Enterprise 6.1.7600 x86",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "No hotfixes"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft FTP service",
+      "role": "Content upload",
+      "binding_or_path": "0.0.0.0:21/tcp",
+      "software_or_version": "Microsoft ftpd",
+      "runs_as": "service account",
+      "exposure": "Public; anonymous read/write",
+      "evidence": "Explicit",
+      "analysis_note": "FTP root is IIS webroot"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft IIS",
+      "role": "Web application server",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 7.5 / ASP.NET",
+      "runs_as": "IIS APPPOOL\\Web",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Executes ASPX in shared root"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Directory",
+      "name": "IIS/FTP shared webroot",
+      "role": "Published executable content",
+      "binding_or_path": "FTP root = HTTP document root",
+      "software_or_version": "NTFS",
+      "runs_as": "IIS/FTP identities",
+      "exposure": "Public through both services",
+      "evidence": "Explicit",
+      "analysis_note": "Contains aspnet_client, iisstart.htm, welcome.png"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Kernel",
+      "name": "Windows kernel",
+      "role": "Privilege boundary",
+      "binding_or_path": "local",
+      "software_or_version": "build 7600 unpatched",
+      "runs_as": "SYSTEM",
+      "exposure": "Local only",
+      "evidence": "Explicit",
+      "analysis_note": "EoP target"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "FTP guest",
+      "operational_role": "unauthenticated uploader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "write C3 webroot",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "IIS APPPOOL\\Web",
+      "principal_type": "service identity",
+      "operational_role": "ASPX execution context",
+      "groups_or_nesting": "IIS_IUSRS",
+      "authentication_or_effective_access": "execute web content; local low privilege",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "babis",
+      "principal_type": "local user",
+      "operational_role": "registered owner/profile owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "ordinary user data",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "local system",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "create files",
+      "object": "C3 shared webroot",
+      "condition_or_scope": "FTP anonymous write",
+      "security_consequence": "Attacker controls executable web content",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "C2 IIS",
+      "permission_or_action": "execute",
+      "object": "uploaded .aspx in C3",
+      "condition_or_scope": "HTTP request",
+      "security_consequence": "Code runs as IIS APPPOOL\\Web",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "IIS APPPOOL\\Web",
+      "permission_or_action": "exploit local kernel",
+      "object": "C4",
+      "condition_or_scope": "unpatched build",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "aspnet_client / iisstart.htm / welcome.png",
+      "hosted_on": "C3",
+      "purpose": "default IIS content",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "FTP write",
+      "security_significance": "Proves FTP and HTTP namespace are the same",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "uploaded ASPX",
+      "hosted_on": "C3",
+      "purpose": "attacker payload",
+      "owner_or_authority": "anonymous",
+      "read_access": "public HTTP read",
+      "write_or_execute_access": "anonymous FTP write; IIS execute",
+      "security_significance": "Cross-protocol write-to-execute primitive",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C2+C3",
+      "affected_version": "Microsoft FTP + IIS 7.5",
+      "issue": "Anonymous write into executable webroot",
+      "preconditions": "Anonymous FTP enabled",
+      "vulnerable_behavior": "Uploaded ASPX is served and executed by IIS",
+      "resulting_access": "IIS APPPOOL\\Web shell",
+      "reference": "Configuration weakness",
+      "failed_control": "Storage and code-execution boundaries collapse",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Windows 7 build 7600",
+      "issue": "Kernel-mode privilege escalation",
+      "preconditions": "Local code execution",
+      "vulnerable_behavior": "Unpatched kernel flaw elevates token",
+      "resulting_access": "SYSTEM",
+      "reference": "MS11-046 / CVE-2011-1249",
+      "failed_control": "No hotfixes",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "A1",
+      "affected_component": "C4",
+      "affected_version": "Windows 7 build 7600",
+      "issue": "Alternate kernel EoP",
+      "preconditions": "Local code execution",
+      "vulnerable_behavior": "KiTrap0D path on affected 32-bit build",
+      "resulting_access": "SYSTEM",
+      "reference": "MS10-015 / CVE-2010-0232",
+      "failed_control": "Unpatched OS",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "upload ASPX over FTP",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "anonymous write",
+      "resulting_principal_or_access": "attacker file in executable root",
+      "boundary_crossed": "network → content write",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "unauthenticated HTTP client",
+      "action": "request ASPX",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "payload present",
+      "resulting_principal_or_access": "IIS APPPOOL\\Web",
+      "boundary_crossed": "content write → OS execution",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "IIS APPPOOL\\Web",
+      "action": "run local EoP",
+      "target_component_or_artifact": "C4",
+      "prerequisite": "vulnerable unpatched kernel",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "service user → local system",
+      "evidence": "Explicit"
+    }
+  ]
+}

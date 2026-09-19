@@ -1,0 +1,205 @@
+{
+  "machine": "Jerry",
+  "split": "demo",
+  "input": {
+    "documents": 9,
+    "graph_nodes": 65,
+    "graph_edges": 620,
+    "entry_concepts": [
+      "apache",
+      "jerry",
+      "manager",
+      "server",
+      "tomcat"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "jerry:host:0",
+        "title": "Jerry",
+        "summary": "Windows Server 2012 R2 build 9600 Single Java application server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:component:H1",
+        "title": "Jerry server",
+        "summary": "Host OS boundary 10.10.10.95 Windows 6.3.9600 SYSTEM VPN reachable Single exposed application",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:component:C1",
+        "title": "Apache Tomcat",
+        "summary": "Service Java servlet container 0.0.0.0:8080/tcp Tomcat 7.0.88 / Coyote 1.1 NT AUTHORITY\\SYSTEM Public Service is over-privileged Jerry server",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:component:C2",
+        "title": "Tomcat Manager",
+        "summary": "Application Administrative deployment UI/API /manager/html and /manager/text Tomcat 7.0.88 SYSTEM via C1 Public; Basic auth Accepts weak/default credential Apache Tomcat",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:component:C3",
+        "title": "Java VM",
+        "summary": "Runtime Executes deployed WAR/JSP Tomcat process Java 1.6.0_17 artifact SYSTEM Indirectly reachable Version inferred from deployed artifacts Apache Tomcat",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:permission:0",
+        "title": "manager user C2 Tomcat Manager",
+        "summary": "deploy/undeploy C2 Tomcat Manager valid weak/default credential Attacker-controlled WAR executes",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:permission:1",
+        "title": "C1 Tomcat service SYSTEM",
+        "summary": "execute as SYSTEM service configuration Web compromise equals host compromise",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:vulnerability:V1",
+        "title": "Weak/default Manager credential with unrestricted deployment Tomcat Manager",
+        "summary": "Tomcat Manager Tomcat 7.0.88 Manager exposed; credential guessed Authorized deployment feature accepts attacker WAR SYSTEM code execution Default secret + public admin interface",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "jerry:vulnerability:V2",
+        "title": "Service runs as SYSTEM Apache Tomcat",
+        "summary": "Apache Tomcat Tomcat service Any server-side code execution Servlet code inherits SYSTEM token Full host compromise No least-privilege service identity",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "system",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "manager",
+        "tomcat"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "apache",
+        "system"
+      ],
+      [
+        "tomcat",
+        "system"
+      ],
+      [
+        "host",
+        "system"
+      ],
+      [
+        "public",
+        "system"
+      ],
+      [
+        "service",
+        "system"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "apache",
+        "system"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "apache",
+        "system"
+      ],
+      [
+        "tomcat",
+        "system"
+      ],
+      [
+        "jerry",
+        "system"
+      ],
+      [
+        "manager",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "apache",
+        "system"
+      ],
+      [
+        "tomcat",
+        "system"
+      ],
+      [
+        "jerry",
+        "system"
+      ],
+      [
+        "manager",
+        "system"
+      ],
+      [
+        "server",
+        "system"
+      ]
+    ],
+    "e_directed_typed_graph": [
+      [
+        "tomcat",
+        "manager",
+        "administrative",
+        "deployment",
+        "weak",
+        "default",
+        "credential",
+        "unrestricted",
+        "system"
+      ],
+      [
+        "apache",
+        "tomcat",
+        "java",
+        "servlet",
+        "container",
+        "coyote",
+        "system"
+      ],
+      [
+        "tomcat",
+        "manager",
+        "administrative",
+        "deployment",
+        "system"
+      ]
+    ]
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 1.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 1,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 1.0
+  }
+}

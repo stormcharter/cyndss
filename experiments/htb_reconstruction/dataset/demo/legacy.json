@@ -1,0 +1,185 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Legacy",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/02/21/htb-legacy.html",
+    "title": "HTB Legacy writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows XP SP3 build 2600",
+    "deployment_role": "Standalone legacy workstation"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Legacy workstation",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.4",
+      "software_or_version": "Windows XP SP3 5.1.2600",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "HTB workgroup"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "NetBIOS Name Service",
+      "role": "Legacy name resolution",
+      "binding_or_path": "0.0.0.0:137/udp",
+      "software_or_version": "Windows NetBIOS",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Supports SMB discovery"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMBv1 Server",
+      "role": "File/RPC transport",
+      "binding_or_path": "0.0.0.0:139,445/tcp",
+      "software_or_version": "Windows XP SP3 SMBv1",
+      "runs_as": "SYSTEM",
+      "exposure": "Public; signing disabled",
+      "evidence": "Explicit",
+      "analysis_note": "Null-session authentication is denied"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "RPC endpoint",
+      "name": "srvsvc/browser RPC",
+      "role": "Remote file-service procedures",
+      "binding_or_path": "named pipes over SMB",
+      "software_or_version": "XP SP3",
+      "runs_as": "SYSTEM",
+      "exposure": "Pre-auth reachable",
+      "evidence": "Inferred",
+      "analysis_note": "Attack surface for MS08-067"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "local system",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "john",
+      "principal_type": "local user",
+      "operational_role": "profile/flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "ordinary profile; bypassed by direct exploit",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "anonymous",
+      "principal_type": "network principal",
+      "operational_role": "unauthenticated SMB client",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "cannot establish useful null session",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote unauthenticated client",
+      "permission_or_action": "invoke vulnerable RPC",
+      "object": "C3 srvsvc path parser",
+      "condition_or_scope": "SMBv1/RPC reachable",
+      "security_consequence": "Arbitrary code in SYSTEM service",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "SYSTEM",
+      "permission_or_action": "read/write/execute",
+      "object": "entire host",
+      "condition_or_scope": "successful exploit",
+      "security_consequence": "Full compromise",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "SMB signing policy",
+      "hosted_on": "C2 SMB server",
+      "purpose": "transport integrity setting",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "remotely observable",
+      "write_or_execute_access": "SYSTEM",
+      "security_significance": "Signing disabled; enables tampering but is not required for RCE",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Windows XP SP3",
+      "issue": "RPC path canonicalization overflow",
+      "preconditions": "SMB/RPC reachable",
+      "vulnerable_behavior": "Malformed path corrupts memory",
+      "resulting_access": "SYSTEM code execution",
+      "reference": "MS08-067 / CVE-2008-4250",
+      "failed_control": "EOL/unpatched RPC service",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C2",
+      "affected_version": "Windows XP SMBv1",
+      "issue": "SMBv1 remote-code-execution family",
+      "preconditions": "SMBv1 reachable",
+      "vulnerable_behavior": "Crafted SMB traffic triggers kernel/service flaw",
+      "resulting_access": "SYSTEM code execution",
+      "reference": "MS17-010 / CVE-2017-0143 family",
+      "failed_control": "SMBv1 enabled and unpatched",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "invoke MS08-067 RPC request",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "SMB/RPC reachable",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "network → local system",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "unauthenticated",
+      "action": "alternate MS17-010 exploitation",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "SMBv1 reachable",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "network → local system",
+      "evidence": "Explicit"
+    }
+  ]
+}

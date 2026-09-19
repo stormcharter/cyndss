@@ -1,0 +1,399 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "FriendZone",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/07/13/htb-friendzone.html",
+    "title": "HTB FriendZone writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Ubuntu 18.04.1 Linux",
+    "deployment_role": "DNS, SMB and multi-vhost Apache with root maintenance cron"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "FriendZone VM",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.123",
+      "software_or_version": "Ubuntu 18.04.1 / kernel 4.15.0-36",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "BIND DNS",
+      "role": "Authoritative DNS",
+      "binding_or_path": "0.0.0.0:53/tcp,udp",
+      "software_or_version": "BIND",
+      "runs_as": "bind",
+      "exposure": "Public; AXFR allowed",
+      "evidence": "Explicit",
+      "analysis_note": "friendzone.red zone transfer"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Samba",
+      "role": "File sharing",
+      "binding_or_path": "0.0.0.0:139,445/tcp",
+      "software_or_version": "Samba",
+      "runs_as": "root/service",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Anonymous general-files share"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Share",
+      "name": "general-files",
+      "role": "Public data/config clue share",
+      "binding_or_path": "SMB share",
+      "software_or_version": "Samba share",
+      "runs_as": "share owner",
+      "exposure": "Anonymous read",
+      "evidence": "Explicit",
+      "analysis_note": "Discloses content used by web path"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache HTTP/HTTPS",
+      "role": "Virtual-host web tier",
+      "binding_or_path": "0.0.0.0:80,443/tcp",
+      "software_or_version": "Apache 2.4.29-era + PHP",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Multiple vhosts"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "C4",
+      "layer_or_type": "Application",
+      "name": "administrator1 dashboard",
+      "role": "Authenticated image/include dashboard",
+      "binding_or_path": "administrator1.friendzone.red",
+      "software_or_version": "custom PHP",
+      "runs_as": "www-data",
+      "exposure": "Public login",
+      "evidence": "Explicit",
+      "analysis_note": "Unsafe include parameter after login"
+    },
+    {
+      "component_id": "C6",
+      "parent_id": "H1",
+      "layer_or_type": "Artifact",
+      "name": "mysql_data.conf",
+      "role": "Application DB configuration",
+      "binding_or_path": "/var/www/mysql_data.conf",
+      "software_or_version": "PHP config",
+      "runs_as": "www-data/app owner",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Secret reused by local friend account"
+    },
+    {
+      "component_id": "C7",
+      "parent_id": "H1",
+      "layer_or_type": "Scheduled task",
+      "name": "reporter.py",
+      "role": "Server administration report",
+      "binding_or_path": "/opt/server_admin/reporter.py every 2 min",
+      "software_or_version": "Python 2.7",
+      "runs_as": "root",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Imports os"
+    },
+    {
+      "component_id": "C8",
+      "parent_id": "H1",
+      "layer_or_type": "Library file",
+      "name": "Python os.py",
+      "role": "Standard-library dependency",
+      "binding_or_path": "/usr/lib/python2.7/os.py",
+      "software_or_version": "Python 2.7 stdlib",
+      "runs_as": "root-owned",
+      "exposure": "Local; world-writable",
+      "evidence": "Explicit",
+      "analysis_note": "Mode 777; imported by root task"
+    },
+    {
+      "component_id": "C9",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "FTP/OpenSSH",
+      "role": "File transfer and remote shell",
+      "binding_or_path": "21,22/tcp",
+      "software_or_version": "FTP; OpenSSH",
+      "runs_as": "service/root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "SSH used after credential reuse"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "anonymous",
+      "principal_type": "network guest",
+      "operational_role": "DNS/SMB recon principal",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "AXFR; read general-files",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP execution context",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "read web configs including mysql_data.conf",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "friend",
+      "principal_type": "local user",
+      "operational_role": "SSH/lateral account",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "credential reused from app config; write world-writable os.py",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "scheduled-task identity",
+      "operational_role": "reporter.py executor",
+      "groups_or_nesting": "root",
+      "authentication_or_effective_access": "imports Python modules and full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "AXFR",
+      "object": "C1",
+      "condition_or_scope": "zone transfer allowed",
+      "security_consequence": "administrator1/hr vhosts disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "anonymous",
+      "permission_or_action": "read",
+      "object": "C3",
+      "condition_or_scope": "guest share ACL",
+      "security_consequence": "Web/config clue disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "authenticated web user",
+      "permission_or_action": "control include path",
+      "object": "C5",
+      "condition_or_scope": "dashboard access",
+      "security_consequence": "PHP includes attacker-selected/local content as www-data",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "www-data",
+      "permission_or_action": "read",
+      "object": "C6",
+      "condition_or_scope": "filesystem ACL",
+      "security_consequence": "Reusable friend credential disclosed",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "friend",
+      "permission_or_action": "modify",
+      "object": "C8 os.py",
+      "condition_or_scope": "mode 777",
+      "security_consequence": "Code imported by root task",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "root cron",
+      "permission_or_action": "import/execute",
+      "object": "C8 via C7",
+      "condition_or_scope": "two-minute schedule",
+      "security_consequence": "Attacker code as root",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "DNS zone",
+      "hosted_on": "C1",
+      "purpose": "vhost inventory",
+      "owner_or_authority": "DNS admin",
+      "read_access": "public AXFR read",
+      "write_or_execute_access": "DNS admin write",
+      "security_significance": "Expands hidden web attack surface",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "general-files share content",
+      "hosted_on": "C3",
+      "purpose": "web credential/clue material",
+      "owner_or_authority": "share owner",
+      "read_access": "anonymous read",
+      "write_or_execute_access": "restricted write",
+      "security_significance": "Feeds dashboard access",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "mysql_data.conf",
+      "hosted_on": "C6",
+      "purpose": "database credential config",
+      "owner_or_authority": "www-data/app",
+      "read_access": "www-data read",
+      "write_or_execute_access": "app owner write",
+      "security_significance": "Secret reused for local friend login",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "/usr/lib/python2.7/os.py",
+      "hosted_on": "C8",
+      "purpose": "privileged dependency",
+      "owner_or_authority": "root",
+      "read_access": "all users read",
+      "write_or_execute_access": "world write; root execute/import",
+      "security_significance": "Standard library is an attacker-controlled trust input",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "BIND configuration",
+      "issue": "Unrestricted zone transfer",
+      "preconditions": "TCP 53 reachable",
+      "vulnerable_behavior": "AXFR returns internal vhost names",
+      "resulting_access": "Attack-surface disclosure",
+      "reference": "Configuration weakness",
+      "failed_control": "Zone transfer ACL absent",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C2/C3",
+      "affected_version": "Samba share ACL",
+      "issue": "Anonymous sensitive-data read",
+      "preconditions": "SMB reachable",
+      "vulnerable_behavior": "Guest reads material supporting web login/discovery",
+      "resulting_access": "Credential/context disclosure",
+      "reference": "Configuration weakness",
+      "failed_control": "Share data not access-controlled",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "custom PHP dashboard",
+      "issue": "Unsafe dynamic include",
+      "preconditions": "Dashboard authenticated",
+      "vulnerable_behavior": "User-controlled parameter selects PHP/local file",
+      "resulting_access": "www-data code execution",
+      "reference": "Application flaw",
+      "failed_control": "No include allowlist/path validation",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V4",
+      "affected_component": "C6",
+      "affected_version": "application credentials",
+      "issue": "Credential reuse between DB config and OS account",
+      "preconditions": "www-data file read",
+      "vulnerable_behavior": "Recovered secret authenticates friend over SSH",
+      "resulting_access": "friend account",
+      "reference": "Configuration weakness",
+      "failed_control": "Secrets reused across trust boundaries",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V5",
+      "affected_component": "C7+C8",
+      "affected_version": "Python 2.7 root cron",
+      "issue": "World-writable standard library imported by root",
+      "preconditions": "friend shell",
+      "vulnerable_behavior": "Modify os.py; reporter imports it on schedule",
+      "resulting_access": "root code execution",
+      "reference": "Configuration weakness",
+      "failed_control": "Privileged dependency is globally writable",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "AXFR and read SMB share",
+      "target_component_or_artifact": "C1/C3",
+      "prerequisite": "public services",
+      "resulting_principal_or_access": "hidden vhosts/dashboard context",
+      "boundary_crossed": "network → internal topology",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "web user",
+      "action": "exploit unsafe include",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "dashboard access",
+      "resulting_principal_or_access": "www-data",
+      "boundary_crossed": "web app → service identity",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "www-data",
+      "action": "read config and reuse credential",
+      "target_component_or_artifact": "C6/C9",
+      "prerequisite": "file ACL + secret reuse",
+      "resulting_principal_or_access": "friend",
+      "boundary_crossed": "service identity → local user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "friend",
+      "action": "modify os.py",
+      "target_component_or_artifact": "C8",
+      "prerequisite": "world-writable mode",
+      "resulting_principal_or_access": "root-loaded payload",
+      "boundary_crossed": "user → privileged dependency",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 5,
+      "source_principal": "root cron",
+      "action": "run reporter/import os",
+      "target_component_or_artifact": "C7/C8",
+      "prerequisite": "schedule",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "privileged dependency → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

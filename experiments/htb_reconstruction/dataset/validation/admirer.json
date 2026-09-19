@@ -1,0 +1,297 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Admirer",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2020/09/26/htb-admirer.html",
+    "title": "HTB Admirer writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Debian 9 Linux",
+    "deployment_role": "Apache art site, FTP source disclosure and Adminer/Python sudo"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Admirer host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.187",
+      "software_or_version": "Debian 9 Stretch",
+      "runs_as": "root",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "vsftpd",
+      "role": "FTP service",
+      "binding_or_path": "21/tcp",
+      "software_or_version": "vsftpd 3.0.3",
+      "runs_as": "ftp",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Credentials from web allow source download"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "OpenSSH",
+      "role": "Remote shell",
+      "binding_or_path": "22/tcp",
+      "software_or_version": "OpenSSH 7.4p1 Debian",
+      "runs_as": "root daemon",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "waldo login"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Apache/PHP",
+      "role": "Art web site",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "Apache 2.4.25",
+      "runs_as": "www-data",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "robots/admin-dir exposes utility sources"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C3",
+      "layer_or_type": "Application",
+      "name": "Adminer",
+      "role": "Database web interface",
+      "binding_or_path": "/adminer.php/internal",
+      "software_or_version": "Adminer",
+      "runs_as": "www-data",
+      "exposure": "Internal/public after source",
+      "evidence": "Explicit",
+      "analysis_note": "Queries attacker-controlled DB and reads local files"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Authorization",
+      "name": "sudo Python backup",
+      "role": "Privilege helper",
+      "binding_or_path": "/opt/scripts/admin_tasks.sh",
+      "software_or_version": "Python",
+      "runs_as": "waldo as sudo",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Allows PYTHONPATH and imports shutil/archive module"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "www-data",
+      "principal_type": "service identity",
+      "operational_role": "Apache/PHP worker",
+      "groups_or_nesting": "www-data",
+      "authentication_or_effective_access": "web/source access",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "waldo",
+      "principal_type": "local user",
+      "operational_role": "SSH/backup operator",
+      "groups_or_nesting": "sudo backup",
+      "authentication_or_effective_access": "can run admin_tasks.sh with environment",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "ftpuser",
+      "principal_type": "local/service account",
+      "operational_role": "FTP credential holder",
+      "groups_or_nesting": "users",
+      "authentication_or_effective_access": "credential discovered in web source",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "root",
+      "principal_type": "local superuser",
+      "operational_role": "backup/host owner",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "read robots/admin-dir/source",
+      "object": "C3",
+      "condition_or_scope": "public web",
+      "security_consequence": "FTP credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "ftpuser",
+      "permission_or_action": "read/upload source over FTP",
+      "object": "C1",
+      "condition_or_scope": "recovered credential",
+      "security_consequence": "Adminer path/source",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "remote client",
+      "permission_or_action": "use Adminer to read local source",
+      "object": "C4",
+      "condition_or_scope": "Adminer reachable and DB endpoint controlled",
+      "security_consequence": "waldo credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "waldo",
+      "permission_or_action": "sudo run backup with PYTHONPATH",
+      "object": "C5",
+      "condition_or_scope": "NOPASSWD environment",
+      "security_consequence": "root Python library hijack",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "admin-dir/source files",
+      "hosted_on": "C3/C1",
+      "purpose": "FTP and Adminer credentials",
+      "owner_or_authority": "web developer",
+      "read_access": "public read",
+      "write_or_execute_access": "developer/FTP writes",
+      "security_significance": "Web enumeration bridge",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Adminer query",
+      "hosted_on": "C4",
+      "purpose": "DB/local file read primitive",
+      "owner_or_authority": "www-data",
+      "read_access": "internal access",
+      "write_or_execute_access": "Adminer executes queries",
+      "security_significance": "Cross-host file access",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "admin_tasks.sh",
+      "hosted_on": "C5",
+      "purpose": "root archive task",
+      "owner_or_authority": "root",
+      "read_access": "waldo can read/execute",
+      "write_or_execute_access": "root writes",
+      "security_significance": "Sudo target imports attacker path",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "PYTHONPATH/shutil.py",
+      "hosted_on": "C5",
+      "purpose": "Python dependency",
+      "owner_or_authority": "waldo",
+      "read_access": "waldo controls path",
+      "write_or_execute_access": "root Python imports",
+      "security_significance": "Library hijack",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Apache/robots/admin-dir",
+      "issue": "Source and credential disclosure",
+      "preconditions": "Public web",
+      "vulnerable_behavior": "Hidden directory exposes FTP/source files",
+      "resulting_access": "ftpuser/waldo credential",
+      "reference": "Information disclosure",
+      "failed_control": "Sensitive development directory web-readable",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C4",
+      "affected_version": "Adminer",
+      "issue": "Database/local file access through attacker-controlled connection",
+      "preconditions": "Adminer reachable; local DB source",
+      "vulnerable_behavior": "Adminer can connect to attacker DB and issue LOAD DATA/local reads",
+      "resulting_access": "waldo secret",
+      "reference": "Adminer trust flaw",
+      "failed_control": "Database interface not isolated",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "sudo Python backup",
+      "issue": "PYTHONPATH/library hijack",
+      "preconditions": "waldo shell; sudo permits env",
+      "vulnerable_behavior": "Root script imports attacker-controlled module",
+      "resulting_access": "root",
+      "reference": "Sudo/Python path hijack",
+      "failed_control": "Environment and import path not constrained",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "remote client",
+      "action": "enumerate hidden source",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "robots/admin-dir",
+      "resulting_principal_or_access": "ftpuser credential",
+      "boundary_crossed": "network → source",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "use FTP/source to reach Adminer",
+      "target_component_or_artifact": "C1/C3/C4",
+      "prerequisite": "credential/source path",
+      "resulting_principal_or_access": "waldo credential",
+      "boundary_crossed": "source → app",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "remote client",
+      "action": "SSH as waldo",
+      "target_component_or_artifact": "C2",
+      "prerequisite": "credential recovered",
+      "resulting_principal_or_access": "waldo",
+      "boundary_crossed": "credential → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "waldo",
+      "action": "run sudo backup with malicious module",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "PYTHONPATH allowed",
+      "resulting_principal_or_access": "root",
+      "boundary_crossed": "user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

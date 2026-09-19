@@ -1,0 +1,243 @@
+{
+  "machine": "Love",
+  "split": "validation",
+  "input": {
+    "documents": 16,
+    "graph_nodes": 77,
+    "graph_edges": 672,
+    "entry_concepts": [
+      "apache",
+      "host",
+      "love",
+      "proxy",
+      "staging",
+      "system",
+      "voting"
+    ],
+    "corpus": [
+      {
+        "mongo_id": "love:host:0",
+        "title": "Love",
+        "summary": "Windows host Public Voting System, SSRF to localhost credential page and AlwaysInstallElevated",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:component:H1",
+        "title": "Love host",
+        "summary": "Host OS/security boundary 10.10.10.239 Windows (Apache/PHP on XAMPP) SYSTEM VPN reachable Many Windows services exposed",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:component:C1",
+        "title": "Apache/PHP",
+        "summary": "Service HTTP front end 80,443/tcp Apache 2.4.46 / PHP 7.3.27 www-data Public staging.love.htb and Voting System Love host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:component:C2",
+        "title": "Voting System",
+        "summary": "Application PHP web app vote/admin Voting System www-data Public/admin File upload RCE Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:component:C3",
+        "title": "staging proxy",
+        "summary": "Application URL fetcher staging.love.htb PHP www-data Public SSRF to 127.0.0.1:5000 Apache/PHP",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:component:C4",
+        "title": "localhost service",
+        "summary": "Application Credential/status page 127.0.0.1:5000 HTTP local admin Local Leaks Voting System admin credentials Love host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:component:C5",
+        "title": "AlwaysInstallElevated",
+        "summary": "Authorization Windows MSI policy HKLM/HKCU registry Windows Installer SYSTEM Local Any user can install MSI as SYSTEM Love host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:component:C6",
+        "title": "WinRM/SMB",
+        "summary": "Service Remote management 5985/5986,445/tcp WinRM/SMB SYSTEM Authenticated Final host access Love host",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:permission:0",
+        "title": "remote client staging proxy",
+        "summary": "request arbitrary URL staging proxy staging fetch endpoint public localhost service response",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:permission:1",
+        "title": "remote client localhost service",
+        "summary": "read admin credential localhost service SSRF reaches 127.0.0.1:5000 Voting admin",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:permission:2",
+        "title": "admin Voting System",
+        "summary": "upload PHP payload Voting System admin auth webshell/user shell",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:permission:3",
+        "title": "Phoebe/user AlwaysInstallElevated",
+        "summary": "install crafted MSI AlwaysInstallElevated AlwaysInstallElevated enabled SYSTEM",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:permission:4",
+        "title": "SYSTEM WinRM/SMB",
+        "summary": "WinRM/SMB WinRM/SMB local system token full host control",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:vulnerability:V1",
+        "title": "Server-side request forgery C3+C4",
+        "summary": "C3+C4 PHP URL fetcher Public URL fetch parameter Server requests localhost-only service admin credential No destination allowlist",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:vulnerability:V2",
+        "title": "Admin file upload RCE Voting System",
+        "summary": "Voting System Voting System Credentials from SSRF Upload filter accepts PHP payload www-data/Phoebe Admin upload directory executable",
+        "verified_cve_ids": ""
+      },
+      {
+        "mongo_id": "love:vulnerability:V3",
+        "title": "AlwaysInstallElevated AlwaysInstallElevated",
+        "summary": "AlwaysInstallElevated Windows Installer policy Both registry policies enabled Any authenticated user installs MSI as SYSTEM SYSTEM Installer policy grants system token",
+        "verified_cve_ids": ""
+      }
+    ]
+  },
+  "reference": {
+    "goal": "control",
+    "goal_in_graph": true,
+    "gold_steps_scored": [
+      [
+        "admin",
+        "credential"
+      ],
+      [
+        "phoebe",
+        "system",
+        "voting"
+      ],
+      [
+        "alwaysinstallelevated",
+        "system"
+      ]
+    ],
+    "note": "Цільовий крок відкинуто: він поданий на вхід обходу."
+  },
+  "chains": {
+    "a_unidirectional": [
+      [
+        "token",
+        "control"
+      ],
+      [
+        "winrm",
+        "control"
+      ],
+      [
+        "access",
+        "winrm",
+        "control"
+      ],
+      [
+        "final",
+        "winrm",
+        "control"
+      ],
+      [
+        "grants",
+        "token",
+        "control"
+      ]
+    ],
+    "b_bidirectional_single": [
+      [
+        "host",
+        "control"
+      ]
+    ],
+    "c_bidirectional_production": [
+      [
+        "love",
+        "host",
+        "control"
+      ],
+      [
+        "proxy",
+        "remote",
+        "winrm",
+        "control"
+      ],
+      [
+        "host",
+        "control"
+      ],
+      [
+        "voting",
+        "local",
+        "control"
+      ],
+      [
+        "apache",
+        "host",
+        "control"
+      ]
+    ],
+    "d_unidirectional_given_starts": [
+      [
+        "love",
+        "host",
+        "control"
+      ],
+      [
+        "proxy",
+        "remote",
+        "winrm",
+        "control"
+      ],
+      [
+        "host",
+        "control"
+      ],
+      [
+        "voting",
+        "local",
+        "control"
+      ],
+      [
+        "apache",
+        "host",
+        "control"
+      ]
+    ],
+    "e_directed_typed_graph": []
+  },
+  "metrics": {
+    "a_chains": 5,
+    "a_hops": 1,
+    "a_coverage": 0.0,
+    "a_ordered": 0.0,
+    "a_precision": 0.0,
+    "a_coverage_topk": 0.0,
+    "b_found": true,
+    "b_hops": 1,
+    "b_coverage": 0.0,
+    "b_ordered": 0.0,
+    "b_precision": 0.0,
+    "c_chains": 5,
+    "c_hops": 2,
+    "c_coverage": 0.0,
+    "c_ordered": 0.0,
+    "c_precision": 0.0,
+    "c_coverage_topk": 0.3333333333333333
+  }
+}

@@ -1,0 +1,303 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Heist",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/11/30/htb-heist.html",
+    "title": "HTB Heist writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows workgroup host",
+    "deployment_role": "IIS support portal, Cisco secrets, RPC enumeration and WinRM"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Heist host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.149",
+      "software_or_version": "Windows workgroup",
+      "runs_as": "Administrator",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "IIS",
+      "role": "Support portal",
+      "binding_or_path": "80/tcp",
+      "software_or_version": "IIS",
+      "runs_as": "web worker",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Issues page exposes Cisco config attachment"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB/RPC",
+      "role": "Account/share enumeration",
+      "binding_or_path": "135,139,445/tcp",
+      "software_or_version": "Windows RPC/SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "RID and IPC enumeration"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "WinRM",
+      "role": "Remote PowerShell",
+      "binding_or_path": "5985/tcp",
+      "software_or_version": "WinRM",
+      "runs_as": "authenticated user",
+      "exposure": "Public/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Chase login path"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "C1",
+      "layer_or_type": "Artifact",
+      "name": "config.txt",
+      "role": "Cisco configuration",
+      "binding_or_path": "IIS attachment",
+      "software_or_version": "Cisco IOS/type-7",
+      "runs_as": "rout3r/admin",
+      "exposure": "Public download",
+      "evidence": "Explicit",
+      "analysis_note": "Contains reversible type-7 secrets"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Process",
+      "name": "Firefox",
+      "role": "Interactive browser process",
+      "binding_or_path": "Administrator desktop",
+      "software_or_version": "Firefox",
+      "runs_as": "Administrator",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Process memory contains credentials"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "rout3r",
+      "principal_type": "application user",
+      "operational_role": "Cisco operator",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "type-7 secret recovered",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "admin",
+      "principal_type": "application user",
+      "operational_role": "support admin",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "password candidate",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Chase",
+      "principal_type": "local user",
+      "operational_role": "WinRM foothold",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "WinRM session",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Administrator",
+      "principal_type": "local administrator",
+      "operational_role": "final principal",
+      "groups_or_nesting": "Administrators",
+      "authentication_or_effective_access": "browser memory/reused password",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "host superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "anonymous",
+      "permission_or_action": "download config attachment",
+      "object": "C1",
+      "condition_or_scope": "support portal public",
+      "security_consequence": "Cisco usernames/password hashes",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "rout3r/admin",
+      "permission_or_action": "RPC enumerate SIDs",
+      "object": "C2",
+      "condition_or_scope": "valid account",
+      "security_consequence": "Chase identity discovered",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Chase",
+      "permission_or_action": "WinRM login",
+      "object": "C3",
+      "condition_or_scope": "password spray/reuse",
+      "security_consequence": "local PowerShell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Chase",
+      "permission_or_action": "dump Firefox process memory",
+      "object": "C5",
+      "condition_or_scope": "local process access",
+      "security_consequence": "Administrator credential",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Administrator",
+      "permission_or_action": "WinRM/SMB admin",
+      "object": "C2/C3",
+      "condition_or_scope": "recovered secret",
+      "security_consequence": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "issues/config.txt",
+      "hosted_on": "C1/C4",
+      "purpose": "Cisco credential material",
+      "owner_or_authority": "support portal",
+      "read_access": "public read",
+      "write_or_execute_access": "support staff writes",
+      "security_significance": "Reversible type-7 secrets",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "RPC/SAMR user list",
+      "hosted_on": "C2",
+      "purpose": "account enumeration",
+      "owner_or_authority": "SYSTEM",
+      "read_access": "authenticated read",
+      "write_or_execute_access": "DC/workgroup writes",
+      "security_significance": "Expands password-spray target set",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Firefox process dump",
+      "hosted_on": "C5",
+      "purpose": "browser secrets",
+      "owner_or_authority": "Administrator",
+      "read_access": "Chase can read process",
+      "write_or_execute_access": "Firefox writes memory",
+      "security_significance": "Credential disclosure",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C4",
+      "affected_version": "IIS support portal",
+      "issue": "Public attachment exposes reversible Cisco type-7 passwords",
+      "preconditions": "Issues page public",
+      "vulnerable_behavior": "Configuration contains decryptable secrets",
+      "resulting_access": "rout3r/admin candidates",
+      "reference": "Credential disclosure",
+      "failed_control": "Sensitive attachment not access-controlled",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C2+C3",
+      "affected_version": "RPC/WinRM",
+      "issue": "Password reuse across Cisco/application and Windows users",
+      "preconditions": "User names enumerated",
+      "vulnerable_behavior": "Recovered secret authenticates Chase over WinRM",
+      "resulting_access": "Chase",
+      "reference": "Credential reuse",
+      "failed_control": "No password uniqueness/tiering",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C5",
+      "affected_version": "Firefox process",
+      "issue": "Administrator secret remains in readable process memory",
+      "preconditions": "Chase interactive session",
+      "vulnerable_behavior": "Memory dump reveals saved password",
+      "resulting_access": "Administrator",
+      "reference": "Credential exposure",
+      "failed_control": "Privileged browser session not isolated",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "anonymous",
+      "action": "download Cisco config",
+      "target_component_or_artifact": "C1/C4",
+      "prerequisite": "public support page",
+      "resulting_principal_or_access": "candidate credentials",
+      "boundary_crossed": "network → artifact",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "remote client",
+      "action": "enumerate users and spray passwords",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "RPC + reused secret",
+      "resulting_principal_or_access": "Chase",
+      "boundary_crossed": "network → user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "Chase",
+      "action": "WinRM and dump Firefox",
+      "target_component_or_artifact": "C3/C5",
+      "prerequisite": "interactive access",
+      "resulting_principal_or_access": "Administrator credential",
+      "boundary_crossed": "user → process secret",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "Chase",
+      "action": "WinRM/SMB as Administrator",
+      "target_component_or_artifact": "C2/C3",
+      "prerequisite": "recovered secret",
+      "resulting_principal_or_access": "host admin",
+      "boundary_crossed": "credential → admin",
+      "evidence": "Explicit"
+    }
+  ]
+}

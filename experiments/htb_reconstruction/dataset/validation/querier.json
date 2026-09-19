@@ -1,0 +1,295 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup analysis",
+    "split": "validation",
+    "version": "2026-09-04.extra-44"
+  },
+  "machine": "Querier",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/06/22/htb-querier.html",
+    "title": "HTB Querier writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and ordered attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the source writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows workgroup host",
+    "deployment_role": "SMB report share, MSSQL and GPP/service privilege path"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Querier host",
+      "role": "OS/security boundary",
+      "binding_or_path": "10.10.10.125",
+      "software_or_version": "Windows workgroup",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone database/reporting host"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "SMB",
+      "role": "File shares",
+      "binding_or_path": "139,445/tcp",
+      "software_or_version": "Windows SMB",
+      "runs_as": "SYSTEM",
+      "exposure": "Guest/readable Reports share",
+      "evidence": "Explicit",
+      "analysis_note": "Reports workbook exposed"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Share",
+      "name": "Reports share",
+      "role": "Excel macro files",
+      "binding_or_path": "\\\\QUERIER\\Reports",
+      "software_or_version": "SMB",
+      "runs_as": "reporting",
+      "exposure": "Guest read",
+      "evidence": "Explicit",
+      "analysis_note": "Currency Volume Report.xlsm"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "H1",
+      "layer_or_type": "Database",
+      "name": "MSSQL",
+      "role": "Database server",
+      "binding_or_path": "1433/tcp",
+      "software_or_version": "Microsoft SQL Server",
+      "runs_as": "MSSQLSERVER",
+      "exposure": "Network/authenticated",
+      "evidence": "Explicit",
+      "analysis_note": "Reporting database and xp_cmdshell"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Protocol",
+      "name": "Responder/SMB callback",
+      "role": "Net-NTLMv2 capture sink",
+      "binding_or_path": "attacker listener",
+      "software_or_version": "SMB/NTLM",
+      "runs_as": "attacker",
+      "exposure": "Triggered by SQL UNC path",
+      "evidence": "Explicit",
+      "analysis_note": "Captures service account challenge"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Windows service",
+      "role": "Privilege boundary",
+      "binding_or_path": "local",
+      "software_or_version": "Windows service/PowerUp",
+      "runs_as": "SYSTEM",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "Service or GPP material supports final EoP"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "guest",
+      "principal_type": "SMB principal",
+      "operational_role": "share reader",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "read Reports",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "reporting",
+      "principal_type": "MSSQL login",
+      "operational_role": "reporting account",
+      "groups_or_nesting": "SQL users",
+      "authentication_or_effective_access": "connects to MSSQL; limited SQL rights",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "mrb3n",
+      "principal_type": "local user",
+      "operational_role": "shell/flag user",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "Windows shell from xp_cmdshell",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "service/kernel superuser",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "guest",
+      "permission_or_action": "read",
+      "object": "C2 Reports",
+      "condition_or_scope": "SMB guest ACL",
+      "security_consequence": "macro credentials",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "reporting",
+      "permission_or_action": "connect/query",
+      "object": "C3",
+      "condition_or_scope": "credentials in macro",
+      "security_consequence": "MSSQL session",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "reporting",
+      "permission_or_action": "force UNC callback",
+      "object": "C3/C4",
+      "condition_or_scope": "xp_dirtree or equivalent",
+      "security_consequence": "Net-NTLMv2 challenge captured/cracked",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "reporting/mrb3n",
+      "permission_or_action": "execute xp_cmdshell",
+      "object": "C3",
+      "condition_or_scope": "SQL role after hash reuse",
+      "security_consequence": "Windows shell",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "mrb3n",
+      "permission_or_action": "abuse service/GPP",
+      "object": "C5",
+      "condition_or_scope": "local enumeration",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "Currency Volume Report.xlsm",
+      "hosted_on": "C2",
+      "purpose": "reporting workbook/macro",
+      "owner_or_authority": "reporting",
+      "read_access": "guest read",
+      "write_or_execute_access": "reporting writes",
+      "security_significance": "Macro embeds SQL credential",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "VBA macro source",
+      "hosted_on": "C2",
+      "purpose": "connection string",
+      "owner_or_authority": "reporting",
+      "read_access": "guest can extract with olevba",
+      "write_or_execute_access": "report author writes",
+      "security_significance": "Credential disclosure",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "Net-NTLMv2 challenge",
+      "hosted_on": "C4",
+      "purpose": "service authentication proof",
+      "owner_or_authority": "reporting",
+      "read_access": "attacker captures",
+      "write_or_execute_access": "SMB/NTLM generates",
+      "security_significance": "Offline cracking/lateral auth",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1+C2",
+      "affected_version": "SMB guest",
+      "issue": "Guest-readable macro workbook",
+      "preconditions": "SMB public",
+      "vulnerable_behavior": "Guest downloads VBA and connection string",
+      "resulting_access": "reporting credential",
+      "reference": "Configuration weakness",
+      "failed_control": "Reports share ACL too broad",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C3+C4",
+      "affected_version": "MSSQL/NTLM",
+      "issue": "UNC callback leaks Net-NTLMv2",
+      "preconditions": "MSSQL authenticated",
+      "vulnerable_behavior": "xp_dirtree reaches attacker SMB listener",
+      "resulting_access": "reporting hash",
+      "reference": "NTLM relay/credential disclosure",
+      "failed_control": "Outbound SMB unrestricted",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C3+C5",
+      "affected_version": "MSSQL/service",
+      "issue": "SQL command execution plus weak local service/GPP",
+      "preconditions": "MSSQL role and local shell",
+      "vulnerable_behavior": "xp_cmdshell/service material creates SYSTEM path",
+      "resulting_access": "SYSTEM",
+      "reference": "Configuration weakness",
+      "failed_control": "Database/service account over-privileged",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "guest",
+      "action": "download and inspect XLSM",
+      "target_component_or_artifact": "C1/C2",
+      "prerequisite": "SMB read",
+      "resulting_principal_or_access": "reporting credentials",
+      "boundary_crossed": "network → artifact",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "reporting",
+      "action": "connect MSSQL and trigger UNC",
+      "target_component_or_artifact": "C3/C4",
+      "prerequisite": "macro credential",
+      "resulting_principal_or_access": "Net-NTLMv2 material",
+      "boundary_crossed": "database → auth material",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 3,
+      "source_principal": "reporting",
+      "action": "execute xp_cmdshell",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "recovered auth",
+      "resulting_principal_or_access": "mrb3n shell",
+      "boundary_crossed": "database → OS user",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 4,
+      "source_principal": "mrb3n",
+      "action": "abuse service/GPP control",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "local rights",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "user → root",
+      "evidence": "Explicit"
+    }
+  ]
+}

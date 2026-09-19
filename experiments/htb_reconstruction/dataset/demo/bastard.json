@@ -1,0 +1,241 @@
+{
+  "schema": "htb.writeup.analysis.v1",
+  "dataset": {
+    "name": "HTB machine writeup demonstration",
+    "split": "demo",
+    "version": "2026-09-04.demo-22"
+  },
+  "machine": "Bastard",
+  "source": {
+    "url": "https://0xdf.gitlab.io/2019/03/12/htb-bastard.html",
+    "title": "HTB Bastard writeup",
+    "publisher": "0xdf hacks stuff",
+    "accessed": "2026-09-04"
+  },
+  "scope": {
+    "purpose": "Component-level infrastructure, identity, permission, vulnerability and attack-path analysis",
+    "credentials_and_flags": "Omitted",
+    "evidence_rule": {
+      "explicit": "Directly reported or shown in the writeup",
+      "inferred": "Conservative containment or execution relationship needed to explain demonstrated behavior"
+    }
+  },
+  "host": {
+    "operating_system_or_build": "Windows Server 2008 R2 Datacenter build 7600",
+    "deployment_role": "IIS-hosted Drupal application"
+  },
+  "components": [
+    {
+      "component_id": "H1",
+      "parent_id": "-",
+      "layer_or_type": "Host",
+      "name": "Bastard server",
+      "role": "OS boundary",
+      "binding_or_path": "10.10.10.9",
+      "software_or_version": "Windows Server 2008 R2 6.1.7600 x64",
+      "runs_as": "SYSTEM",
+      "exposure": "VPN reachable",
+      "evidence": "Explicit",
+      "analysis_note": "Standalone; no hotfixes"
+    },
+    {
+      "component_id": "C1",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "Microsoft IIS",
+      "role": "HTTP front end",
+      "binding_or_path": "0.0.0.0:80/tcp",
+      "software_or_version": "IIS 7.5",
+      "runs_as": "NT AUTHORITY\\IUSR",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Hosts Drupal under C:\\inetpub"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "C1",
+      "layer_or_type": "Application",
+      "name": "Drupal core",
+      "role": "CMS routing/content",
+      "binding_or_path": "/",
+      "software_or_version": "Drupal 7.54",
+      "runs_as": "IUSR via IIS",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Version leaked by CHANGELOG.txt"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "C2",
+      "layer_or_type": "Module",
+      "name": "Drupal Services",
+      "role": "REST endpoint and serializers",
+      "binding_or_path": "/rest",
+      "software_or_version": "Drupal 7.x Services module",
+      "runs_as": "IUSR",
+      "exposure": "Public endpoint",
+      "evidence": "Explicit",
+      "analysis_note": "Intended RCE surface"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "H1",
+      "layer_or_type": "Service",
+      "name": "RPC Endpoint Mapper",
+      "role": "Windows RPC",
+      "binding_or_path": "135/tcp and 49154/tcp",
+      "software_or_version": "Windows RPC",
+      "runs_as": "SYSTEM",
+      "exposure": "Public",
+      "evidence": "Explicit",
+      "analysis_note": "Recon only"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "H1",
+      "layer_or_type": "Kernel",
+      "name": "Win32k subsystem",
+      "role": "Local privilege boundary",
+      "binding_or_path": "local",
+      "software_or_version": "build 7600 unpatched",
+      "runs_as": "SYSTEM",
+      "exposure": "Local",
+      "evidence": "Explicit",
+      "analysis_note": "MS15-051 target"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "Drupal admin",
+      "principal_type": "application account",
+      "operational_role": "CMS administrator",
+      "groups_or_nesting": "Drupal roles",
+      "authentication_or_effective_access": "application configuration/content control",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "NT AUTHORITY\\IUSR",
+      "principal_type": "service identity",
+      "operational_role": "IIS anonymous worker",
+      "groups_or_nesting": "IIS_IUSRS",
+      "authentication_or_effective_access": "execute Drupal/PHP; low local privilege",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "dimitris",
+      "principal_type": "local user",
+      "operational_role": "profile/flag owner",
+      "groups_or_nesting": "Users",
+      "authentication_or_effective_access": "ordinary local profile",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "SYSTEM",
+      "principal_type": "machine principal",
+      "operational_role": "local system",
+      "groups_or_nesting": "-",
+      "authentication_or_effective_access": "full host control",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "remote client",
+      "permission_or_action": "submit crafted serialized REST request",
+      "object": "C3",
+      "condition_or_scope": "Services endpoint enabled",
+      "security_consequence": "PHP/webshell write and execution as IUSR",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "IUSR",
+      "permission_or_action": "execute local kernel exploit",
+      "object": "C5",
+      "condition_or_scope": "unpatched build",
+      "security_consequence": "SYSTEM",
+      "evidence": "Explicit"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_or_path": "CHANGELOG.txt",
+      "hosted_on": "C2",
+      "purpose": "version disclosure",
+      "owner_or_authority": "web content owner",
+      "read_access": "public read",
+      "write_or_execute_access": "server write",
+      "security_significance": "Pins Drupal 7.54",
+      "evidence": "Explicit"
+    },
+    {
+      "artifact_or_path": "webshell in C:\\inetpub\\drupal-7.54",
+      "hosted_on": "C1/C2",
+      "purpose": "attacker command bridge",
+      "owner_or_authority": "IUSR",
+      "read_access": "public invoke",
+      "write_or_execute_access": "created through exploit",
+      "security_significance": "OS commands inherit IUSR",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C3",
+      "affected_version": "Drupal 7.x Services module",
+      "issue": "Object injection / endpoint RCE",
+      "preconditions": "REST endpoint reachable",
+      "vulnerable_behavior": "Crafted payload causes PHP code/file execution",
+      "resulting_access": "NT AUTHORITY\\IUSR",
+      "reference": "EDB-41564",
+      "failed_control": "Unsafe deserialization/endpoint configuration",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "A1",
+      "affected_component": "C2",
+      "affected_version": "Drupal 7.54",
+      "issue": "Later alternate unauthenticated Drupalgeddon2 path",
+      "preconditions": "Vulnerable core and reachable HTTP",
+      "vulnerable_behavior": "Crafted request executes PHP",
+      "resulting_access": "IUSR",
+      "reference": "CVE-2018-7600",
+      "failed_control": "Outdated core",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C5",
+      "affected_version": "Windows build 7600",
+      "issue": "Win32k kernel EoP",
+      "preconditions": "Local IUSR shell",
+      "vulnerable_behavior": "Kernel flaw elevates process",
+      "resulting_access": "SYSTEM",
+      "reference": "MS15-051 / CVE-2015-1701",
+      "failed_control": "No hotfixes",
+      "evidence": "Explicit"
+    }
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "source_principal": "unauthenticated",
+      "action": "exploit Services endpoint",
+      "target_component_or_artifact": "C3",
+      "prerequisite": "module enabled",
+      "resulting_principal_or_access": "IUSR",
+      "boundary_crossed": "network → web-service identity",
+      "evidence": "Explicit"
+    },
+    {
+      "step": 2,
+      "source_principal": "IUSR",
+      "action": "execute MS15-051",
+      "target_component_or_artifact": "C5",
+      "prerequisite": "unpatched kernel",
+      "resulting_principal_or_access": "SYSTEM",
+      "boundary_crossed": "service identity → system",
+      "evidence": "Explicit"
+    }
+  ]
+}

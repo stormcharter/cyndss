@@ -1,0 +1,404 @@
+{
+  "config": {
+    "dataset": "D:\\folders\\diplom\\experiments\\corporate_networks\\dataset",
+    "scenario_pool": 20,
+    "top_k": 5,
+    "pythonhashseed": "0",
+    "uses_llm": false,
+    "uses_network": false
+  },
+  "summary": {
+    "networks_total": 100,
+    "networks_goal_reachable": 65,
+    "reconstruction": {
+      "all": {
+        "coverage": {
+          "mean": 0.2325,
+          "median": 0.2,
+          "sd": 0.2685,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "ordered_coverage": {
+          "mean": 0.22,
+          "median": 0.2,
+          "sd": 0.2597,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "precision": {
+          "mean": 0.3208,
+          "median": 0.2,
+          "sd": 0.3733,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "coverage_top_k": {
+          "mean": 0.4238,
+          "median": 0.5,
+          "sd": 0.3615,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "found_hops": {
+          "mean": 4.98,
+          "median": 2.0,
+          "sd": 6.3214,
+          "min": 0,
+          "max": 28
+        }
+      },
+      "reachable_only": {
+        "coverage": {
+          "mean": 0.3577,
+          "median": 0.4,
+          "sd": 0.2571,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "ordered_coverage": {
+          "mean": 0.3385,
+          "median": 0.3333,
+          "sd": 0.2524,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "precision": {
+          "mean": 0.4936,
+          "median": 0.4615,
+          "sd": 0.3594,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "coverage_top_k": {
+          "mean": 0.6521,
+          "median": 0.6,
+          "sd": 0.2286,
+          "min": 0.2,
+          "max": 1.0
+        },
+        "found_hops": {
+          "mean": 7.6615,
+          "median": 6,
+          "sd": 6.3978,
+          "min": 2,
+          "max": 28
+        }
+      }
+    },
+    "baseline": {
+      "networks_reachable": 100,
+      "all": {
+        "coverage": {
+          "mean": 0.0905,
+          "median": 0.0,
+          "sd": 0.1248,
+          "min": 0.0,
+          "max": 0.4
+        },
+        "ordered_coverage": {
+          "mean": 0.0905,
+          "median": 0.0,
+          "sd": 0.1248,
+          "min": 0.0,
+          "max": 0.4
+        },
+        "precision": {
+          "mean": 0.33,
+          "median": 0.0,
+          "sd": 0.4484,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "hops": {
+          "mean": 2.44,
+          "median": 2.0,
+          "sd": 0.8285,
+          "min": 2,
+          "max": 4
+        }
+      },
+      "reachable_only": {
+        "coverage": {
+          "mean": 0.0905,
+          "median": 0.0,
+          "sd": 0.1248,
+          "min": 0.0,
+          "max": 0.4
+        },
+        "ordered_coverage": {
+          "mean": 0.0905,
+          "median": 0.0,
+          "sd": 0.1248,
+          "min": 0.0,
+          "max": 0.4
+        },
+        "precision": {
+          "mean": 0.33,
+          "median": 0.0,
+          "sd": 0.4484,
+          "min": 0.0,
+          "max": 1.0
+        },
+        "hops": {
+          "mean": 2.44,
+          "median": 2.0,
+          "sd": 0.8285,
+          "min": 2,
+          "max": 4
+        }
+      }
+    },
+    "ranking_agreement": {
+      "networks": 100,
+      "gold_attacks_total": 500,
+      "gold_attacks_convertible": 453,
+      "gold_attacks_inconvertible": 47,
+      "networks_with_best_match_defined": 95,
+      "best_match_share": 0.1789,
+      "networks_with_spearman_defined": 90,
+      "spearman_mean": 0.0452,
+      "by_difficulty": {
+        "easy": {
+          "networks": 40,
+          "gold_attacks_total": 200,
+          "gold_attacks_convertible": 186,
+          "gold_attacks_inconvertible": 14,
+          "networks_with_best_match_defined": 39,
+          "best_match_share": 0.1795,
+          "networks_with_spearman_defined": 37,
+          "spearman_mean": 0.097
+        },
+        "hard": {
+          "networks": 20,
+          "gold_attacks_total": 100,
+          "gold_attacks_convertible": 88,
+          "gold_attacks_inconvertible": 12,
+          "networks_with_best_match_defined": 18,
+          "best_match_share": 0.3889,
+          "networks_with_spearman_defined": 18,
+          "spearman_mean": 0.274
+        },
+        "moderate": {
+          "networks": 40,
+          "gold_attacks_total": 200,
+          "gold_attacks_convertible": 179,
+          "gold_attacks_inconvertible": 21,
+          "networks_with_best_match_defined": 38,
+          "best_match_share": 0.0789,
+          "networks_with_spearman_defined": 35,
+          "spearman_mean": -0.1274
+        }
+      },
+      "by_profile": {
+        "large": {
+          "networks": 25,
+          "gold_attacks_total": 125,
+          "gold_attacks_convertible": 110,
+          "gold_attacks_inconvertible": 15,
+          "networks_with_best_match_defined": 23,
+          "best_match_share": 0.1739,
+          "networks_with_spearman_defined": 22,
+          "spearman_mean": 0.1184
+        },
+        "medium": {
+          "networks": 35,
+          "gold_attacks_total": 175,
+          "gold_attacks_convertible": 164,
+          "gold_attacks_inconvertible": 11,
+          "networks_with_best_match_defined": 33,
+          "best_match_share": 0.1818,
+          "networks_with_spearman_defined": 30,
+          "spearman_mean": -0.0848
+        },
+        "small": {
+          "networks": 40,
+          "gold_attacks_total": 200,
+          "gold_attacks_convertible": 179,
+          "gold_attacks_inconvertible": 21,
+          "networks_with_best_match_defined": 39,
+          "best_match_share": 0.1795,
+          "networks_with_spearman_defined": 38,
+          "spearman_mean": 0.1054
+        }
+      }
+    },
+    "defense": {
+      "networks_with_reachable_target": 65,
+      "networks_with_full_break_possible": 64,
+      "networks_with_no_defense_possible": 1,
+      "networks_best_violates_constraints": 0,
+      "networks_best_has_unevaluable_requirements": 21,
+      "mean_best_size": 1.0156,
+      "mean_best_cost": 0.0,
+      "mean_best_unbroken_paths": 0.3692,
+      "total_paths_all_networks": 325,
+      "total_unbroken_paths_all_networks": 24,
+      "unbroken_path_share": 0.0738
+    },
+    "qualitative_examples": {
+      "zero_cve_overlap_networks": [
+        "net-002",
+        "net-004",
+        "net-010",
+        "net-012",
+        "net-021",
+        "net-026",
+        "net-034",
+        "net-038",
+        "net-070",
+        "net-075",
+        "net-078",
+        "net-090"
+      ],
+      "fully_inconvertible_attack_networks": [
+        "net-014",
+        "net-052",
+        "net-057",
+        "net-076",
+        "net-087"
+      ],
+      "no_defense_possible_networks": [
+        "net-012"
+      ]
+    },
+    "with_exploitability": {
+      "reconstruction": {
+        "all": {
+          "coverage": {
+            "mean": 0.227,
+            "median": 0.2,
+            "sd": 0.2704,
+            "min": 0.0,
+            "max": 1.0
+          },
+          "ordered_coverage": {
+            "mean": 0.2145,
+            "median": 0.2,
+            "sd": 0.2615,
+            "min": 0.0,
+            "max": 1.0
+          },
+          "precision": {
+            "mean": 0.2998,
+            "median": 0.1714,
+            "sd": 0.3626,
+            "min": 0.0,
+            "max": 1.0
+          },
+          "coverage_top_k": {
+            "mean": 0.4373,
+            "median": 0.5,
+            "sd": 0.3751,
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        "reachable_only": {
+          "coverage": {
+            "mean": 0.3492,
+            "median": 0.4,
+            "sd": 0.2642,
+            "min": 0.0,
+            "max": 1.0
+          },
+          "ordered_coverage": {
+            "mean": 0.33,
+            "median": 0.3333,
+            "sd": 0.259,
+            "min": 0.0,
+            "max": 1.0
+          },
+          "precision": {
+            "mean": 0.4613,
+            "median": 0.4,
+            "sd": 0.3576,
+            "min": 0.0,
+            "max": 1.0
+          },
+          "coverage_top_k": {
+            "mean": 0.6728,
+            "median": 0.75,
+            "sd": 0.2408,
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      },
+      "ranking_agreement": {
+        "networks": 100,
+        "gold_attacks_total": 500,
+        "gold_attacks_convertible": 453,
+        "gold_attacks_inconvertible": 47,
+        "networks_with_best_match_defined": 95,
+        "best_match_share": 0.3895,
+        "networks_with_spearman_defined": 93,
+        "spearman_mean": 0.3253,
+        "by_difficulty": {
+          "easy": {
+            "networks": 40,
+            "gold_attacks_total": 200,
+            "gold_attacks_convertible": 186,
+            "gold_attacks_inconvertible": 14,
+            "networks_with_best_match_defined": 39,
+            "best_match_share": 0.4872,
+            "networks_with_spearman_defined": 38,
+            "spearman_mean": 0.4342
+          },
+          "hard": {
+            "networks": 20,
+            "gold_attacks_total": 100,
+            "gold_attacks_convertible": 88,
+            "gold_attacks_inconvertible": 12,
+            "networks_with_best_match_defined": 18,
+            "best_match_share": 0.5,
+            "networks_with_spearman_defined": 18,
+            "spearman_mean": 0.3707
+          },
+          "moderate": {
+            "networks": 40,
+            "gold_attacks_total": 200,
+            "gold_attacks_convertible": 179,
+            "gold_attacks_inconvertible": 21,
+            "networks_with_best_match_defined": 38,
+            "best_match_share": 0.2368,
+            "networks_with_spearman_defined": 37,
+            "spearman_mean": 0.1914
+          }
+        },
+        "by_profile": {
+          "large": {
+            "networks": 25,
+            "gold_attacks_total": 125,
+            "gold_attacks_convertible": 110,
+            "gold_attacks_inconvertible": 15,
+            "networks_with_best_match_defined": 23,
+            "best_match_share": 0.3043,
+            "networks_with_spearman_defined": 23,
+            "spearman_mean": 0.2513
+          },
+          "medium": {
+            "networks": 35,
+            "gold_attacks_total": 175,
+            "gold_attacks_convertible": 164,
+            "gold_attacks_inconvertible": 11,
+            "networks_with_best_match_defined": 33,
+            "best_match_share": 0.3939,
+            "networks_with_spearman_defined": 32,
+            "spearman_mean": 0.2994
+          },
+          "small": {
+            "networks": 40,
+            "gold_attacks_total": 200,
+            "gold_attacks_convertible": 179,
+            "gold_attacks_inconvertible": 21,
+            "networks_with_best_match_defined": 39,
+            "best_match_share": 0.4359,
+            "networks_with_spearman_defined": 38,
+            "spearman_mean": 0.3919
+          }
+        }
+      }
+    }
+  }
+}
