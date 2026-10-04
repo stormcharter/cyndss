@@ -41,3 +41,7 @@ cti_graph.html
 .env.bak*
 .env.save
 .env.*.bak
+
+# Стенд «від проблеми до розв'язку»: кеш побудованих мереж і відповіді анкет (локальні дані)
+data/semantic_cache/
+data/surveys/
