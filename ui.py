@@ -17,6 +17,7 @@ from collections import Counter
 from itertools import combinations
 from twin_scenarios import build_scenarios, parse_infrastructure_model
 from twin_defense import rank_defenses
+from solution_ui import SolutionEnv, render_solution_mode
 from semantic_reasoner import build_reasoner_from_records, format_hypotheses_for_llm
 from hypothesis_labels import build_mitre_label_map, annotate_chain_for_display
 from hypothesis_graph import VIRTUAL_START_NODE, build_hypothesis_graph
@@ -36,6 +37,7 @@ from prompt_guard import ISOLATION_INSTRUCTION_UK, format_untrusted_context, wra
 from auth.streamlit_gate import require_login
 from llm_backends import available_backends, resolve_backend
 import json
+from pathlib import Path
 
 # Налаштування сторінки
 st.set_page_config(
@@ -1837,13 +1839,17 @@ init_chat_state()
 st.sidebar.markdown('<div class="onyx-side-brand">&#9670; ONYX</div>', unsafe_allow_html=True)
 app_mode = st.sidebar.radio(
     "Режим роботи",
-    options=["💬 Чат з ONYX", "📰 Стрічка подій", "🎯 Сценарії"],
+    options=["💬 Чат з ONYX", "📰 Стрічка подій", "🎯 Сценарії",
+             "🧭 Від проблеми до розв'язку"],
     index=0,
     help="Чат — аналітика й графи одним запитом. Стрічка — перегляд корпусу й "
-         "пошук. Сценарії — орієнтований граф переходів за описом інфраструктури.",
+         "пошук. Сценарії — орієнтований граф переходів за описом інфраструктури. "
+         "Від проблеми до розв'язку — двостороння семантична мережа, ланцюги "
+         "розв'язання й анкета для експертів.",
 )
 IS_CHAT = app_mode.startswith("💬")
 IS_SCENARIOS = app_mode.startswith("🎯")
+IS_SOLUTION = app_mode.startswith("🧭")
 
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ Налаштування")
@@ -2261,6 +2267,96 @@ def render_scenarios_mode(lang_filter):
 
 
 # =========================================================================
+#  РЕЖИМ «ВІД ПРОБЛЕМИ ДО РОЗВ'ЯЗКУ» — двостороння семантична мережа
+# =========================================================================
+# Сам екран — у solution_ui.py (спільний із локальним стендом scenario_lab.py).
+# Тут лише підключення до інфраструктури ONYX: моделі з llm_backends (кожен
+# ШІ-експерт може йти у свою), ембедер — та сама Ollama/nomic, що й для
+# пошуку, RAG — векторний пошук по корпусу events_enriched.
+
+SOLUTION_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _solution_generate(backend_name, temperature):
+    """Виклик моделі для методу. На відміну від `_llm_generate`, помилку не
+    ховає в тексті відповіді, а піднімає: метод розбирає JSON, і рядок
+    «❌ Помилка…» замість відповіді перетворився б на мовчазний порожній фронт."""
+    backend = resolve_backend(backend_name)
+
+    def generate(system: str, user: str, tag: str) -> str:
+        temp = temperature if temperature is not None else (
+            0.0 if tag in {"bridges", "score"} else 0.3)
+        response = httpx.post(
+            f"{backend.base_url}/chat/completions",
+            headers=_llm_headers(backend.api_key),
+            json={"model": backend.model, "temperature": temp,
+                  "max_tokens": 1200 if tag == "synth" else 900, "stream": False,
+                  "messages": [{"role": "system", "content": system},
+                               {"role": "user", "content": user}]},
+            timeout=httpx.Timeout(300.0, connect=10.0),
+        )
+        response.raise_for_status()
+        choices = response.json().get("choices") or [{}]
+        return (choices[0].get("message") or {}).get("content") or ""
+    return generate
+
+
+def _solution_embed(texts: list[str]) -> list[list[float]]:
+    """Ембединги через Ollama: пакетом (/api/embed), а на старих версіях —
+    по одному (/api/embeddings), як у `get_query_embedding`."""
+    if not texts:
+        return []
+    response = httpx.post(f"{OLLAMA_BASE_URL}/api/embed",
+                          json={"model": EMBED_MODEL, "input": texts}, timeout=120.0)
+    if response.status_code != 404:
+        response.raise_for_status()
+        return response.json()["embeddings"]
+    vectors = []
+    for text in texts:
+        single = httpx.post(f"{OLLAMA_BASE_URL}/api/embeddings",
+                            json={"model": EMBED_MODEL, "prompt": text}, timeout=60.0)
+        single.raise_for_status()
+        vectors.append(single.json()["embedding"])
+    return vectors
+
+
+def _solution_retrieve(query: str) -> list[str]:
+    """RAG-опора для розкриття фронту: два найближчі документи корпусу за KNN.
+    Запит — англійська форма поняття: ембединги корпусу рахувались переважно
+    по англійському тексту (див. retrieve_context)."""
+    vector = _solution_embed([query])[0]
+    conn = get_manticore_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(f"""
+                SELECT title, summary, knn_dist() AS distance
+                FROM events_enriched
+                WHERE knn(embedding, 4, ({",".join(map(str, vector))}))
+            """)
+            hits = [h for h in cursor.fetchall() if h.get("distance", 1.0) < KNN_MAX_DISTANCE]
+    finally:
+        conn.close()
+    return [f"{h.get('title') or ''}. {h.get('summary') or ''}"[:500] for h in hits[:2]]
+
+
+def solution_env() -> SolutionEnv:
+    backends = {name: b.label for name, b in available_backends().items()}
+    return SolutionEnv(
+        make_generate=_solution_generate,
+        backends=backends,
+        embed=_solution_embed,
+        networks_dir=Path(SOLUTION_ROOT) / "experiments"
+        / "corporate_networks" / "dataset",
+        data_dir=Path(SOLUTION_ROOT) / "data",
+        model_tag=LLM_MODEL,
+        retrieve=_solution_retrieve,
+        retrieve_label="корпус ONYX",
+        notes=[f"Модель за замовчуванням: {LLM_MODEL}; ембедер: {EMBED_MODEL}. "
+               "Для ШІ-експертів можна обрати інші бекенди (налаштування експертів)."],
+    )
+
+
+# =========================================================================
 #  ДИСПЕТЧЕР РЕЖИМІВ
 # =========================================================================
 render_onyx_hero(compact=IS_CHAT)
@@ -2280,5 +2376,7 @@ if IS_CHAT:
     render_chat_mode(lang_filter)
 elif IS_SCENARIOS:
     render_scenarios_mode(lang_filter)
+elif IS_SOLUTION:
+    render_solution_mode(solution_env())
 else:
     render_feed_mode(lang_filter, theme_mode, show_semantic)
