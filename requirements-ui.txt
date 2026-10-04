@@ -16,6 +16,7 @@ networkx==3.6.1        # граф семантичної мережі + обхі
 pymorphy3==2.0.6       # лематизація української у пошуковому запиті (той самий модуль, що в shipper)
 pymorphy3-dicts-uk==2.4.1.1.1663094765
 httpx==0.28.1          # NB: у shipper (requirements.txt) інша версія — 0.27.2
+PyYAML==6.0.3          # qa/twin.py (сценарії, двостороння мережа) — той самий пін, що в requirements.txt
 
 # --- автентифікація (auth/) ---
 argon2-cffi==25.1.0             # argon2id для паролів (memory-hard, а не sha256)
