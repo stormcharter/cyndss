@@ -20,4 +20,7 @@ yt-dlp==2026.3.17          # опціонально: лише для переб�
 # Веб-сайти та RSS (collectors/website.py)
 httpx==0.28.1              # NB: у shipper (requirements.txt) інша версія — 0.27.2
 trafilatura==2.0.0
+# trafilatura -> justext імпортує lxml.html.clean, який у lxml >= 5.2 винесено
+# в окремий пакет; без нього `import trafilatura` падає ImportError.
+lxml_html_clean==0.4.6
 feedparser==6.0.12

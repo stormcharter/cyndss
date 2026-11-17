@@ -328,12 +328,85 @@ def test_or_clause_escapes_user_supplied_or_operator():
     assert not has_unescaped(user_part, "|"), user_part
 
 
+def or_terms(user_part):
+    """Терми OR-виразу без НАШОГО синтаксису: розбиваємо по довіреному роздільнику
+    ' | ' і знімаємо одну довірену пару лапок-фрази навколо терма. Що лишилось —
+    уже лише вміст терма, у якому будь-який оператор мусить бути екранований."""
+    terms = []
+    for term in user_part.split(" | "):
+        if len(term) >= 2 and term[0] == '"' and term[-1] == '"':
+            # Лапка в кінці екранована, лише якщо перед нею НЕПАРНА кількість слешів:
+            # у `"foo\\"` слеш сам екранований, і лапка — наша.
+            slashes = len(term[1:-1]) - len(term[1:-1].rstrip(chr(92)))
+            if slashes % 2 == 0:
+                term = term[1:-1]
+        terms.append(term)
+    return terms
+
+
+#: Вводи, де оператор опиняється ВСЕРЕДИНІ терма разом із буквами (інакше терм
+#: відсіюється як «без букв» і перевіряти нічого): `|` і `"` усередині слова,
+#: зворотний слеш у кінці терма і в кінці всього вводу.
+OPERATORS_INSIDE_TERMS = [FTS_OPS_QUERY, "alpha|beta gamma", 'x"y z', "foo\\ bar",
+                          "trail\\", 'a"|"b c']
+
+
 def test_or_clause_escapes_fts_operators_in_terms():
-    clause = build_or_match_clause(FTS_OPS_QUERY, mysql_escape)
-    assert not has_unescaped(sql_literal_body(clause), "'"), clause
-    user_part = fts_user_part(clause)
-    for ch in FTS_OPS_CHARS.replace("|", ""):
-        assert not has_unescaped(user_part, ch), (ch, user_part)
+    """Ані роздільник ' | ', ані лапки-фраза, які ставимо МИ, не звільняють терм від
+    перевірки: всередині кожного терма будь-який оператор із вводу — включно з `|`
+    і `"` — має лишатись екранованим літералом."""
+    for query in OPERATORS_INSIDE_TERMS:
+        clause = build_or_match_clause(query, mysql_escape)
+        assert not has_unescaped(sql_literal_body(clause), "'"), clause
+        for term in or_terms(fts_user_part(clause)):
+            for ch in FTS_OPS_CHARS:
+                assert not has_unescaped(term, ch), (query, ch, term)
+
+
+def test_or_terms_helper_handles_escaped_backslash_before_closing_quote():
+    """Сам хелпер: у `"foo\\\\"` останній слеш екранований, тож лапка — наша й
+    знімається; у `"foo\\""` лапка екранована й лишається частиною терма."""
+    assert or_terms('"foo\\\\" | bar') == ["foo\\\\", "bar"]
+    assert or_terms('"foo\\"') == ['"foo\\"']
+
+
+def test_or_clause_keeps_split_term_as_one_phrase():
+    """МОТИВАЦІЯ (реальний баг). Терм із роздільником усередині (`net-001`,
+    `network's`, `CVE-2024-3400`) Manticore ріже на кілька слів, а сусідні слова
+    з'єднує НЕЯВНИМ AND. Оскільки `|` зв'язує сильніше за пробіл, вираз
+    `risk | net\\-001 | x` розбирався як `(risk | net) AND (001 | x)` і OR
+    мовчки ставав AND: на живому індексі поняття «Risk assessment for the net-001
+    network's cybersecurity» давало 0 документів замість 63, а запит у чаті
+    «CVE-2024-3400 exploitation» — 0 замість 16. Такий терм має бути ОДНІЄЮ фразою."""
+    clause = build_or_match_clause("risk net-001 network's", mysql_escape)
+    assert fts_user_part(clause) == 'risk | "net\\-001" | "network\\\'s"', clause
+
+
+def test_or_clause_quotes_manticore_operator_keywords():
+    """`MAYBE`, `SENTENCE`, `PARAGRAPH` — ключові слова операторів Manticore. Голими
+    вони валять увесь запит («P08: syntax error», перевірено на живому індексі), а
+    фразою шукаються як звичайні слова. Решту ключових слів беремо у фразу із
+    запасом — це нешкідливо, а регістр у різних версіях Manticore різний."""
+    clause = build_or_match_clause("ransomware MAYBE Sentence paragraph phishing", mysql_escape)
+    assert fts_user_part(clause) == \
+        'ransomware | "MAYBE" | "Sentence" | "paragraph" | phishing', clause
+    for word in ("NEAR", "notnear", "Zone", "ZONESPAN"):
+        assert fts_user_part(build_or_match_clause(f"alpha {word}", mysql_escape)) == \
+            f'alpha | "{word}"'
+
+
+def test_or_clause_plain_terms_are_not_quoted():
+    """Чисті буквено-цифрові терми лишаються голими — фраза їм нічого не дає."""
+    clause = build_or_match_clause("ransomware CVE 2024 вразливість", mysql_escape)
+    assert fts_user_part(clause) == "ransomware | CVE | 2024 | вразливість", clause
+
+
+def test_or_clause_user_quote_stays_escaped_inside_phrase():
+    """Лапка з вводу не може закрити нашу фразу й вийти в синтаксис виразу."""
+    clause = build_or_match_clause('net-001" | @title secret', mysql_escape)
+    for term in or_terms(fts_user_part(clause)):
+        assert not has_unescaped(term, '"'), term
+        assert not has_unescaped(term, "@"), term
 
 
 def test_or_clause_without_escape_fn_is_safe():

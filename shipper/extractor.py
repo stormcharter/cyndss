@@ -2,8 +2,8 @@
 Видобування сутностей із тексту через LLM (OpenAI-сумісний API: OpenRouter / Hermes 3).
 
 Строгий JSON просимо прямо в промпті. На випадок, якщо модель усе ж загорне відповідь
-у текст ("Sure, here are the CVEs: ..."), нижче є запасний варіант — видобування підрядка
-між першою { та останньою }.
+у текст ("Sure, here are the CVEs: ..."), нижче є запасний варіант — parse_model_json: підрядок
+між першою { та останньою }, а за невдачі — ремонт (дописує незакриті дужки).
 """
 
 import asyncio
@@ -72,6 +72,69 @@ def build_extraction_prompt(text):
     return EXTRACTION_PROMPT_PREFIX + wrap_untrusted(text, max_len=MAX_PROMPT_TEXT_LEN)
 
 
+def _repair_truncated_json(tail: str) -> str | None:
+    """Домикає незакриті структури в JSON, що починається з `{`.
+
+    Іде посимвольно, стежить за станом рядка (лапки, екранування бекслешем) та
+    стеком відкритих `{`/`[`. Дані НЕ вигадує: лише прибирає висячу кому/пробіли
+    у хвості й дописує відсутні закриваючі дужки у зворотному порядку.
+    Обірваний посеред рядка вивід не латаємо (None): закрита лапка дала б
+    відрізаний title/quote — тобто дані, яких модель не віддавала."""
+    stack: list[str] = []
+    in_string = escaped = False
+    for ch in tail:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+        elif ch == '"':
+            in_string = True
+        elif ch in "{[":
+            stack.append("}" if ch == "{" else "]")
+        elif ch in "}]":
+            if not stack or stack[-1] != ch:
+                return None  # неузгоджені дужки — це не «просто обрізано»
+            stack.pop()
+    if in_string:
+        return None
+    body = tail.rstrip()
+    if body.endswith(","):
+        body = body[:-1].rstrip()
+    return body + "".join(reversed(stack))
+
+
+def parse_model_json(raw: str) -> dict | None:
+    """Розбирає JSON із відповіді моделі; None, якщо не вдалося.
+
+    1) як є: між першою `{` та останньою `}` (модель може обгорнути текстом);
+    2) ремонт: модель інколи не закриває КОРЕНЕВИЙ обʼєкт, і rfind("}") хапає
+       `}` вкладеного — тоді від першої `{` до кінця дописуємо відсутні дужки."""
+    start = raw.find("{")
+    if start == -1:
+        return None
+    end = raw.rfind("}")
+    if end > start:
+        try:
+            parsed = json.loads(raw[start : end + 1])
+            return parsed if isinstance(parsed, dict) else None
+        except json.JSONDecodeError:
+            pass
+    repaired = _repair_truncated_json(raw[start:])
+    if repaired is None:
+        return None
+    try:
+        parsed = json.loads(repaired)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    logger.info("extractor_json_repaired", raw_len=len(raw))
+    return parsed
+
+
 class OllamaExtractor:
     """Клієнт до LLM для видобування сутностей."""
 
@@ -95,6 +158,8 @@ class OllamaExtractor:
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.0,
             "stream": False,
+            # Ollama (/v1) тоді гарантує валідний JSON; OpenRouter — ігнорує.
+            "response_format": {"type": "json_object"},
         }
         delay = 2.0
         response = None
@@ -128,20 +193,14 @@ class OllamaExtractor:
                 logger.warning("extractor_empty_response")
                 return ExtractedEntities(summary=text[:200])
 
-            # При format=json Ollama повертає чистий JSON, але про всяк випадок
-            # лишаємо видобування між першою { та останньою } — захист від
-            # моделей, які інколи додають пояснення навколо.
-            start, end = raw_content.find("{"), raw_content.rfind("}")
-            if start != -1 and end != -1 and end > start:
-                try:
-                    parsed = json.loads(raw_content[start : end + 1])
-                    return self._to_pydantic(parsed)
-                except json.JSONDecodeError as e:
-                    logger.warning(
-                        "extractor_json_decode_failed",
-                        error=str(e),
-                        raw_preview=raw_content[:200],
-                    )
+            # response_format=json_object (див. _post_chat) змушує Ollama віддавати
+            # валідний JSON; OpenRouter непідтримуваний параметр ігнорує. Від
+            # моделей, що все одно додають текст навколо або не закривають
+            # кореневу `}`, страхує parse_model_json (видобування + ремонт дужок).
+            parsed = parse_model_json(raw_content)
+            if parsed is not None:
+                return self._to_pydantic(parsed)
+            logger.warning("extractor_json_decode_failed", raw_preview=raw_content[:200])
 
             # Повертаємо порожній результат, якщо розбір не вдався
             return ExtractedEntities(summary=text[:200])

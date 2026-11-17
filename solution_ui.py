@@ -24,6 +24,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from pyvis.network import Network as VisNetwork
 
+from concept_support import SUPPORT_SCHEME, support_message
 from network_context import default_problem, default_solution, network_brief, parse_network_xml
 from semantic_bridge import (
     PROBLEM_ID,
@@ -84,6 +85,20 @@ class SolutionEnv:
 
 def K(name: str) -> str:
     return f"sol_{name}"
+
+
+def _cache_key(case: dict, context: str, k: int, depth: int, model_tag: str,
+               use_rag: bool) -> str:
+    """Ключ кешу побудованої мережі на диску.
+
+    Спосіб відбору фрагментів корпусу (`SUPPORT_SCHEME`) додається ЛИШЕ з RAG:
+    мережі без RAG від нього не залежать, тож їхні ключі лишаються побайтово
+    колишніми й наявний кеш чинний. А мережі з RAG, зібрані старим зламаним
+    KNN-пошуком (він мовчки нічого не давав), не підхоплюються як актуальні."""
+    parts = [case["problem"], case["solution"], context, k, depth, model_tag, bool(use_rag)]
+    if use_rag:
+        parts.append(SUPPORT_SCHEME)
+    return hashlib.sha1(json.dumps(parts, ensure_ascii=False).encode()).hexdigest()[:16]
 
 
 # =========================================================================
@@ -229,9 +244,7 @@ def render_solution_mode(env: SolutionEnv) -> None:
                f"зустрічаються, модель підтверджує мости. Це ≈{calls} викликів моделі. "
                "Побудована мережа кешується на диску — повторно її не рахуємо.")
 
-    cache_key = hashlib.sha1(json.dumps(
-        [case["problem"], case["solution"], context, k, depth, env.model_tag, bool(use_rag)],
-        ensure_ascii=False).encode()).hexdigest()[:16]
+    cache_key = _cache_key(case, context, k, depth, env.model_tag, use_rag)
     cache_path = cache_dir / f"{phys.id}-{cache_key}.json"
     net: SemanticNet | None = None
     scores: dict = {}
@@ -270,6 +283,12 @@ def render_solution_mode(env: SolutionEnv) -> None:
     m[1].metric("Понять від розв'язку", len(net.side("backward")))
     m[2].metric("Мостів", len(net.bridges))
     m[3].metric("Ланцюгів", len(chains(net)))
+    # Користувач має знати, чи корпус справді допоміг: «нічого не знайшов» і
+    # збій — різні речі, і обидві не можна ховати.
+    notice = support_message(net.support)
+    if notice:
+        level, text = notice
+        {"info": st.info, "warning": st.warning, "error": st.error}[level](text)
     for line in net.log:
         st.caption(f"⚠️ {line}")
 

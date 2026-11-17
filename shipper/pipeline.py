@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 import structlog
+from embedding_text import SUMMARY_PLACEHOLDER, embedding_text  # спільне з UI
 from .config import settings
 from .dead_letter import write_dead_letter, PIPELINE_REVISION
 from .dedup import EmbeddingClient, SemanticDeduplicator
@@ -53,7 +54,7 @@ class Pipeline:
         embedder,
         extractor,
         verifier,
-        dedup,
+        dedup,  # SemanticDeduplicator або None (семантичний дедуп вимкнено)
         sink,
         dead_letter_collection=None,
         fast_mode: bool = False,
@@ -73,10 +74,14 @@ class Pipeline:
 
         last_exc: Exception | None = None
         max_retries = settings.pipeline_max_retries
+        # Результати дорогих стадій (LLM-екстракція+заземлення, верифікація NVD/MITRE)
+        # живуть між спробами ОДНІЄЇ події: ембединг іде після них, і збій ембедингу
+        # чи сінка не повинен змушувати кожен ретрай платити за LLM і NVD знову.
+        stages: dict = {}
 
         for attempt in range(1, max_retries + 1):
             try:
-                return await self._process_unsafe(event)
+                return await self._process_unsafe(event, stages=stages)
             except Exception as e:
                 last_exc = e
                 if attempt < max_retries:
@@ -122,12 +127,13 @@ class Pipeline:
             error_class=type(last_exc).__name__,
         )
 
-    async def _process_unsafe(self, event: RawEvent) -> ProcessResult:
+    async def _process_unsafe(self, event: RawEvent, stages: dict | None = None) -> ProcessResult:
+        # `stages` — кеш результатів дорогих стадій між ретраями однієї події
+        # (див. `process`); без нього (прямий виклик) кожна стадія рахується заново.
+        if stages is None:
+            stages = {}
         log = logger.bind(mongo_id=event.id, source=event.source.source_type.value)
         t0 = time.monotonic()
-
-        embedding = await self.embedder.embed(event.text)
-        t1 = time.monotonic()
 
         if self.fast_mode:
             # Швидкий шлях для масового корпусу: відібраний вихідний текст уже авторитетний;
@@ -136,24 +142,42 @@ class Pipeline:
                 title=(event.text.strip().splitlines() or [""])[0][:200] or "Untitled",
             )
             v_cves, v_ttps, v_iocs, v_rels = [], [], [], []
-            t2 = t3 = t1  # екстракцію/верифікацію пропущено; поля латентності в логах лишаємо визначеними
+            t1 = t2 = t0  # екстракцію/верифікацію пропущено; поля латентності в логах лишаємо визначеними
         else:
-            extracted = await self.extractor.extract(event.text)
-            # Гейт СТОЇТЬ ДО верифікації навмисно: NVD/MITRE підтверджують лише
-            # існування ідентифікатора й вигаданий T1190 проходять наскрізь.
-            # Заодно не витрачаємо зовнішні виклики на завідомий шум.
-            extracted = self._ground(extracted, event.text, log)
+            if "extracted" not in stages:
+                extracted = await self.extractor.extract(event.text)
+                # Гейт СТОЇТЬ ДО верифікації навмисно: NVD/MITRE підтверджують лише
+                # існування ідентифікатора й вигаданий T1190 проходять наскрізь.
+                # Заодно не витрачаємо зовнішні виклики на завідомий шум.
+                stages["extracted"] = self._ground(extracted, event.text, log)
+            extracted = stages["extracted"]
+            t1 = time.monotonic()
+
+            if "verified" not in stages:
+                stages["verified"] = await self.verifier.verify(extracted)
+            v_cves, v_ttps, v_iocs, v_rels = stages["verified"]
             t2 = time.monotonic()
 
-            v_cves, v_ttps, v_iocs, v_rels = await self.verifier.verify(extracted)
-            t3 = time.monotonic()
-        duplicate = self.dedup.find_duplicate(embedding)
-        if duplicate.is_duplicate:
+        # Ембедимо англійське «title. summary», а не сирий оригінал: виміряно, що
+        # сирий кириличний текст (1) падає в Ollama з 400 на довгих постах
+        # (втрачено 15), (2) дає хибні семантичні дублікати між РІЗНИМИ постами
+        # (462 відкинуто, ~30% корпусу) і (3) робить KNN марним для англійських
+        # запитів. Береться сирий summary екстрактора, а не плейсхолдер, який
+        # нижче пишеться в документ. У fast_mode екстракції нема — природно
+        # лишається сирий текст, обрізаний до стелі. Один вектор слугує і
+        # дедупу (якщо ввімкнений), і індексу.
+        embedding = await self.embedder.embed(
+            embedding_text(extracted.title, extracted.summary, event.text)
+        )
+        t3 = time.monotonic()
+
+        duplicate = self.dedup.find_duplicate(embedding) if self.dedup is not None else None
+        if duplicate is not None and duplicate.is_duplicate:
             log.info(
                 "pipeline_duplicate",
                 duplicate_of=duplicate.duplicate_of_mongo_id,
                 similarity=duplicate.similarity,
-                embed_latency_ms=round((t1 - t0) * 1000, 1),
+                embed_latency_ms=round((t3 - t2) * 1000, 1),
             )
             return ProcessResult(event.id, ProcessStatus.DUPLICATE)
 
@@ -169,7 +193,7 @@ class Pipeline:
             text=event.text,
             title=extracted.title,
             language=extracted.detected_language,
-            summary=extracted.summary or "Summary unavailable",
+            summary=extracted.summary or SUMMARY_PLACEHOLDER,
             embedding=embedding.tolist(),
             verified_cves=v_cves,
             verified_ttps=v_ttps,
@@ -184,14 +208,15 @@ class Pipeline:
         t4 = time.monotonic()
 
         if ack.status == "ok":
-            self.dedup.remember_indexed(event.id, event.text, embedding)
+            if self.dedup is not None:
+                self.dedup.remember_indexed(event.id, event.text, embedding)
             log.info(
                 "pipeline_success",
                 cve_verified=len(v_cves_list),
                 ttp_verified=len(v_ttps_list),
-                embed_latency_ms=round((t1 - t0) * 1000, 1),
-                extract_latency_ms=round((t2 - t1) * 1000, 1),
-                verify_latency_ms=round((t3 - t2) * 1000, 1),
+                embed_latency_ms=round((t3 - t2) * 1000, 1),
+                extract_latency_ms=round((t1 - t0) * 1000, 1),
+                verify_latency_ms=round((t2 - t1) * 1000, 1),
                 push_latency_ms=round((t4 - t3) * 1000, 1),
                 total_latency_ms=round((t4 - t0) * 1000, 1),
             )

@@ -82,6 +82,28 @@ def test_scenario_mode_does_not_break_the_two_existing_modes():
     assert "render_feed_mode(" in UI
 
 
+def _scenario_renderer() -> str:
+    start = UI.find("def render_scenarios_mode")
+    assert start != -1
+    end = UI.find("\ndef ", start + 1)
+    return UI[start:end if end != -1 else None]
+
+
+def test_uploaded_file_reaches_the_parser_directly():
+    """Регрес 16.11.2026: файл завантажено, а сторінка каже «Додайте опис».
+
+    Текстове поле має `key`, тож Streamlit бере його значення зі стану сесії,
+    а `value=` після першого рендеру ігнорує — вміст файлу туди не потрапляв.
+    Завантажений файл має йти в розбір напряму (`getvalue()` не залежить від
+    позиції курсора), а поле лишається лише для вставки вручну."""
+    body = _scenario_renderer()
+    assert "uploaded.getvalue()" in body
+    area = re.search(r"st\.text_area\((.*?)\)\n", body, re.S)
+    assert area, "немає текстового поля для вставки опису"
+    assert "uploaded" not in area.group(1), \
+        "вміст файлу знову передається через value= поля з key — Streamlit його ігнорує"
+
+
 # --- ручний запуск без pytest --------------------------------------------
 if __name__ == "__main__":
     import traceback

@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import re
 from dataclasses import asdict, dataclass, field
@@ -32,6 +33,8 @@ import networkx as nx
 
 from prompt_guard import ISOLATION_INSTRUCTION_UK, wrap_untrusted
 from qa.twin import TwinCriterion, aggregate
+
+logger = logging.getLogger(__name__)
 
 Generate = Callable[[str, str, str], str]
 Embed = Callable[[list[str]], list[list[float]]]
@@ -53,6 +56,13 @@ BRIDGE_CANDIDATES = 20
 #: Внесок кроку з впливом s (1..5) у зниження проблеми: 1 - Π(1 - IMPACT_UNIT·s).
 IMPACT_UNIT = 0.15
 MAX_CHAINS = 200
+#: Скільки збоїв корпусу ПОСПІЛЬ терпимо в межах однієї побудови. Далі корпус не
+#: питаємо: інакше завислий Manticore/Ollama змусив би кожне розкриття чекати свій
+#: таймаут, а без опори побудова однаково йде далі.
+MAX_SUPPORT_FAILURES = 3
+#: Скільки символів тексту винятку показувати в журналі мережі (pymysql кладе туди
+#: шматок SQL); повний трейсбек іде в журнал процесу.
+SUPPORT_ERROR_CHARS = 200
 
 
 @dataclass
@@ -73,6 +83,11 @@ class SemanticNet:
     edges: list[tuple[str, str, str]] = field(default_factory=list)   # (from, to, relation)
     bridges: list[dict] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
+    #: Підсумок опори на корпус: скільки розкриттів питали корпус, скільком дісталися
+    #: фрагменти, скільки запитів упало. Без цього «RAG нічого не дав» невидиме.
+    support: dict = field(default_factory=lambda: {"asked": 0, "supported": 0, "errors": 0})
+    #: Збої корпусу поспіль — стан ОДНІЄЇ побудови для запобіжника, не серіалізується.
+    support_failures_in_row: int = field(default=0, init=False, repr=False, compare=False)
 
     def side(self, name: str) -> list[Concept]:
         return [c for c in self.concepts.values() if c.side == name]
@@ -88,7 +103,7 @@ class SemanticNet:
         return {"problem": self.problem, "solution": self.solution,
                 "concepts": [asdict(c) for c in self.concepts.values()],
                 "edges": [list(e) for e in self.edges],
-                "bridges": self.bridges, "log": self.log}
+                "bridges": self.bridges, "log": self.log, "support": self.support}
 
     @classmethod
     def from_dict(cls, data: dict) -> "SemanticNet":
@@ -99,6 +114,8 @@ class SemanticNet:
         net.edges = [tuple(e) for e in data.get("edges", [])]
         net.bridges = list(data.get("bridges", []))
         net.log = list(data.get("log", []))
+        # Старі кеші без `support` вантажаться з нулями.
+        net.support = {**net.support, **(data.get("support") or {})}
         return net
 
 
@@ -192,6 +209,48 @@ def _path_labels(net: SemanticNet, concept: Concept) -> list[str]:
     return labels
 
 
+def _support(net: SemanticNet, retrieve: Retrieve, query: str) -> list[str]:
+    """Фрагменти корпусу для одного розкриття + облік у `net.support`.
+
+    Широкий `except Exception` тут свідомий: опора на корпус — необов'язкове
+    збагачення, а побудова мережі коштує десятки викликів моделі. Збій
+    Manticore (pymysql тощо) не повинен її викидати. Але й мовчати не можна:
+    помилка рахується в `errors`, перша потрапляє в `net.log` коротко (з типом)
+    і в журнал процесу з трейсбеком — тож і помилка програміста не зникає. UI
+    показує підсумок. Протилежний випадок — `_solution_generate` у ui.py: від
+    моделі залежить сам фронт, тому там помилка мусить летіти вгору.
+
+    Після `MAX_SUPPORT_FAILURES` збоїв поспіль корпус до кінця побудови не
+    питаємо (запобіжник від завислого сервісу); такі розкриття теж ідуть в
+    `errors`, а в журналі мережі лишається один рядок."""
+    net.support["asked"] += 1
+    if net.support_failures_in_row >= MAX_SUPPORT_FAILURES:
+        net.support["errors"] += 1
+        return []
+    try:
+        snippets = retrieve(query)
+    except Exception as exc:  # noqa: BLE001 — збій корпусу не губить дорогу побудову
+        net.support["errors"] += 1
+        net.support_failures_in_row += 1
+        if net.support["errors"] == 1:
+            logger.exception("опора на корпус: перший збій у побудові")
+            text = f"{type(exc).__name__}: {exc}"
+            if len(text) > SUPPORT_ERROR_CHARS:
+                text = text[:SUPPORT_ERROR_CHARS] + "…"
+            net.log.append(f"опора на корпус недоступна: {text}")
+        if net.support_failures_in_row == MAX_SUPPORT_FAILURES:
+            for index, line in enumerate(net.log):
+                if line.startswith("опора на корпус недоступна"):
+                    net.log[index] = (f"{line} — після {MAX_SUPPORT_FAILURES} збоїв поспіль "
+                                      "опору вимкнено до кінця побудови")
+                    break
+        return []
+    net.support_failures_in_row = 0
+    if snippets:
+        net.support["supported"] += 1
+    return snippets
+
+
 def _expand(net: SemanticNet, concept: Concept, direction: str, k: int, context: str,
             generate: Generate, retrieve: Retrieve | None) -> list[tuple[str, str]]:
     forward = direction == "forward"
@@ -205,7 +264,8 @@ def _expand(net: SemanticNet, concept: Concept, direction: str, k: int, context:
             f"Шлях до нього ({origin}): {route}\n"
             f"Уже наявні поняття (не повторювати): {'; '.join(existing)}")
     if retrieve:
-        snippets = retrieve(concept.en or concept.label)
+        # Запит — англійська форма: чому не українська, див. concept_support.py.
+        snippets = _support(net, retrieve, concept.en or concept.label)
         if snippets:
             system += "\n\n" + ISOLATION_INSTRUCTION_UK
             user += "\n\nФрагменти відкритих джерел (для опори):\n" + "\n".join(

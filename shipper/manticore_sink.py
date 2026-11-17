@@ -41,6 +41,10 @@ logger = structlog.get_logger(__name__)
 CREATE_TABLE_SQL = build_create_table_sql(settings.manticore_table)
 
 
+#: Стеля переліку mongo_id (і max_matches). Корпус ~1.5k документів — із запасом.
+_LIST_LIMIT = 100_000
+
+
 class ManticoreBulkMismatch(Exception):
     """Manticore /bulk повернув іншу кількість елементів, ніж було надіслано."""
 
@@ -101,6 +105,48 @@ class ManticoreSink:
         )
         response.raise_for_status()
         logger.info("manticore_table_ready", table=settings.manticore_table)
+
+    async def _sql(self, query: str) -> list[dict]:
+        """Один SQL-запит через той самий ендпойнт, що й setup_schema -> рядки."""
+        response = await self.client.post(
+            f"{settings.manticore_url}/sql?mode=raw",
+            content=query,
+            headers={"Content-Type": "text/plain"},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        result = payload[0] if isinstance(payload, list) else payload
+        if result.get("error"):
+            raise RuntimeError(f"Manticore SQL error: {result['error']}")
+        return result.get("data") or []
+
+    async def count_documents(self) -> int:
+        """Кількість документів в індексі (для звірки схеми ембедингів)."""
+        rows = await self._sql(f"SELECT COUNT(*) AS c FROM {settings.manticore_table}")
+        return int(rows[0]["c"]) if rows else 0
+
+    async def list_mongo_ids(self) -> set[str]:
+        """Усі mongo_id, що вже лежать в індексі (для `replay --missing`).
+
+        `OPTION max_matches` обов'язковий: без нього Manticore мовчки віддає
+        щонайбільше 1000 рядків незалежно від LIMIT, і документи після тисячного
+        здавались би «втраченими». Обрізану вибірку (РЯДКІВ менше, ніж документів)
+        не віддаємо взагалі — краще впасти, ніж «відновити» вже проіндексоване.
+        Порівнюємо саме кількість рядків, а не унікальних id: повторні чи порожні
+        mongo_id в індексі — не обрізання."""
+        limit = _LIST_LIMIT
+        rows = await self._sql(
+            f"SELECT mongo_id FROM {settings.manticore_table} "
+            f"LIMIT {limit} OPTION max_matches={limit}"
+        )
+        ids = {str(row["mongo_id"]) for row in rows if row.get("mongo_id")}
+        total = await self.count_documents()
+        if len(rows) < total:
+            raise RuntimeError(
+                f"перелік mongo_id обрізано: отримано {len(rows)} із {total} документів "
+                f"індексу (стеля {limit})"
+            )
+        return ids
 
     async def push(self, doc: EnrichedDocument) -> SinkAck:
         """Ставить документ у чергу й чекає на надійний результат: сінк або DLQ."""

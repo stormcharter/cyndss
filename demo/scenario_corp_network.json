@@ -1,0 +1,162 @@
+{
+  "machine": "DEMO-CORP",
+  "host": {
+    "operating_system_or_build": "Mixed: Check Point Gaia, Windows Server 2019, Linux, VMware ESXi 8.0",
+    "deployment_role": "Демо-мережа компанії: периметр, віддалене адміністрування, інтеграційна шина, AD, віртуалізація"
+  },
+  "components": [
+    {
+      "component_id": "C1",
+      "parent_id": "-",
+      "layer_or_type": "Service",
+      "name": "Check Point Quantum Security Gateway",
+      "role": "Perimeter firewall and remote access VPN portal",
+      "software_or_version": "Check Point Gaia R81.20",
+      "runs_as": "Gaia root",
+      "exposure": "Public",
+      "evidence": "Explicit"
+    },
+    {
+      "component_id": "C2",
+      "parent_id": "-",
+      "layer_or_type": "Service",
+      "name": "ConnectWise ScreenConnect Server",
+      "role": "Remote support for IT staff and MSP",
+      "software_or_version": "ScreenConnect 25.2",
+      "runs_as": "LocalSystem",
+      "exposure": "Public",
+      "evidence": "Explicit"
+    },
+    {
+      "component_id": "C3",
+      "parent_id": "-",
+      "layer_or_type": "Service",
+      "name": "Apache ActiveMQ Broker",
+      "role": "Message bus for partner integration",
+      "software_or_version": "ActiveMQ 5.18.2",
+      "runs_as": "svc_activemq",
+      "exposure": "Public",
+      "evidence": "Explicit"
+    },
+    {
+      "component_id": "C4",
+      "parent_id": "-",
+      "layer_or_type": "Service",
+      "name": "Domain Controller Netlogon",
+      "role": "Active Directory authentication",
+      "software_or_version": "Windows Server 2019",
+      "runs_as": "SYSTEM",
+      "exposure": "Internal",
+      "evidence": "Explicit"
+    },
+    {
+      "component_id": "C5",
+      "parent_id": "-",
+      "layer_or_type": "Service",
+      "name": "VMware ESXi Hypervisor",
+      "role": "Virtualization of servers and backups",
+      "software_or_version": "ESXi 8.0",
+      "runs_as": "ESXi root",
+      "exposure": "Internal management VLAN",
+      "evidence": "Explicit"
+    }
+  ],
+  "identities": [
+    {
+      "principal": "Gaia root",
+      "principal_type": "gateway shell",
+      "operational_role": "firewall administration",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "LocalSystem",
+      "principal_type": "Windows service context",
+      "operational_role": "ScreenConnect service",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "svc_activemq",
+      "principal_type": "Linux service account",
+      "operational_role": "message broker",
+      "evidence": "Explicit"
+    },
+    {
+      "principal": "Domain Administrator",
+      "principal_type": "domain account",
+      "operational_role": "full control of AD",
+      "evidence": "Explicit"
+    }
+  ],
+  "permission_edges": [
+    {
+      "subject": "Gaia root",
+      "permission_or_action": "pivot through VPN tunnel",
+      "object": "C4",
+      "condition_or_scope": "gateway routes to internal VLAN",
+      "security_consequence": "Netlogon reachable",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "LocalSystem",
+      "permission_or_action": "push remote session to domain hosts",
+      "object": "C4",
+      "condition_or_scope": "ScreenConnect agents on servers",
+      "security_consequence": "Netlogon reachable",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "svc_activemq",
+      "permission_or_action": "connect to internal network",
+      "object": "C4",
+      "condition_or_scope": "broker in flat server VLAN",
+      "security_consequence": "Netlogon reachable",
+      "evidence": "Explicit"
+    },
+    {
+      "subject": "Domain Administrator",
+      "permission_or_action": "log in to vCenter with domain SSO",
+      "object": "C5",
+      "condition_or_scope": "vCenter joined to AD",
+      "security_consequence": "ESXi root",
+      "evidence": "Explicit"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "finding_id": "V1",
+      "affected_component": "C1",
+      "affected_version": "Gaia R81.20 without hotfix",
+      "issue": "PHP2Shell",
+      "resulting_access": "Gaia root",
+      "reference": "CVE-2026-123039",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V2",
+      "affected_component": "C2",
+      "affected_version": "ScreenConnect 25.2",
+      "issue": "ScreenConnect SCKit hijack",
+      "resulting_access": "LocalSystem",
+      "reference": "CVE-2026-84869",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V3",
+      "affected_component": "C3",
+      "affected_version": "ActiveMQ 5.18.2",
+      "issue": "ActiveMQ OpenWire deserialization",
+      "resulting_access": "svc_activemq",
+      "reference": "CVE-2023-46604",
+      "evidence": "Explicit"
+    },
+    {
+      "finding_id": "V4",
+      "affected_component": "C4",
+      "affected_version": "Windows Server 2019 without August 2020 update",
+      "issue": "Zerologon Netlogon",
+      "resulting_access": "Domain Administrator",
+      "reference": "CVE-2020-1472",
+      "evidence": "Explicit"
+    }
+  ]
+}

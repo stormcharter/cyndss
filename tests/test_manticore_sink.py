@@ -385,3 +385,95 @@ def test_sink_ack_default_status() -> None:
     ack = SinkAck()
     assert ack.status == "failed"
     assert ack.error is None
+
+
+# --- Лічильник і перелік документів індексу (для маркера схеми та replay --missing) ---
+
+def _sql_response(rows: list[dict]):
+    """Відповідь `/sql?mode=raw`: список із одним result-set."""
+    payload = [{"columns": [], "data": rows, "total": len(rows), "error": "", "warning": ""}]
+    return type("R", (), {
+        "status_code": 200,
+        "raise_for_status": lambda self: None,
+        "json": lambda self: payload,
+    })()
+
+
+@pytest.mark.asyncio
+async def test_count_documents_reads_select_count(monkeypatch) -> None:
+    sink = ManticoreSink()
+    seen: list[str] = []
+
+    async def _post(url, **kwargs):
+        seen.append(kwargs["content"])
+        return _sql_response([{"c": 1009}])
+
+    monkeypatch.setattr(sink.client, "post", _post)
+    assert await sink.count_documents() == 1009
+    assert "COUNT(*)" in seen[0].upper()
+    assert settings.manticore_table in seen[0]
+
+
+@pytest.mark.asyncio
+async def test_count_documents_empty_index_is_zero(monkeypatch) -> None:
+    sink = ManticoreSink()
+
+    async def _post(url, **kwargs):
+        return _sql_response([{"c": 0}])
+
+    monkeypatch.setattr(sink.client, "post", _post)
+    assert await sink.count_documents() == 0
+
+
+@pytest.mark.asyncio
+async def test_list_mongo_ids_is_not_capped_at_1000(monkeypatch) -> None:
+    """Manticore без OPTION max_matches мовчки віддає лише 1000 рядків — тоді
+    `replay --missing` вважав би «втраченими» всі документи після тисячного."""
+    sink = ManticoreSink()
+    ids = [f"{i:024x}" for i in range(2500)]
+    queries: list[str] = []
+
+    async def _post(url, **kwargs):
+        query = kwargs["content"]
+        queries.append(query)
+        if "COUNT(*)" in query.upper():
+            return _sql_response([{"c": len(ids)}])
+        return _sql_response([{"mongo_id": m} for m in ids])
+
+    monkeypatch.setattr(sink.client, "post", _post)
+    got = await sink.list_mongo_ids()
+    assert got == set(ids)
+    select = next(q for q in queries if "mongo_id" in q)
+    assert "max_matches" in select.lower()
+
+
+@pytest.mark.asyncio
+async def test_list_mongo_ids_tolerates_duplicate_and_empty_ids(monkeypatch) -> None:
+    """Повторні й порожні mongo_id в індексі — не обрізання: рядків стільки, скільки
+    count(*). Порівнюємо кількість РЯДКІВ, а не унікальних id."""
+    sink = ManticoreSink()
+    listing = [{"mongo_id": "a"}, {"mongo_id": "a"}, {"mongo_id": ""}, {"mongo_id": "b"}]
+
+    async def _post(url, **kwargs):
+        if "COUNT(*)" in kwargs["content"].upper():
+            return _sql_response([{"c": len(listing)}])
+        return _sql_response(listing)
+
+    monkeypatch.setattr(sink.client, "post", _post)
+    assert await sink.list_mongo_ids() == {"a", "b"}
+
+
+@pytest.mark.asyncio
+async def test_list_mongo_ids_refuses_a_truncated_listing(monkeypatch) -> None:
+    """Менше id, ніж документів у індексі = обрізана вибірка; віддати її означало б
+    «відновити» вже проіндексоване."""
+    sink = ManticoreSink()
+
+    async def _post(url, **kwargs):
+        if "COUNT(*)" in kwargs["content"].upper():
+            return _sql_response([{"c": 5}])
+        return _sql_response([{"mongo_id": "a"}, {"mongo_id": "b"}])
+
+    monkeypatch.setattr(sink.client, "post", _post)
+    with pytest.raises(RuntimeError, match="обрізан"):
+        await sink.list_mongo_ids()

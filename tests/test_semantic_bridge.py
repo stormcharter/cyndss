@@ -14,6 +14,7 @@
 """
 
 import json
+import logging
 import os
 import re
 import sys
@@ -29,7 +30,9 @@ from network_context import (  # noqa: E402
     network_brief,
     parse_network_xml,
 )
+from prompt_guard import ISOLATION_INSTRUCTION_UK, wrap_untrusted  # noqa: E402
 from semantic_bridge import (  # noqa: E402
+    MAX_SUPPORT_FAILURES,
     PROBLEM_ID,
     SOLUTION_ID,
     SemanticNet,
@@ -498,3 +501,139 @@ def test_expert_estimates_average(expert_survey):
     ]
     assert expert_estimates(expert_survey, responses) == {
         "А": {"cost": 3.0, "time": 3.0, "impact": 4.5}, "Б": {"cost": 1.0}}
+
+
+# --- опора на корпус (RAG) ------------------------------------------------------------------
+
+EXPANSIONS = 2 * (1 + 3)    # корінь + три вузли першого кроку з кожного боку (k=3, depth=2)
+
+
+def fake_retrieve(supported_when=lambda query: query not in {"Проблема", "Розв'язок"}):
+    """Корпус-заглушка: фрагмент є не для кожного запиту; усі запити запам'ятовує."""
+    queries = []
+
+    def retrieve(query):
+        queries.append(query)
+        return [f"фрагмент про {query}"] if supported_when(query) else []
+    retrieve.queries = queries
+    return retrieve
+
+
+def build_with(retrieve, generate=None):
+    return build_semantic_net("Проблема", "Розв'язок", "к", generate or fake_generate(),
+                              fake_embed, k=3, depth=2, retrieve=retrieve)
+
+
+def test_support_is_counted_per_expansion():
+    retrieve = fake_retrieve()
+    net = build_with(retrieve)
+    assert net.support["asked"] == EXPANSIONS == len(retrieve.queries)
+    assert net.support["supported"] == EXPANSIONS - 2      # корені корпус не підтвердив
+    assert net.support["errors"] == 0
+
+
+def test_without_retriever_nothing_is_asked():
+    net = build_with(None)
+    assert net.support == {"asked": 0, "supported": 0, "errors": 0}
+
+
+def test_failing_retriever_does_not_throw_the_build_away():
+    def broken(query):
+        raise RuntimeError("manticore лежить")
+    net = build_with(broken)
+    assert net.side("forward") and net.side("backward") and chains(net)
+    assert net.support == {"asked": EXPANSIONS, "supported": 0, "errors": EXPANSIONS}
+    corpus_lines = [line for line in net.log if "корпус" in line]
+    assert len(corpus_lines) == 1 and "manticore лежить" in corpus_lines[0]
+
+
+def test_corpus_that_keeps_failing_is_not_asked_for_the_rest_of_the_build():
+    """Раніше збій корпусу обривав побудову одразу. Тепер він її не обриває — і без
+    запобіжника завислий Manticore/Ollama змусив би КОЖНЕ розкриття чекати свій
+    таймаут. Після MAX_SUPPORT_FAILURES збоїв поспіль корпус більше не питаємо."""
+    calls = []
+
+    def broken(query):
+        calls.append(query)
+        raise RuntimeError("manticore лежить")
+    net = build_with(broken)
+    assert len(calls) == MAX_SUPPORT_FAILURES == 3
+    assert net.support == {"asked": EXPANSIONS, "supported": 0, "errors": EXPANSIONS}
+    corpus_lines = [line for line in net.log if "корпус" in line]
+    assert len(corpus_lines) == 1 and "вимкнено" in corpus_lines[0]
+
+
+def test_a_successful_answer_resets_the_failure_streak():
+    """Поодинокі збої (не поспіль) запобіжник не вмикають."""
+    calls = []
+
+    def flaky(query):
+        calls.append(query)
+        if len(calls) % 2:
+            raise RuntimeError("тимчасово")
+        return []
+    net = build_with(flaky)
+    assert len(calls) == EXPANSIONS
+    assert net.support["errors"] == EXPANSIONS // 2
+    assert not any("вимкнено" in line for line in net.log)
+
+
+def test_first_corpus_failure_is_logged_with_traceback(caplog):
+    """Широкий except не має ховати помилку програміста: у net.log іде коротко для
+    користувача, а повний трейсбек — у журнал процесу."""
+    def broken(query):
+        raise KeyError("зламаний ключ")
+    with caplog.at_level(logging.ERROR, logger="semantic_bridge"):
+        net = build_with(broken)
+    records = [r for r in caplog.records if r.name == "semantic_bridge" and r.exc_info]
+    assert len(records) == 1                       # лише перший збій, не на кожне розкриття
+    line = next(line for line in net.log if "корпус" in line)
+    assert "KeyError" in line                      # тип видно, а не лише «('id', 1)»
+
+
+def test_corpus_error_text_in_the_log_is_bounded():
+    """Текст винятку (pymysql кладе туди шматок SQL) не повинен розростатися в UI."""
+    def broken(query):
+        raise RuntimeError("SQL near '" + "x" * 2000 + "'")
+    net = build_with(broken)
+    line = next(line for line in net.log if "корпус" in line)
+    assert len(line) < 400, len(line)
+
+
+def test_expansion_queries_the_corpus_in_english():
+    retrieve = fake_retrieve()
+    build_with(retrieve)
+    assert "password hygiene" in retrieve.queries and "password reuse eliminated" in retrieve.queries
+    assert "Навести лад із паролями" not in retrieve.queries
+    assert "Паролі не повторюються" not in retrieve.queries
+
+
+def test_fragments_reach_the_expansion_prompt_wrapped_as_untrusted():
+    seen = {}
+    inner = fake_generate()
+
+    def spy(system, user, tag):
+        seen[tag] = (system, user)
+        return inner(system, user, tag)
+    build_with(fake_retrieve(), spy)
+    system, user = seen["forward:f3"]                  # f3 = «Навести лад із паролями»
+    assert wrap_untrusted("фрагмент про password hygiene", max_len=500) in user
+    assert ISOLATION_INSTRUCTION_UK in system
+    # Без фрагментів (корінь) ні блоку, ні інструкції ізоляції в промпті немає.
+    root_system, root_user = seen["forward:P"]
+    assert "Фрагменти відкритих джерел" not in root_user
+    assert ISOLATION_INSTRUCTION_UK not in root_system
+
+
+def test_support_roundtrips_through_json(net):
+    withsupport = build_with(fake_retrieve())
+    again = SemanticNet.from_dict(json.loads(json.dumps(withsupport.to_dict(),
+                                                        ensure_ascii=False)))
+    assert again.support == withsupport.support
+    assert again.support["asked"] == EXPANSIONS
+
+
+def test_old_cache_without_support_loads_with_zeros(net):
+    data = net.to_dict()
+    data.pop("support", None)
+    assert SemanticNet.from_dict(data).support == {"asked": 0, "supported": 0, "errors": 0}

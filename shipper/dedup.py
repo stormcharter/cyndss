@@ -157,3 +157,10 @@ class SemanticDeduplicator:
         self.window.append(
             DedupRecord(mongo_id=mongo_id, text=text, embedding=embedding)
         )
+
+
+def build_deduplicator() -> "SemanticDeduplicator | None":
+    """Дедуплікатор за налаштуванням `SEMANTIC_DEDUP_ENABLED`; `None` = вимкнено
+    (Pipeline тоді пропускає find_duplicate і remember_indexed). Спільна точка
+    для main.py і replay.py, щоб вони не розійшлись."""
+    return SemanticDeduplicator() if settings.semantic_dedup_enabled else None

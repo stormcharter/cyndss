@@ -8,6 +8,7 @@
 import asyncio
 import json
 import signal
+import sys
 from collections import deque
 
 import httpx
@@ -15,10 +16,11 @@ import motor.motor_asyncio
 import structlog
 
 from .config import settings
-from .dedup import EmbeddingClient, SemanticDeduplicator
+from .dedup import EmbeddingClient, build_deduplicator
+from .embedding_scheme import check_index_scheme
 from .extractor import OllamaExtractor
 from .manticore_sink import ManticoreSink
-from .mongo_source import MongoSource
+from .mongo_source import STATE_COLLECTION, MongoSource
 
 from .pipeline import Pipeline
 from .redact import safe_settings_dump
@@ -73,7 +75,9 @@ async def serve_readiness(
     return await asyncio.start_server(handle, host, port)
 
 
-async def run() -> None:
+async def run() -> int:
+    """Запустити шиппер. Повертає код виходу: 0 — штатна зупинка, 1 — відмова
+    стартувати (індекс іншої схеми ембедингів)."""
     _setup_logging()
     logger = structlog.get_logger("shipper.main")
     # Через safe_settings_dump, а не сирим: у mongo_uri тепер живе пароль.
@@ -81,6 +85,27 @@ async def run() -> None:
 
     # HTTP-клієнт: спільний пул з'єднань
     http_client = httpx.AsyncClient(timeout=settings.shipper_http_timeout_seconds)
+
+    # dead-letter колекція для відмов Manticore
+    mongo_client = motor.motor_asyncio.AsyncIOMotorClient(
+        settings.mongo_uri,
+        tz_aware=True,
+    )
+    dead_letter_col = mongo_client[settings.mongo_db][settings.dead_letter_collection]
+    sink = ManticoreSink(dead_letter_collection=dead_letter_col)
+    await sink.setup_schema()
+
+    # Вектори індексу мусять бути тієї самої схеми, що рахує цей шиппер (інакше
+    # KNN/дедуп мовчки змішають різні простори). Перевірка — ДО flusher-а, оренди
+    # й будь-якої обробки: при розбіжності нічого не пишемо й виходимо з кодом 1.
+    # І до завантаження MITRE: під `restart: unless-stopped` відмова — це цикл
+    # перезапусків, і кожен виток інакше тягнув би STIX-бандл із мережі.
+    state_col = mongo_client[settings.mongo_db][STATE_COLLECTION]
+    if not await check_index_scheme(sink, state_col, logger):
+        await _wait_bounded(sink.stop(), "sink", logger)
+        mongo_client.close()
+        await _wait_bounded(http_client.aclose(), "http_client", logger)
+        return 1
 
     # Завантажуємо MITRE STIX-бандл (один раз при старті) — не критично, якщо немає мережі.
     mitre_kb = MitreAttackKB()
@@ -94,15 +119,7 @@ async def run() -> None:
     extractor = OllamaExtractor(client=http_client)
     nvd_client = NVDClient(client=http_client)
     verifier = EntityVerifier(mitre_kb=mitre_kb, nvd_client=nvd_client)
-    dedup = SemanticDeduplicator()
-    # dead-letter колекція для відмов Manticore
-    mongo_client = motor.motor_asyncio.AsyncIOMotorClient(
-        settings.mongo_uri,
-        tz_aware=True,
-    )
-    dead_letter_col = mongo_client[settings.mongo_db][settings.dead_letter_collection]
-    sink = ManticoreSink(dead_letter_collection=dead_letter_col)
-    await sink.setup_schema()
+    dedup = build_deduplicator()  # None, якщо SEMANTIC_DEDUP_ENABLED=false (дефолт)
     sink.start_flusher()
 
     pipeline = Pipeline(
@@ -153,6 +170,7 @@ async def run() -> None:
     await _wait_bounded(http_client.aclose(), "http_client", logger)
 
     logger.info("shutdown_complete")
+    return 0
 
 
 async def _wait_bounded(awaitable, component: str, logger) -> None:
@@ -252,4 +270,4 @@ async def _consume_stream(
 
 
 if __name__ == "__main__":
-    asyncio.run(run())
+    sys.exit(asyncio.run(run()))

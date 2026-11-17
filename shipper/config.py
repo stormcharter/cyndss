@@ -82,7 +82,15 @@ class Settings(BaseSettings):
         "enterprise-attack/enterprise-attack.json"
     )
 
-    # Дедуплікація
+    # Дедуплікація. Семантичний дедуп (косинус по ембедингах) ВИМКНЕНО за
+    # замовчуванням. Виміряно на живому стеку (1486 подій): cosine >= 0.92 між
+    # векторами nomic давав 462 «дублікати», з них 451 у діапазоні 0.92-0.95, і
+    # вибірка з 10 була 10/10 РІЗНИМИ постами (навіть >= 0.95 зливало різні
+    # інциденти) — ~30% корпусу мовчки втрачалось. Справжніх дублів ~3 точні
+    # копії + кілька переказів, а їх ловить точний дедуп на рівні БД
+    # (message_id + content_hash, ДО ембедингу). Увімкнути:
+    # SEMANTIC_DEDUP_ENABLED=true (поріг — DEDUP_SIMILARITY_THRESHOLD).
+    semantic_dedup_enabled: bool = False
     dedup_similarity_threshold: float = 0.92  # косинусна схожість
     dedup_window_size: int = 1000  # скільки останніх ембедингів тримати в RAM
 
@@ -94,6 +102,15 @@ class Settings(BaseSettings):
     manticore_max_retries: int = 3
     manticore_retry_base_seconds: float = 0.5
     dead_letter_collection: str = "shipper_dead_letters"
+
+    # Ретраї NVD API на ТИМЧАСОВИХ збоях (429/5xx/мережа): усього спроб,
+    # база експоненційного backoff і стеля для заголовка Retry-After.
+    # 6 спроб (паузи 1+2+4+8+16 = 31 с), а не 4: 16.11.2026 NVD через раз
+    # давав 503, і з 4 спробами (7 с) 9 реальних CVE лишились неверифікованими;
+    # повторний прогін тих самих постів із 7 спробами — 0 втрат.
+    nvd_max_retries: int = 6
+    nvd_retry_base_seconds: float = 1.0
+    nvd_retry_after_max_seconds: float = 30.0
 
     # Надійне підтвердження запису (durable ack): черга до сінка та ретраї конвеєра
     sink_queue_maxsize: int = 200
@@ -158,6 +175,7 @@ class Settings(BaseSettings):
 
         positive_integers = {
             "MANTICORE_MAX_RETRIES": self.manticore_max_retries,
+            "NVD_MAX_RETRIES": self.nvd_max_retries,
             "PIPELINE_MAX_RETRIES": self.pipeline_max_retries,
             "PIPELINE_CONCURRENCY": self.pipeline_concurrency,
             "SINK_QUEUE_MAXSIZE": self.sink_queue_maxsize,
@@ -175,6 +193,8 @@ class Settings(BaseSettings):
         positive_durations = {
             "BATCH_TIMEOUT_SECONDS": self.batch_timeout_seconds,
             "MANTICORE_RETRY_BASE_SECONDS": self.manticore_retry_base_seconds,
+            "NVD_RETRY_BASE_SECONDS": self.nvd_retry_base_seconds,
+            "NVD_RETRY_AFTER_MAX_SECONDS": self.nvd_retry_after_max_seconds,
             "PIPELINE_RETRY_BASE_SECONDS": self.pipeline_retry_base_seconds,
             "SHIPPER_RECONNECT_BASE_SECONDS": self.shipper_reconnect_base_seconds,
             "SHIPPER_HTTP_TIMEOUT_SECONDS": self.shipper_http_timeout_seconds,

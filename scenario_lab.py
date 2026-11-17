@@ -22,7 +22,7 @@ from pathlib import Path
 import httpx
 import streamlit as st
 
-from semantic_bridge import cosine
+from concept_support import corpus_retriever
 from solution_ui import SolutionEnv, render_solution_mode
 
 ROOT = Path(__file__).resolve().parent
@@ -84,21 +84,6 @@ def llm_status(base_url: str) -> str:
         return f"❌ недоступно: {exc}"
 
 
-def make_retrieve(documents: list[dict], embed):
-    """RAG по завантаженому корпусу: два найближчі за змістом документи до поняття."""
-    if not documents:
-        return None
-    texts = [" ".join(str(d.get(f) or "") for f in ("title", "summary", "content"))[:1500]
-             for d in documents]
-    vectors = embed([f"search_document: {t}" for t in texts])
-
-    def retrieve(query: str) -> list[str]:
-        q = embed([f"search_query: {query}"])[0]
-        best = sorted(range(len(texts)), key=lambda i: -cosine(q, vectors[i]))[:2]
-        return [texts[i][:500] for i in best]
-    return retrieve
-
-
 with st.sidebar:
     st.header("⚙️ Модель ШІ")
     base_url = st.text_input("Base URL (OpenAI-сумісний)",
@@ -153,6 +138,6 @@ render_solution_mode(SolutionEnv(
     networks_dir=NETWORKS_DIR,
     data_dir=ROOT / "data",
     model_tag=model_name,
-    retrieve=make_retrieve(documents, embed) if documents else None,
+    retrieve=corpus_retriever(documents, embed),
     retrieve_label="завантажений файл" if documents else "",
 ))

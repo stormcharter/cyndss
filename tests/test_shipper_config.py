@@ -94,6 +94,45 @@ def test_embeddings_stay_local_nomic_by_default():
     assert s.embed_dims == 768
 
 
+def test_semantic_dedup_is_off_by_default():
+    """Виміряно на живому стеку (1486 подій): сирі вектори nomic давали cosine >= 0.92
+    між РІЗНИМИ постами, і ~30% корпусу мовчки відкидалось як «дублікати». Вибірка
+    із 10 відкинутих при 0.92-0.95 була 10/10 різними постами. Тому за
+    замовчуванням семантичний дедуп вимкнено; точний дедуп (message_id +
+    content_hash) працює на рівні БД незалежно від цього."""
+    s = Settings(_env_file=None)
+    assert s.semantic_dedup_enabled is False
+    # Поріг лишається для випадку, коли дедуп вмикають свідомо.
+    assert s.dedup_similarity_threshold == 0.92
+
+
+def test_semantic_dedup_can_be_enabled_from_env():
+    old = os.environ.get("SEMANTIC_DEDUP_ENABLED")
+    os.environ["SEMANTIC_DEDUP_ENABLED"] = "true"
+    try:
+        assert Settings(_env_file=None).semantic_dedup_enabled is True
+    finally:
+        if old is None:
+            del os.environ["SEMANTIC_DEDUP_ENABLED"]
+        else:
+            os.environ["SEMANTIC_DEDUP_ENABLED"] = old
+
+
+def test_build_deduplicator_follows_the_switch():
+    """`None` = дедуп вимкнено (Pipeline пропускає find_duplicate/remember_indexed)."""
+    from shipper.config import settings
+    from shipper.dedup import SemanticDeduplicator, build_deduplicator
+
+    old = settings.semantic_dedup_enabled
+    try:
+        settings.semantic_dedup_enabled = False
+        assert build_deduplicator() is None
+        settings.semantic_dedup_enabled = True
+        assert isinstance(build_deduplicator(), SemanticDeduplicator)
+    finally:
+        settings.semantic_dedup_enabled = old
+
+
 if __name__ == "__main__":
     failures = 0
     for name, fn in sorted(globals().items()):

@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tools.manticore_io import (  # noqa: E402
     build_bulk_line,
+    build_delete_query,
     build_scan_query,
     is_valid_mongo_id,
     manticore_doc_id,
@@ -93,6 +94,17 @@ def test_bulk_line_carries_table_and_doc():
 def test_bulk_line_is_a_single_ndjson_record():
     line = build_bulk_line("t", 1, {"a": 1})
     assert "\n" not in line
+
+
+# --- 2b. Видалення рядків за id ---------------------------------------------
+def test_delete_query_targets_the_table_and_lists_the_ids():
+    assert build_delete_query("events_enriched", [1, 2, 3]) == \
+        "DELETE FROM events_enriched WHERE id IN (1,2,3)"
+
+
+def test_delete_query_folds_signed_ids_like_bulk_does():
+    q = build_delete_query("t", [-8871276304639429742, 5])
+    assert f"{2**64 - 8871276304639429742}" in q and "-" not in q
 
 
 # --- 3. Підготовка списку id для одного запиту в Mongo ---------------------

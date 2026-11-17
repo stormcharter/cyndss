@@ -88,6 +88,39 @@ def _term_len(token):
     return sum(1 for ch in token if ch != "\\")
 
 
+# Категорії Unicode «звичайних» букв і цифр. Модифікатори на кшталт ʼ (Lm) сюди
+# свідомо не входять: токенізатор може їх різати, а зайва фраза нешкідлива.
+_PLAIN_WORD_CATEGORIES = {"Lu", "Ll", "Lt", "Lo", "Nd"}
+
+# Ключові слова операторів Manticore. `MAYBE`, `SENTENCE`, `PARAGRAPH` голими
+# валять увесь запит синтаксичною помилкою (перевірено на живому індексі), решта —
+# оператори в інших позиціях. Фразою вони шукаються як звичайні слова; порівнюємо
+# без урахування регістру, бо фраза з одного слова нешкідлива.
+_OPERATOR_KEYWORDS = {"MAYBE", "SENTENCE", "PARAGRAPH", "NEAR", "NOTNEAR", "ZONE",
+                      "ZONESPAN"}
+
+
+def _as_or_operand(token):
+    """Терм як ОДИН операнд OR-виразу.
+
+    Терм із роздільником усередині (`net\\-001`, `network\\'s`, `CVE\\-2024\\-3400`)
+    Manticore ріже на кілька слів і з'єднує їх НЕЯВНИМ AND, а `|` зв'язує
+    сильніше за пробіл. Тож `a | net\\-001 | b` розбирається як
+    `(a | net) AND (001 | b)` — OR мовчки стає AND, і запит про конкретний CVE не
+    знаходить нічого. Фраза `"net\\-001"` тримає терм цілим (і для ідентифікаторів
+    це ще й точніша семантика — слова поспіль). Фраза з одного слова дорівнює
+    самому слову, тож обгортати із запасом безпечно; голим лишаємо лише терм із
+    звичайних букв і цифр, що не є ключовим словом оператора
+    (`_OPERATOR_KEYWORDS`) — так вираз читається, як і раніше.
+
+    Безпека: лапки ставимо МИ навколо вже санітизованого терма; лапка з вводу
+    в ньому екранована (`\\"`) і закрити фразу не може."""
+    plain = all(unicodedata.category(ch) in _PLAIN_WORD_CATEGORIES for ch in token)
+    if plain and token.upper() not in _OPERATOR_KEYWORDS:
+        return token
+    return '"%s"' % token
+
+
 def _default_sql_escape(value):
     """Запасний SQL-екранувальник (коли escape_fn не передали). Поводиться як
     pymysql `conn.escape_string`: подвоює зворотний слеш, екранує лапки."""
@@ -211,8 +244,9 @@ def build_or_match_clause(raw_query, escape_fn=None,
     видачі визначає WEIGHT() (BM25) на боці Manticore — класична IR-схема
     «OR + ранжування».
 
-    БЕЗПЕКА. Роздільник « | » вставляємо МИ і лише між уже санітизованими
-    термами. Ввід користувача проходить той самий sanitize_match_query, що й
+    БЕЗПЕКА. Роздільник « | » і лапки-фразу навколо терма з роздільником
+    усередині (див. `_as_or_operand`) вставляємо МИ і лише довкола вже
+    санітизованих термів. Ввід користувача проходить той самий sanitize_match_query, що й
     в AND-гілці, тож його власні `|`, `@`, дужки лишаються екранованими
     літералами й не можуть перевизначити вираз."""
     if isinstance(fields, str):
@@ -243,5 +277,6 @@ def build_or_match_clause(raw_query, escape_fn=None,
     if not terms:
         return ""
 
-    escaped = (escape_fn or _default_sql_escape)(" | ".join(terms))
+    escaped = (escape_fn or _default_sql_escape)(
+        " | ".join(_as_or_operand(t) for t in terms))
     return "MATCH('@(%s) %s')" % (",".join(fields), escaped)

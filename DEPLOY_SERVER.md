@@ -107,6 +107,70 @@ docker compose -f docker-compose.server.yml logs -f shipper   # перевіри
 ```
 Mongo-replica set `rs0` ініціюється автоматично (healthcheck при першому старті).
 
+## 5.1 Перерахунок векторів індексу (один раз, при оновленні)
+
+Потрібен, якщо індекс зібрала версія shipper, що рахувала вектор від сирого
+оригіналу посту. Нова рахує його від англійського «title. summary»
+(`embedding_text.py`), і змішаний індекс — це вектори двох різних просторів в
+одній таблиці. Тому shipper **відмовиться стартувати**, поки індекс не
+перераховано: позначка схеми лежить у `threat_intel.shipper_state`
+(`_id: "index_embedding"`). На чистому, порожньому індексі він ставить її сам.
+
+Порядок важливий — старий shipper не повинен писати в індекс, поки той
+перераховується:
+
+```bash
+docker compose -f docker-compose.server.yml stop shipper     # 1. зупинити старий (і будь-який replay)
+git pull                                                     # 2. новий код
+docker compose -f docker-compose.server.yml build shipper    # 3. новий образ
+# 4. резервна копія індексу: старі вектори інакше не відновити
+docker compose -f docker-compose.server.yml stop manticore
+docker run --rm -v onyx_manticore-data:/d:ro -v "$PWD":/b alpine \
+    tar czf /b/manticore-before-reembed.tgz -C /d .
+docker compose -f docker-compose.server.yml up -d manticore
+source .venv/bin/activate
+python tools/reembed_index.py                                # 5. сухий прогін
+python tools/reembed_index.py --apply                        # 6. перерахунок + позначка схеми
+docker compose -f docker-compose.server.yml up -d shipper    # 7. новий shipper стартує
+```
+
+Ім'я тому (`onyx_manticore-data`) — за назвою теки проєкту; перевірити:
+`docker volume ls | grep manticore`.
+
+Сухий прогін друкує дві схеми — ту, яку запише інструмент, і ту, яку чекає
+shipper. Вони мусять збігатися, інакше shipper не стартує й після перерахунку.
+
+Інструмент відмовиться писати, поки оренду конвеєра тримає shipper. Replay
+оренди не бере, тому на кроці 1 його теж треба зупинити: інакше він може
+дописувати документи, поки індекс перераховується. Повторний запуск нічого не
+ламає — вектори просто перерахуються наново.
+
+Якщо в індексі є рядки, для яких у Mongo немає оригіналу, їх неможливо
+перерахувати, і позначку схеми інструмент не запише. Такі рядки й так зламані
+(UI бере текст із Mongo за `mongo_id`). Інструмент виведе їх повним списком;
+прибрати — тим самим запуском із `--apply --drop-orphans`.
+
+Якщо крок 5 забули, новий shipper під `restart: unless-stopped` перезапускається
+по колу з `index_scheme_mismatch` у логах. Це безпечно: перевірка стоїть до
+оренди, до запису і до завантаження MITRE, тож він нічого не пише й нічого не
+тягне з мережі. Лікується кроком 5.
+
+**Повернути загублене.** Стара версія відкидала як «дублі» різні пости (на
+локальному корпусі — 462 з 1486) і губила довгі (15). Усі вони лишились у Mongo.
+Переграти події, яких немає в індексі:
+
+```bash
+docker compose -f docker-compose.server.yml exec -T shipper python -m shipper.replay --missing --limit 5
+nohup docker compose -f docker-compose.server.yml exec -T shipper \
+    python -m shipper.replay --missing > replay_missing.log 2>&1 &
+```
+
+Спершу п'ять подій — переконатися, що конвеєр живий. Далі всі: кожна подія
+проходить повний конвеєр із викликом LLM, локально це ~5 с на подію, тож на
+сотнях — година-дві. Прогрес і підсумок (`replay_missing_complete`) — у
+`replay_missing.log`. Два replay одночасно не запускати: вони не блокують один
+одного й оброблятимуть ті самі події.
+
 ## 6. Колектори (за потреби наповнити базу)
 ```bash
 source .venv/bin/activate

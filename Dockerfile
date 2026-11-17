@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY prompt_guard.py .
 # lemmatizer спільний з UI (укр. лематизація content на індексації = у запиті)
 COPY lemmatizer.py .
+# embedding_text спільний з UI (який текст ембедиться: «title. summary» в індексі = у запиті)
+COPY embedding_text.py .
 COPY shipper ./shipper
 
 # Непривілейований користувач: shipper нічого на диск не пише (кеш MITRE/NVD —

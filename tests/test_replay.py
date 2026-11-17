@@ -4,7 +4,7 @@ from bson import ObjectId
 import pytest
 
 from shipper.pipeline import ProcessResult, ProcessStatus
-from shipper.replay import replay_dead_letters
+from shipper.replay import replay_dead_letters, replay_missing
 
 
 class FakeCursor:
@@ -204,3 +204,140 @@ async def test_durable_duplicate_resolves_replay() -> None:
     assert result == {"replayed": 1, "failed": 0}
     assert entry["replayed_at"] is not None
     assert "replay_attempts" not in entry
+
+
+# --- replay --missing: події, яких немає в індексі ---------------------------
+class FakeEventStream:
+    """Колекція raw_events: `find(query).sort("_id", 1)` -> асинхронна ітерація."""
+
+    def __init__(self, documents: list[dict]) -> None:
+        self.documents = list(documents)
+        self.queries: list[dict] = []
+
+    def find(self, query: dict | None = None) -> "FakeEventStream":
+        self.queries.append(query or {})
+        return self
+
+    def sort(self, field: str, direction: int) -> "FakeEventStream":
+        self.documents.sort(key=lambda doc: doc[field], reverse=direction < 0)
+        return self
+
+    def __aiter__(self):
+        async def iterate():
+            for document in self.documents:
+                yield document
+
+        return iterate()
+
+
+class ScriptedPipeline:
+    """Віддає статуси по черзі (останній повторюється); запам'ятовує виклики."""
+
+    def __init__(self, *statuses) -> None:
+        self.statuses = list(statuses) or [ProcessStatus.INDEXED]
+        self.calls: list[tuple] = []
+
+    async def process(self, event, resume_token):
+        self.calls.append((event.id, resume_token))
+        status = self.statuses.pop(0) if len(self.statuses) > 1 else self.statuses[0]
+        if isinstance(status, Exception):
+            raise status
+        return ProcessResult(event.id, status)
+
+
+def _ids(count: int) -> list[ObjectId]:
+    return [ObjectId(f"{i:024x}") for i in range(1, count + 1)]
+
+
+@pytest.mark.asyncio
+async def test_missing_replays_only_events_absent_from_the_index_in_id_order() -> None:
+    a, b, c, d = _ids(4)
+    events = FakeEventStream([_source_document(x) for x in (d, b, c, a)])  # навмисно впереміш
+    pipeline = ScriptedPipeline()
+
+    result = await replay_missing(
+        events=events, indexed_ids={str(b), str(d)}, pipeline=pipeline)
+
+    assert [call[0] for call in pipeline.calls] == [str(a), str(c)]
+    assert pipeline.calls[0][1] == {"_data": f"hist_{a}"}
+    assert result == {"indexed": 2, "duplicate": 0, "failed": 0,
+                      "skipped_malformed": 0, "skipped_empty": 0}
+
+
+@pytest.mark.asyncio
+async def test_missing_counts_results_by_status() -> None:
+    ids = _ids(4)
+    events = FakeEventStream([_source_document(x) for x in ids])
+    pipeline = ScriptedPipeline(
+        ProcessStatus.INDEXED, ProcessStatus.DUPLICATE,
+        ProcessStatus.DEAD_LETTERED, ProcessStatus.FAILED)
+
+    result = await replay_missing(events=events, indexed_ids=set(), pipeline=pipeline)
+
+    assert result["indexed"] == 1
+    assert result["duplicate"] == 1
+    assert result["failed"] == 2
+
+
+@pytest.mark.asyncio
+async def test_missing_counts_empty_text_separately_from_failures() -> None:
+    # Пост без тексту ніколи не індексується — це не збій, що його треба «лікувати».
+    events = FakeEventStream([_source_document(x) for x in _ids(1)])
+    pipeline = ScriptedPipeline(ProcessStatus.SKIPPED_EMPTY)
+
+    result = await replay_missing(events=events, indexed_ids=set(), pipeline=pipeline)
+
+    assert result["skipped_empty"] == 1
+    assert result["failed"] == 0
+
+
+@pytest.mark.asyncio
+async def test_missing_skips_and_counts_malformed_documents() -> None:
+    good, bad = _ids(2)
+    broken = {"_id": bad, "source_type": "telegram"}  # немає text/collected_at
+    events = FakeEventStream([_source_document(good), broken])
+    pipeline = ScriptedPipeline()
+
+    result = await replay_missing(events=events, indexed_ids=set(), pipeline=pipeline)
+
+    assert result["skipped_malformed"] == 1
+    assert result["indexed"] == 1
+    assert [call[0] for call in pipeline.calls] == [str(good)]
+
+
+@pytest.mark.asyncio
+async def test_missing_limit_caps_processed_events_not_skipped_ones() -> None:
+    a, b, c, d = _ids(4)
+    events = FakeEventStream([_source_document(x) for x in (a, b, c, d)])
+    pipeline = ScriptedPipeline()
+
+    result = await replay_missing(
+        events=events, indexed_ids={str(a)}, pipeline=pipeline, limit=2)
+
+    assert [call[0] for call in pipeline.calls] == [str(b), str(c)]
+    assert result["indexed"] == 2
+
+
+@pytest.mark.asyncio
+async def test_missing_survives_a_pipeline_exception() -> None:
+    a, b = _ids(2)
+    events = FakeEventStream([_source_document(x) for x in (a, b)])
+    pipeline = ScriptedPipeline(RuntimeError("boom"), ProcessStatus.INDEXED)
+
+    result = await replay_missing(events=events, indexed_ids=set(), pipeline=pipeline)
+
+    assert result["failed"] == 1
+    assert result["indexed"] == 1
+
+
+@pytest.mark.asyncio
+async def test_missing_with_everything_indexed_does_nothing() -> None:
+    ids = _ids(3)
+    events = FakeEventStream([_source_document(x) for x in ids])
+    pipeline = ScriptedPipeline()
+
+    result = await replay_missing(
+        events=events, indexed_ids={str(x) for x in ids}, pipeline=pipeline)
+
+    assert pipeline.calls == []
+    assert result["indexed"] == 0

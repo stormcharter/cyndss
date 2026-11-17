@@ -73,6 +73,13 @@ def build_bulk_line(table, doc_id, doc):
     )
 
 
+def build_delete_query(table, ids):
+    """`DELETE ... WHERE id IN (...)`. Знакові id згортаємо в unsigned, як і в
+    `build_bulk_line`: інакше рядок із id > 2^63 не знайдеться."""
+    listed = ",".join(str(manticore_doc_id(i)) for i in ids)
+    return f"DELETE FROM {table} WHERE id IN ({listed})"
+
+
 def is_valid_mongo_id(value):
     """Чи є value канонічним 24-символьним hex ObjectId."""
     return isinstance(value, str) and bool(_OBJECT_ID_RE.match(value))

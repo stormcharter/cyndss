@@ -83,6 +83,15 @@ class MitreAttackKB:
 
 # ---------- NVD ----------
 
+# Тимчасові збої NVD, які варто повторити (інші 4xx — ні).
+NVD_TRANSIENT_STATUSES = frozenset({429, 500, 502, 503, 504})
+
+
+async def _sleep(seconds: float) -> None:
+    """Обгортка над asyncio.sleep — шов для підміни в тестах."""
+    await asyncio.sleep(seconds)
+
+
 class NVDClient:
     """Клієнт до NVD API з кешуванням і семафором на кількість одночасних запитів."""
 
@@ -101,26 +110,64 @@ class NVDClient:
         if cve_id in self._cache:
             return self._cache[cve_id]
 
-        async with self._sem:
-            try:
-                response = await self.client.get(
-                    settings.nvd_base_url,
-                    params={"cveId": cve_id},
-                    headers=self.headers,
-                    timeout=30.0,
-                )
-                if response.status_code == 404:
-                    result = VerifiedCVE(cve_id=cve_id, status=VerificationStatus.NOT_FOUND)
-                    self._cache[cve_id] = result
-                    return result
-                response.raise_for_status()
-                data = response.json()
-                result = self._parse_nvd_response(cve_id, data)
-                self._cache[cve_id] = result
-                return result
-            except httpx.HTTPError as e:
-                logger.warning("nvd_unreachable", cve_id=cve_id, error=str(e))
-                return VerifiedCVE(cve_id=cve_id, status=VerificationStatus.UNREACHABLE)
+        max_attempts = max(1, settings.nvd_max_retries)
+        for attempt in range(1, max_attempts + 1):
+            retry_after: Optional[float] = None
+            # Семафор тримаємо лише на час самого запиту; backoff-сон — поза ним,
+            # щоб CVE в ретраях не блокувала слоти іншим.
+            async with self._sem:
+                try:
+                    response = await self.client.get(
+                        settings.nvd_base_url,
+                        params={"cveId": cve_id},
+                        headers=self.headers,
+                        timeout=30.0,
+                    )
+                    if response.status_code == 404:
+                        result = VerifiedCVE(cve_id=cve_id, status=VerificationStatus.NOT_FOUND)
+                        self._cache[cve_id] = result
+                        return result
+                    if response.status_code in NVD_TRANSIENT_STATUSES:
+                        retry_after = self._parse_retry_after(response)
+                        error = f"HTTP {response.status_code}"
+                    else:
+                        response.raise_for_status()
+                        result = self._parse_nvd_response(cve_id, response.json())
+                        self._cache[cve_id] = result
+                        return result
+                except httpx.TransportError as e:
+                    error = str(e) or type(e).__name__
+                except httpx.HTTPError as e:
+                    # Інші 4xx (400/403…) — не тимчасові, без ретраїв.
+                    logger.warning("nvd_unreachable", cve_id=cve_id, error=str(e))
+                    return VerifiedCVE(cve_id=cve_id, status=VerificationStatus.UNREACHABLE)
+
+            if attempt >= max_attempts:
+                break
+            delay = settings.nvd_retry_base_seconds * (2 ** (attempt - 1))
+            if retry_after is not None:
+                delay = retry_after
+            logger.warning(
+                "nvd_transient_retry", cve_id=cve_id, attempt=attempt,
+                error=error, delay=delay,
+            )
+            await _sleep(delay)
+
+        # Ретраї вичерпано. UNREACHABLE НЕ кешуємо: наступний lookup піде в мережу.
+        logger.warning("nvd_unreachable", cve_id=cve_id, error=error)
+        return VerifiedCVE(cve_id=cve_id, status=VerificationStatus.UNREACHABLE)
+
+    @staticmethod
+    def _parse_retry_after(response: httpx.Response) -> Optional[float]:
+        """Retry-After у секундах, зі стелею; некоректне/відсутнє -> None."""
+        raw = response.headers.get("Retry-After")
+        if raw is None:
+            return None
+        try:
+            seconds = float(raw)
+        except ValueError:
+            return None
+        return min(max(seconds, 0.0), settings.nvd_retry_after_max_seconds)
 
     @staticmethod
     def _parse_nvd_response(cve_id: str, data: dict) -> VerifiedCVE:

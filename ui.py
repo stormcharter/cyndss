@@ -21,6 +21,7 @@ from solution_ui import SolutionEnv, render_solution_mode
 from semantic_reasoner import build_reasoner_from_records, format_hypotheses_for_llm
 from hypothesis_labels import build_mitre_label_map, annotate_chain_for_display
 from hypothesis_graph import VIRTUAL_START_NODE, build_hypothesis_graph
+from concept_support import SupportRetriever
 from search_utils import build_language_filter, build_match_clause, build_or_match_clause
 from lemmatizer import lemmatize_query
 from chat_intents import (
@@ -1307,8 +1308,15 @@ def retrieve_context(query_text, lang_filter, limit=CHAT_CONTEXT_LIMIT):
                     meta["strategies"].append(f"{label}:{len(hits)}")
                     groups.append(hits)
 
-            # KNN шукаємо за англійським варіантом: ембеддинги корпусу рахувались
-            # по тексту, який здебільшого проходив через той самий переклад.
+            # KNN шукаємо за англійським варіантом: вектори індексу рахуються від
+            # англійського «title. summary», яке пише модель (embedding_text.py), тож
+            # перекладений запит і документ — в одному просторі. Так було не завжди:
+            # поки шиппер ембедив сирий оригінал (uk/ru), ця гілка не знаходила під
+            # порогом жодного документа на жодному з 12 типових запитів; після
+            # перерахунку (tools/reembed_index.py) — 67. Український запит тут не
+            # годиться: nomic англоцентричний і кладе всі українські тексти в купу.
+            # Поріг KNN_MAX_DISTANCE підбирали ще для старих векторів — у новому
+            # просторі він м'якший, точність поки тримає злиття з повнотекстовими гілками.
             vector = get_query_embedding(translated or query_text)
             if vector:
                 vec_str = ",".join(map(str, vector))
@@ -2062,11 +2070,15 @@ def render_scenarios_mode(lang_filter):
     with left:
         uploaded = st.file_uploader("Опис інфраструктури (JSON)", type=["json"],
                                     key="twin_model_file")
-        raw = st.text_area(
+        pasted = st.text_area(
             "…або вставте опис сюди",
-            value=(uploaded.read().decode("utf-8", "replace") if uploaded else ""),
             height=180, key="twin_model_text",
             placeholder='{"machine": "...", "components": [...]}')
+        # Файл іде в розбір НАПРЯМУ, а не через value= поля: поле має key, і
+        # Streamlit після першого рендеру бере значення зі стану сесії, тож
+        # вміст файлу туди не потрапляв («Додайте опис…» при завантаженому файлі).
+        raw = (uploaded.getvalue().decode("utf-8", "replace") if uploaded
+               else pasted)
     with right:
         goal = st.text_input("Цільовий стан", value="root", key="twin_goal",
                              help="Те, чим закінчується сценарій: root, SYSTEM, "
@@ -2272,7 +2284,7 @@ def render_scenarios_mode(lang_filter):
 # Сам екран — у solution_ui.py (спільний із локальним стендом scenario_lab.py).
 # Тут лише підключення до інфраструктури ONYX: моделі з llm_backends (кожен
 # ШІ-експерт може йти у свою), ембедер — та сама Ollama/nomic, що й для
-# пошуку, RAG — векторний пошук по корпусу events_enriched.
+# пошуку, RAG — двоетапний відбір по корпусу events_enriched (BM25 + nomic).
 
 SOLUTION_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -2320,23 +2332,47 @@ def _solution_embed(texts: list[str]) -> list[list[float]]:
     return vectors
 
 
-def _solution_retrieve(query: str) -> list[str]:
-    """RAG-опора для розкриття фронту: два найближчі документи корпусу за KNN.
-    Запит — англійська форма поняття: ембединги корпусу рахувались переважно
-    по англійському тексту (див. retrieve_context)."""
-    vector = _solution_embed([query])[0]
+def _solution_candidates(query: str, k: int) -> list[dict]:
+    """Етап 1 опори на корпус: до k кандидатів за BM25 (OR-збіг англійського
+    поняття) по ЗБЕРЕЖЕНИХ англійських полях `title`, `summary` — їх пише модель.
+    Поле `content` у «сліпому індексі» не зберігається; чому не голий KNN по
+    векторах `embedding` — див. `_solution_retrieve`."""
     conn = get_manticore_connection()
     try:
+        clause = build_or_match_clause(query, conn.escape_string, fields=("title", "summary"))
+        if not clause:
+            return []
         with conn.cursor() as cursor:
             cursor.execute(f"""
-                SELECT title, summary, knn_dist() AS distance
+                SELECT id, title, summary, WEIGHT() AS relevance
                 FROM events_enriched
-                WHERE knn(embedding, 4, ({",".join(map(str, vector))}))
+                WHERE {clause}
+                ORDER BY relevance DESC
+                LIMIT {int(k)}
+                OPTION max_matches = 1000
             """)
-            hits = [h for h in cursor.fetchall() if h.get("distance", 1.0) < KNN_MAX_DISTANCE]
+            return list(cursor.fetchall())
     finally:
         conn.close()
-    return [f"{h.get('title') or ''}. {h.get('summary') or ''}"[:500] for h in hits[:2]]
+
+
+@st.cache_resource(show_spinner=False)
+def _solution_support() -> SupportRetriever:
+    """Один ретривер на процес: кеш векторів документів переживає rerun-и Streamlit
+    (інакше кожне поняття заново ембедило б тих самих кандидатів)."""
+    return SupportRetriever(_solution_candidates, _solution_embed)
+
+
+def _solution_retrieve(query: str) -> list[str]:
+    """RAG-опора для розкриття фронту: до двох фрагментів корпусу.
+
+    Запит — англійська форма поняття. Двоетапно: BM25-кандидати за title/summary,
+    далі відбір за косинусною відстанню nomic між запитом і «title. summary»
+    (поріг `SUPPORT_MAX_DISTANCE`). Голий KNN по збережених векторах гірший:
+    поки вони рахувались від сирого оригіналу, він давав 0/43, а й по перерахованих
+    «title. summary» дав би 20/43 приблизно з третиною фрагментів мимо. Двоетапний
+    відбір — 16/43 майже без промахів, див. concept_support.py."""
+    return _solution_support()(query)
 
 
 def solution_env() -> SolutionEnv:
