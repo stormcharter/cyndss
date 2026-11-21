@@ -1,12 +1,65 @@
-# ONYX — нейро-символічна платформа кіберрозвідки
+# ONYX — когнітивний кіберполігон
 
-Система збирає відкриті джерела з кібербезпеки (Telegram-канали, YouTube,
-сайти та RSS), видобуває з постів події (вразливості, техніки атак), звіряє їх
-із довідниками NVD та MITRE ATT&CK і складає в пошуковий індекс. Поверх індексу
-працює аналітичний інтерфейс: гібридний пошук, рада ШІ-агентів із синтезатором,
-семантична мережа понять, граф гіпотез і сценарії на орієнтованому графі.
+*English summary — [нижче](#in-english).*
+
+Мовна модель лише читає, шляхи атаки шукає алгоритм. Система збирає відкриті
+джерела з кібербезпеки (Telegram-канали, YouTube, сайти та RSS), модель
+стискає пости до суті й пропонує мітки CVE та технік MITRE ATT&CK, а в індекс
+доходить лише мітка, ідентифікатор якої дослівно є в тексті й існує в NVD чи
+ATT&CK. Над описом конкретної мережі детермінований алгоритм будує граф станів
+із двох боків — від поточного стану зловмисника й від його цілі, — знаходить
+шляхи атаки, ранжує їх і шукає найменший набір заходів, що ці шляхи розриває.
+Поверх цього працює аналітичний інтерфейс: гібридний пошук, рада ШІ-агентів із
+синтезатором, семантична мережа понять, граф гіпотез і сценарії на
+орієнтованому графі.
+
+## Результати
+
+100 згенерованих корпоративних мереж із прихованим еталоном атак: метод
+еталона не бачить, він читається лише після відповіді. Прогін детермінований,
+без мовної моделі; відтворення — у розділі [«Експерименти»](#експерименти).
+
+| Що виміряно | Результат |
+|---|---|
+| Звуження простору пошуку двостороннім узгодженням | −80,8 % вузлів у середньому (153,6 → 30,9) |
+| Чи губить звуження шляхи | ні: множини шляхів зі звуженням і без нього збігаються (коефіцієнт Жаккара 1,0 на всіх 81 мережі, де завершились обидві конфігурації) |
+| Бюджет 10 с на мережу | 100/100 мереж зі звуженням, 81/100 без нього; пошук у середньому 0,009 с |
+| Синтез захисту | у 64 з 65 мереж із досяжною ціллю є набір заходів, що розриває всі шляхи, які взагалі можна розірвати; у середньому 1,02 заходу |
+| Покриття кроків еталонної атаки | 0,233 проти 0,091 у базової лінії — того самого графа без напрямку й типів ребер |
+| Збіг найкращого за J шляху з еталоном | 0,179; 0,390 з критерієм експлуатованості (CVSS) |
+
+Що поки не працює: ціль досяжна в моделі лише у 65 мережах зі 100, а 47 із 500
+еталонних атак модель не виражає.
 
 Дипломний проєкт. Кафедра інформаційної безпеки.
+
+## In English
+
+ONYX is a cognitive cyber range — a research prototype that links open-source
+threat intelligence to attack-path analysis of a specific network. The
+language model only reads: it condenses OSINT posts written in several
+languages and proposes CVE and MITRE ATT&CK labels, and a label is indexed only
+if its identifier occurs verbatim in the source text and exists in NVD or
+ATT&CK. Attack paths are found by a deterministic algorithm on a typed,
+directed state graph of the infrastructure. Forward expansion from the
+attacker's current state and backward expansion from the goal are intersected
+into a context graph that keeps every path of up to 20 hops; the paths are
+ranked by an integral score J, and defense synthesis solves the inverse
+problem — the smallest set of measures that breaks the paths found. The same
+input always yields the same result.
+
+On 100 generated corporate networks with a hidden attack ground truth, the
+bidirectional intersection removes 80.8 % of graph nodes on average without
+losing a single path (Jaccard similarity of the path sets 1.0), every network
+fits the 10-second budget (81 of 100 without the intersection), and in 64 of
+the 65 networks with a reachable goal a set of measures exists that breaks
+every breakable path — 1.02 measures on average. The goal is reachable in only
+65 of the 100 network models, and 47 of the 500 reference attacks cannot be
+expressed in the model yet.
+
+Stack: Python; MongoDB as the source of truth, Manticore as the search index;
+`nomic-embed-text` embeddings and Hermes 3 via Ollama or any OpenAI-compatible
+API; Streamlit UI. The rest of this README is in Ukrainian.
 
 ---
 
@@ -50,11 +103,14 @@
 2. видобування сутностей — LLM, `temperature 0`, строгий JSON; текст документа
    передається як недовірений у делімітерах (`prompt_guard.py`);
 3. заземлення міток (`shipper/grounding.py`) — CVE/техніка приймається лише
-   якщо ідентифікатор є в тексті дослівно або модель навела цитату, яка справді
-   міститься в документі;
+   якщо її ідентифікатор є в тексті дослівно. Цитату модель теж наводить, але
+   сама по собі вона доказом не є: з вимогою цитувати модель підкріплювала
+   вигадану техніку справжньою, але не дотичною до неї цитатою;
 4. символьна верифікація — NVD 2.0 для CVE, STIX-бандл MITRE для технік
    (відкликані та застарілі відкидаються); статуси `verified / not_found /
-   invalid_format / unreachable`;
+   invalid_format / unreachable`. Тимчасові збої NVD (429, 5xx, мережа)
+   повторюються з експоненційною паузою, тож разовий 503 не лишає справжню CVE
+   неверифікованою;
 5. ембединг — `nomic-embed-text`, 768 вимірів, L2-норма, від **англійського**
    подання «title. summary», яке щойно написала модель; без summary — від
    початку оригіналу, не довше 1500 символів (`embedding_text.py`);
@@ -302,8 +358,7 @@ DEPLOY_SERVER.md          розгортання на сервері
 (перестворити таблицю), `drop_marker.py` (скинути чекпойнт shipper),
 `raw_events.py` (очистити колекцію), `backfill_dedup.py` (бекфіл індексів
 дедуплікації), `start_docker.bat` / `start_server.sh` / `run_ui.sh` /
-`run_collectors.sh` (запуск). `tg1.py` — ранній прототип (LLM → Obsidian),
-у поточному конвеєрі не використовується.
+`run_collectors.sh` (запуск).
 
 ---
 
